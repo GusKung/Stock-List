@@ -1,0 +1,345 @@
+
+from PIL import Image 
+from CTkMenuBar import *
+from CTkMessagebox import *
+from pathlib import Path
+import os 
+import mysql.connector
+import math
+from PIL import Image
+from cryptography.fernet import Fernet
+from dotenv import load_dotenv, dotenv_values 
+from CTkScrollableDropdown import *
+from customtkinter import *
+import customtkinter
+
+def main_gui(mysql,a_user,a_pass):
+# //-----------------------------------------------------
+
+    class CTKUI(CTkToplevel):
+        def __init__(self,titel,wide,height,color,theme):
+            CTkToplevel.__init__(self)
+            self.title(f"{titel}")
+            screen_x = self.winfo_screenwidth()
+            screen_y = self.winfo_screenheight()
+
+            x = int((screen_x / 2) - (wide/2))
+            y = int((screen_y / 2) - (height / 2))
+            self.geometry(f"{wide}x{height}+{x}+{y-25}")
+            
+            self.config(bg=f"{color}")
+            customtkinter.set_appearance_mode(theme)
+
+            appdir = Path(__file__).parent
+            icon = appdir / "icon" / "icon.ico"
+            
+            self.iconbitmap(icon)
+            self.after(200, lambda: self.iconbitmap(icon)) 
+
+# //-----------------------------------------------------
+
+    mydoc = os.path.expanduser('~\\Documents')
+    localfile = mydoc + "\\Stock_List"
+
+    file_account = localfile + "\\Account.env"
+
+    appdir = Path(__file__).parent
+    icon = appdir / "icon" 
+
+    main = CTKUI("Stock List",1280,720,"#D4D4D4","light")
+    
+    num_page = IntVar(value=0)
+
+    def next_page():
+        num =  num_page.get()
+        if (num < all_row):
+            num_page.set(num+1)
+            amount_page.set(num_page.get())
+            show_products(num_page.get())
+    
+    def next_last_page():
+        num_page.set(all_row)
+        amount_page.set(num_page.get())
+        show_products(all_row)
+
+    def back_page():
+        num =  num_page.get()
+        if (num > 0):
+            num_page.set(num-1)
+            amount_page.set(num_page.get())
+            show_products(num_page.get())
+
+    def back_last_page():
+        num_page.set(0)
+        amount_page.set(num_page.get())
+        show_products(0)
+
+    sql = mysql.cursor()
+    sql.execute("SELECT * FROM `products`;")
+    all_product = sql.fetchall()
+    all_row = int(len(all_product)/40)
+
+    FLeft= CTkFrame(main,fg_color="#D4D4D4",corner_radius=0,border_color="black",border_width=0)
+    FLeft.pack(side=LEFT,fill=BOTH,expand=True)
+    FLeft.columnconfigure(1,weight=1)
+    FLeft.rowconfigure(1,weight=1)
+
+    FProducts = CTkScrollableFrame(FLeft,width=650,height=600,fg_color="#D4D4D4",corner_radius=0)
+    FProducts.grid(row=1,column=0,columnspan=3,sticky="news")
+
+    btn_next = CTkButton(FLeft,font=("Arial",18),command=next_page,text=">",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
+    btn_next.grid(row=2,column=1,sticky="SE",pady=20,padx=(0,100))
+
+    btn_last_next = CTkButton(FLeft,font=("Arial",18),command=next_last_page,text=">>",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
+    btn_last_next.grid(row=2,column=1,sticky="SE",pady=20,padx=(0,20))
+
+    def change_page(page):
+        num_page.set(page)
+        amount_page.set(num_page.get())
+        show_products(num_page.get())
+
+    value =[f"{i}"for i in range(all_row+1)]
+    amount_page = CTkComboBox(FLeft,width=80,values=value)
+    amount_page.grid(row=2,column=0,columnspan=2,sticky="S",pady=25)
+
+    CTkScrollableDropdown(amount_page,values=value,justify="left", button_color="transparent",command=change_page)
+
+    btn_back = CTkButton(FLeft,font=("Arial",18),command=back_last_page,text="<<",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
+    btn_back.grid(row=2,column=0,sticky="SW",pady=20,padx=(20,0))
+
+    btn_last_back = CTkButton(FLeft,font=("Arial",18),command=back_page,text="<",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
+    btn_last_back.grid(row=2,column=0,sticky="SW",pady=20,padx=(100,0))
+
+    inp_product = CTkEntry(FLeft,font=("Arial",14),width=250,corner_radius=20,border_color="#3B3B3B")
+
+    inp_product.grid(row=0, column=0,padx=(20,10),pady=20,sticky="WE")
+
+    inp_product.focus_set()
+    inp_product.bind("<Return>",lambda e:serch_product())
+
+    open_search_icon = Image.open(icon/"search.png")
+    search_icon = CTkImage(light_image=open_search_icon,dark_image=open_search_icon,size=(20,20))
+
+    def serch_product():
+        code = inp_product.get()
+        find_star = code.find("*")
+        amount = code[0:find_star]
+        bar_code = code[find_star+1:]
+
+        if (find_star <= -1):
+            sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_id` = '%s';" % (bar_code))
+            product = sql.fetchone()
+            try:
+                id = product[0]
+                
+                appdir = Path(__file__).parent
+                img_products = appdir / "products" 
+
+                try:
+                    name_img = product[0]+".jpg"
+
+                    open_image = Image.open(img_products/name_img)
+                    image = CTkImage(light_image=open_image,dark_image=open_image,size=(20,20))
+                except FileNotFoundError:
+                    name_img = "Default.jpg"
+                    open_image = Image.open(img_products/name_img)
+                    image = CTkImage(light_image=open_image,dark_image=open_image,size=(20,20))
+
+                name = product[1]
+                price = product[2]
+                get_values(open_image,id,name,1,price)
+
+                inp_product.delete(0,END)
+                inp_product.focus_set()
+
+            except TypeError:
+                inp_product.delete(0,END)
+                inp_product.focus_set()
+
+
+        elif (find_star >= 0):
+            sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_id` = '%s';" % (bar_code))
+            product = sql.fetchone()
+
+            try:
+                id = product[0]
+                
+                appdir = Path(__file__).parent
+                img_products = appdir / "products" 
+
+                try:
+                    name_img = product[0]+".jpg"
+
+                    open_image = Image.open(img_products/name_img)
+                    image = CTkImage(light_image=open_image,dark_image=open_image,size=(20,20))
+
+                except FileNotFoundError:
+                    name_img = "Default.jpg"
+
+                    open_image = Image.open(img_products/name_img)
+                    image = CTkImage(light_image=open_image,dark_image=open_image,size=(20,20))
+
+                name = product[1]
+                price = product[2]
+                
+                get_values(open_image,id,name,amount,price*int(amount))
+
+                inp_product.delete(0,END)
+                inp_product.focus_set()
+            except TypeError:
+                inp_product.delete(0,END)
+                inp_product.focus_set()
+
+    
+    button_product = CTkButton(FLeft,font=("Arial Bold",16),width=60,height=30,command=serch_product,corner_radius=20,image=search_icon,text="",text_color="white",fg_color="#38f388",hover_color="#6be59e")
+    button_product.bind("<Enter>", lambda event: button_product.configure(width=65,height=35)) 
+    button_product.bind("<Leave>", lambda event: button_product.configure(width=60,height=30)) 
+
+    button_product.bind("<Enter>",lambda e: hover_enter())
+    button_product.bind("<Leave>",lambda e: hover_leave())
+    
+    button_product.grid(row=0,column=1,padx=5,sticky="W")
+
+    
+    open_re_icon = Image.open(icon/"restart.png")
+    re_icon = CTkImage(light_image=open_re_icon,dark_image=open_re_icon,size=(20,20))
+
+    button_re = CTkButton(FLeft,font=("Arial Bold",16),width=60,height=30,corner_radius=20,text="",image=re_icon,text_color="white",fg_color="#38f388",hover_color="#6be59e")
+    button_re.bind("<Enter>", lambda event: button_re.configure(width=65,height=35)) 
+    button_re.bind("<Leave>", lambda event: button_re.configure(width=60,height=30)) 
+    button_re.grid(row=0,column=1,padx=80,sticky="W")
+
+    button_re.bind("<Enter>",lambda e: hover_enter())
+    button_re.bind("<Leave>",lambda e: hover_leave())
+
+    FRight= CTkFrame(main,fg_color="#EEABAB",corner_radius=0,border_width=0,border_color="black",width=600)
+    FRight.pack(side=RIGHT,fill=BOTH)
+
+    FProducts_Scroll = CTkScrollableFrame(FRight,fg_color="#EEABAB",border_width=0,border_color="black",width=600)
+    FProducts_Scroll.pack(fill=BOTH,expand=True)
+
+    FBottom= CTkFrame(FRight,fg_color="#1DF38F",corner_radius=0,border_width=0,border_color="black")
+    FBottom.pack(side=BOTTOM,fill=BOTH)
+
+    def show_products(num):
+
+        sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` ORDER BY `p_name` LIMIT 40 offset %d;" % (num*40))
+        products = sql.fetchall()
+        
+
+        img_products = appdir / "products"
+
+        for num,value in enumerate(products):
+            col = num % 4
+            row = num // 4
+
+            id = value[0] 
+            name = value[1]
+            price = value[2]
+
+            try:
+                open_pimg = Image.open(f"{img_products/id}.jpg")
+                pimg = CTkImage(light_image=open_pimg,dark_image=open_pimg,size=(150,200))
+            except FileNotFoundError:
+                open_pimg = Image.open(f"{img_products/"Default.jpg"}")
+                pimg = CTkImage(light_image=open_pimg,dark_image=open_pimg,size=(150,200))
+        
+            pro = CTkFrame(FProducts,fg_color="white",width=250,height=250,corner_radius=16)
+            pro.grid(column=col,row=row,padx=5,pady=5,sticky="news")
+
+            pro_frame = CTkLabel(pro,image=pimg,text="")
+            pro_frame.pack()
+
+            pro_frame.bind("<Button-1>",lambda e, e_image = open_pimg ,e_id = id,e_name = name, e_amount = 1, e_price = price :get_values(e_image,e_id,e_name,e_amount,e_price))
+        
+            pro_frame.bind("<Enter>",lambda e: hover_enter())
+            pro_frame.bind("<Leave>",lambda e: hover_leave())
+        
+            FProducts.columnconfigure(pro,weight=1)
+            # print(num*40, col , row)
+
+    bill_list = []
+    def get_values(img,id,name,amount,price):
+        frame_product = CTkFrame(FProducts_Scroll,fg_color="white",corner_radius=20)
+        frame_product.pack(padx=10,pady=5,anchor="nw")
+
+        bill_list.append(frame_product)
+
+        pimg = CTkImage(light_image=img,dark_image=img,size=(100,100))
+
+        img_products = appdir / "icon"
+
+        open_pimg = Image.open(f"{img_products/"bin.png"}")
+        del_img = CTkImage(light_image=open_pimg,dark_image=open_pimg,size=(20,20))
+
+        bproducts = CTkLabel(frame_product,font=("Airal",12),text=f"\t{name[0:20]}\t\tX{amount}\t {price}",image=pimg,compound="left", anchor="w",width=600)
+        bproducts.pack()
+
+        btn_del = CTkButton(frame_product,width=20,height=20,text="",corner_radius=5,fg_color="#FF2C2C",hover_color="#F14141",image=del_img,command=lambda:del_product(frame_product,int(amount),price))
+        btn_del.place(relx=0.87,y=35)
+
+        p_price.set(price+float(p_price.get()))
+        p_amount_list.set(int(amount) + p_amount_list.get())
+        vat = float(p_price.get())/100*7
+
+        num_price.configure(text=f"{float(p_price.get())}\n\n{p_amount_list.get()}\n\n{vat:.2f}\n\n{float(p_price.get())+vat:.2f}",font=("Arial",24),justify="right")
+
+        btn_del.bind("<Enter>",lambda e: hover_enter())
+        btn_del.bind("<Leave>",lambda e: hover_leave())
+
+
+    def del_product(BillProduct,Amount,Price):
+        BillProduct.destroy()
+        p_price.set(float(p_price.get())- Price)
+        p_amount_list.set(p_amount_list.get() - Amount)
+        vat = (float(p_price.get())/100*7)
+
+        bill_list.remove(BillProduct)
+
+        num_price.configure(text=f"{p_price.get()}\n\n{p_amount_list.get()}\n\n{vat:.2f}\n\n{float(p_price.get())+vat:.2f}")
+
+
+    def hover_enter():
+        main.config(cursor="hand2")
+
+    def hover_leave():
+        main.config(cursor="arrow")
+
+
+    def offline():
+        
+        sql.execute("Update `accounts` SET `onlines` = 0 WHERE `username` = '%s'" % (a_user))
+        mysql.commit()
+
+        os._exit(0)
+
+    def clear():
+        p_price.set(value=0)
+        p_amount_list.set(value=0)
+
+        num_price.configure(text=f"{p_price.get()}\n\n{p_amount_list.get()}\n\n{vat:.2f}\n\n{float(p_price.get())+vat}")
+        for i in bill_list:
+            i.destroy()
+
+    p_price = StringVar(value=0)
+    p_amount_list = IntVar(value=0)
+    vat = (float(p_price.get())/100*7)
+
+    open_image = Image.open(icon/"clean.png")
+    clean_image = CTkImage(light_image=open_image,dark_image=open_image,size=(20,20))
+
+    btn_clear = CTkButton(FProducts_Scroll,text="",image=clean_image,width=20,height=20,fg_color="#FF2C2C",hover_color="#F14141",corner_radius=15,command=clear)
+    btn_clear.pack(anchor="ne")
+
+    btn_clear.bind("<Enter>",lambda e: hover_enter())
+    btn_clear.bind("<Leave>",lambda e: hover_leave())
+
+    label_price = CTkLabel(FBottom,text="Price :\n\nAmount :\n\nVAT :\n\nTotal :",font=("Arial",24),justify="left")
+    label_price.pack(side=LEFT,anchor="w",padx=20)
+
+    num_price = CTkLabel(FBottom,text=f"{float(p_price.get())}\n\n{p_amount_list.get()}\n\n{vat:.2f}\n\n{float(p_price.get())+vat:.2f}",font=("Arial",24),justify="right")
+    num_price.pack(side=RIGHT,anchor="w",padx=20)
+
+    show_products(num_page.get())
+
+    FLeft.bind("<Destroy>",lambda e: offline())
