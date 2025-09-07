@@ -12,6 +12,7 @@ from dotenv import load_dotenv, dotenv_values
 from CTkScrollableDropdown import *
 from customtkinter import *
 import customtkinter
+import upload_data
 
 def main_gui(mysql,a_user,a_pass):
 # //-----------------------------------------------------
@@ -211,6 +212,16 @@ def main_gui(mysql,a_user,a_pass):
 
     button_re.bind("<Enter>",lambda e: hover_enter())
     button_re.bind("<Leave>",lambda e: hover_leave())
+
+    button_add = CTkButton(FLeft,font=("Arial Bold",16),command=upload_data.gui_upload,width=60,height=30,corner_radius=20,text="+",text_color="black",fg_color="#38f388",hover_color="#6be59e")
+    button_add.bind("<Enter>", lambda event: button_add.configure(width=65,height=35)) 
+    button_add.bind("<Leave>", lambda event: button_add.configure(width=60,height=30)) 
+
+    button_add.bind("<Enter>",lambda e: hover_enter())
+    button_add.bind("<Leave>",lambda e: hover_leave())
+
+    button_add.grid(row=0,column=1,padx=(0,20),sticky="E")
+
 
     FRight= CTkFrame(main,fg_color="#EEABAB",corner_radius=0,border_width=0,border_color="black",width=600)
     FRight.pack(side=RIGHT,fill=BOTH)
