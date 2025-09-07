@@ -266,7 +266,7 @@ def main_gui(mysql,a_user,a_pass):
             pro_frame.bind("<Enter>",lambda e: hover_enter())
             pro_frame.bind("<Leave>",lambda e: hover_leave())
         
-            FProducts.columnconfigure(pro,weight=1)
+            FProducts.grid_columnconfigure(pro,weight=1)
             # print(num*40, col , row)
 
     bill_list = []
