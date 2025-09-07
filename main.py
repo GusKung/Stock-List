@@ -205,7 +205,11 @@ def main_gui(mysql,a_user,a_pass):
     open_re_icon = Image.open(icon/"restart.png")
     re_icon = CTkImage(light_image=open_re_icon,dark_image=open_re_icon,size=(20,20))
 
-    button_re = CTkButton(FLeft,font=("Arial Bold",16),width=60,height=30,corner_radius=20,text="",image=re_icon,text_color="white",fg_color="#38f388",hover_color="#6be59e")
+    def reconnect():
+        mysql.reconnect()
+        show_products(0)
+
+    button_re = CTkButton(FLeft,font=("Arial Bold",16),command=reconnect,width=60,height=30,corner_radius=20,text="",image=re_icon,text_color="white",fg_color="#38f388",hover_color="#6be59e")
     button_re.bind("<Enter>", lambda event: button_re.configure(width=65,height=35)) 
     button_re.bind("<Leave>", lambda event: button_re.configure(width=60,height=30)) 
     button_re.grid(row=0,column=1,padx=80,sticky="W")
@@ -213,7 +217,7 @@ def main_gui(mysql,a_user,a_pass):
     button_re.bind("<Enter>",lambda e: hover_enter())
     button_re.bind("<Leave>",lambda e: hover_leave())
 
-    button_add = CTkButton(FLeft,font=("Arial Bold",16),command=upload_data.gui_upload,width=60,height=30,corner_radius=20,text="+",text_color="black",fg_color="#38f388",hover_color="#6be59e")
+    button_add = CTkButton(FLeft,font=("Arial Bold",16),command= lambda: upload_data.gui_upload(mysql),width=60,height=30,corner_radius=20,text="+",text_color="black",fg_color="#38f388",hover_color="#6be59e")
     button_add.bind("<Enter>", lambda event: button_add.configure(width=65,height=35)) 
     button_add.bind("<Leave>", lambda event: button_add.configure(width=60,height=30)) 
 
@@ -297,7 +301,6 @@ def main_gui(mysql,a_user,a_pass):
 
         btn_del.bind("<Enter>",lambda e: hover_enter())
         btn_del.bind("<Leave>",lambda e: hover_leave())
-
 
     def del_product(BillProduct,Amount,Price):
         BillProduct.destroy()
