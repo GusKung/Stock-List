@@ -84,7 +84,6 @@ def gui_upload(my_sql):
         data["btn_remove"].grid(row=2,column=2,padx=(25,10),sticky="ew")
 
         data_list.append(data)
-        print(len(data_list))
 
     def remove_track(data,frame):
         frame.destroy()
