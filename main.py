@@ -14,7 +14,7 @@ from customtkinter import *
 import customtkinter
 import upload_data
 
-def main_gui(mysql,a_user,a_pass):
+def main_gui(my_sql,a_user,a_pass):
 # //-----------------------------------------------------
 
     class CTKUI(CTkToplevel):
@@ -75,7 +75,7 @@ def main_gui(mysql,a_user,a_pass):
         amount_page.set(num_page.get())
         show_products(0)
 
-    sql = mysql.cursor()
+    sql = my_sql.cursor()
     sql.execute("SELECT * FROM `products`;")
     all_product = sql.fetchall()
     all_row = int(len(all_product)/40)
@@ -206,7 +206,7 @@ def main_gui(mysql,a_user,a_pass):
     re_icon = CTkImage(light_image=open_re_icon,dark_image=open_re_icon,size=(20,20))
 
     def reconnect():
-        mysql.reconnect()
+        my_sql.reconnect()
         show_products(0)
 
     button_re = CTkButton(FLeft,font=("Arial Bold",16),command=reconnect,width=60,height=30,corner_radius=20,text="",image=re_icon,text_color="white",fg_color="#38f388",hover_color="#6be59e")
@@ -217,7 +217,7 @@ def main_gui(mysql,a_user,a_pass):
     button_re.bind("<Enter>",lambda e: hover_enter())
     button_re.bind("<Leave>",lambda e: hover_leave())
 
-    button_add = CTkButton(FLeft,font=("Arial Bold",16),command= lambda: upload_data.gui_upload(mysql),width=60,height=30,corner_radius=20,text="+",text_color="black",fg_color="#38f388",hover_color="#6be59e")
+    button_add = CTkButton(FLeft,font=("Arial Bold",16),command= lambda: upload_data.gui_upload(my_sql),width=60,height=30,corner_radius=20,text="+",text_color="black",fg_color="#38f388",hover_color="#6be59e")
     button_add.bind("<Enter>", lambda event: button_add.configure(width=65,height=35)) 
     button_add.bind("<Leave>", lambda event: button_add.configure(width=60,height=30)) 
 
@@ -323,7 +323,7 @@ def main_gui(mysql,a_user,a_pass):
     def offline():
         
         sql.execute("Update `accounts` SET `onlines` = 0 WHERE `username` = '%s'" % (a_user))
-        mysql.commit()
+        my_sql.commit()
 
         os._exit(0)
 

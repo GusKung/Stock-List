@@ -107,6 +107,8 @@ def gui_upload(my_sql):
             try:
                 sql.execute("INSERT IGNORE products VALUES ('%s', '%s', %.2f, %.2f, %d , %d) " % (barcode, name, cost_price, sell_price, amount,0))
                 my_sql.commit()
+                my_sql.reconnect()
+                gui.destroy()
             except mysql.connector.Error as err:
                  CTkMessagebox(title="Error",message=f"Error: {err}",icon="cancel",option_1="Ok")
             except TypeError as err:
