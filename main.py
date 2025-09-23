@@ -217,7 +217,69 @@ def main_gui(my_sql,a_user,a_pass):
     button_re.bind("<Enter>",lambda e: hover_enter())
     button_re.bind("<Leave>",lambda e: hover_leave())
 
-    button_add = CTkButton(FLeft,font=("Arial Bold",16),command= lambda: upload_data.gui_upload(my_sql),width=60,height=30,corner_radius=20,text="+",text_color="black",fg_color="#38f388",hover_color="#6be59e")
+    def check_level():
+        try:
+            sql.execute("SELECT IF(`accounts`.`level`>=2, `accounts`.`level`, `accounts`.`level`) as `status`FROM `stock_list`.`accounts` where `accounts`.`username` = '%s';" % (a_user))
+
+            level = sql.fetchone()
+            
+            if (level[0] >= 2):
+                upload_data.gui_upload(my_sql)
+            else:
+                level_gui = CTKUI("Stock List",480,360,"#D4D4D4","light")
+                level_gui.resizable(False,False)
+                level_gui.attributes("-topmost",True)
+
+                appdir = Path(__file__).parent
+                photo = appdir / "icon" / "sql_connect.png"
+                bg_image = Image.open(photo)
+                background_photo= CTkImage(bg_image,size=(500,500))
+
+                background  = CTkLabel(master=level_gui,text="",image=background_photo)
+                background.place(x=0,y=0)
+
+                F_Connect = CTkFrame(master=level_gui,fg_color="#FFFFFF",width=420,height=280,corner_radius=0)
+                F_Connect.pack(anchor=CENTER,pady=40,expand=NO)
+
+                titel = CTkLabel(F_Connect,text="Login",font=("Arial",24),fg_color="#FFFFFF",bg_color="black")
+                titel.place(relx=.45,rely=.05)
+
+                inp_user = CTkEntry(master=F_Connect,border_width=2,corner_radius=8,fg_color="#FBFBFB",border_color="#C1C1C1",placeholder_text="Username",width=300,height=40)
+                inp_user.place(relx=.14,rely=.25,anchor=NW)
+
+                inp_password = CTkEntry(master=F_Connect,border_width=2,corner_radius=8,fg_color="#FBFBFB",border_color="#C1C1C1",placeholder_text="Password",show="●",width=300,height=40)
+                inp_password.place(relx=.14,rely=.49,anchor=NW)
+
+                def connect_level():
+                    username = inp_user.get()
+                    passwords = inp_password.get()
+                    
+                    sql.execute("SELECT * FROM `stock_list`.`accounts` WHERE `username` = '%s' AND `passwords` = '%s'AND `level` >= 2;" % (username,passwords))
+                    resulte = sql.fetchone()
+
+                    if (resulte):
+                        btn_ok = CTkMessagebox(title="Success", message="Login Success", icon="check", option_1="OK")
+
+                        if (btn_ok.get() == "OK"):
+                            upload_data.gui_upload(my_sql)
+                            level_gui.destroy()
+                    else:
+                        CTkMessagebox(title="Error", message="Username or Passwords is incorrect or You don't have permission to access.", icon="cancel", option_1="OK")
+                        inp_user.delete(0,END)
+                        inp_password.delete(0,END)
+                        inp_user.focus_set()
+
+                inp_password.bind("<Return>",lambda e:connect_level())
+
+                button_connect = CTkButton(master=F_Connect,corner_radius=20,command=connect_level,text="Connect",width=300,height=45)
+                button_connect.place(relx=.14,rely=.75,anchor=NW)
+
+
+        except mysql.connector.Error as err:
+            CTkMessagebox(title="Error", message=f"Something went wrong: {err}", icon="cancel", option_1="OK")
+
+
+    button_add = CTkButton(FLeft,font=("Arial Bold",16),command= check_level,width=60,height=30,corner_radius=20,text="+",text_color="black",fg_color="#38f388",hover_color="#6be59e")
     button_add.bind("<Enter>", lambda event: button_add.configure(width=65,height=35)) 
     button_add.bind("<Leave>", lambda event: button_add.configure(width=60,height=30)) 
 

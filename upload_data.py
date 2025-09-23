@@ -93,9 +93,7 @@ def gui_upload(my_sql):
         data["inp_amount"] = CTkEntry(Frame_Center,width=150,height=30,corner_radius=10,placeholder_text="Amount",font=("Arial",16))
         data["inp_amount"].grid(row=2,column=1,sticky="ew")
 
-        # btn_remove = CTkButton(Frame_Center,width=60,height=30,corner_radius=20,text="Remove",text_color="white",fg_color="#f33838",hover_color="#f66b6b",command=lambda: remove_track(data,Frame_Center))
-
-        data["btn_remove"] = CTkButton(Frame_Center,width=60,height=30,corner_radius=20,text="Remove",text_color="white",fg_color="#f33838",hover_color="#f66b6b")
+        data["btn_remove"] = CTkButton(Frame_Center,width=60,height=30,corner_radius=20,text="Remove",text_color="white",fg_color="#f33838",hover_color="#f66b6b",command=lambda: remove_track(data,Frame_Center))
         data["btn_remove"].grid(row=2,column=2,padx=(25,10),sticky="ew")
 
         data_list.append(data)
@@ -103,6 +101,7 @@ def gui_upload(my_sql):
 
     def remove_track(data,frame):
         frame.destroy()
+        data_list.remove(data)
 
     btn_add = CTkButton(gui,font=("Arial",16),command=add_track,width=60,height=30,corner_radius=20,text="Add",text_color="white",fg_color="#38f388",hover_color="#6be59e")
     btn_add.pack(side=LEFT,anchor="sw",padx=10,pady=10)
