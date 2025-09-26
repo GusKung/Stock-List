@@ -50,7 +50,27 @@ def main_gui(my_sql,a_user,a_pass):
     main = CTKUI("Stock List",1280,720,"#D4D4D4","light")
     
     num_page = IntVar(value=0)
+# //----------------------------------------------------------------------
 
+# //----------------------------------------------------------------------
+    def update_account(mysql):
+        print("Update Account")
+# //----------------------------------------------------------------------
+
+# //----------------------------------------------------------------------
+    menu = CTkMenuBar(main)
+    try:
+        file_menu = menu.add_cascade("Setting",fg_color="white")
+
+        dropdown = CustomDropdownMenu(widget=file_menu,bg_color="#FFFFFF")
+        dropdown.add_option(option="Account",command= lambda:check_level(3,update_account(my_sql)))
+        dropdown.add_option(option="Produtcs")
+    except Exception as e:
+        print(e)
+# //----------------------------------------------------------------------
+
+
+# //----------------------------------------------------------------------
     def next_page():
         num =  num_page.get()
         if (num < all_row):
@@ -217,14 +237,14 @@ def main_gui(my_sql,a_user,a_pass):
     button_re.bind("<Enter>",lambda e: hover_enter())
     button_re.bind("<Leave>",lambda e: hover_leave())
 
-    def check_level():
+    def check_level(lv,fuc):
         try:
             sql.execute("SELECT IF(`accounts`.`level`>=2, `accounts`.`level`, `accounts`.`level`) as `status`FROM `stock_list`.`accounts` where `accounts`.`username` = '%s';" % (a_user))
 
             level = sql.fetchone()
             
-            if (level[0] >= 2):
-                upload_data.gui_upload(my_sql)
+            if (level[0] >= lv):
+                fuc
             else:
                 level_gui = CTKUI("Stock List",480,360,"#D4D4D4","light")
                 level_gui.resizable(False,False)
@@ -254,14 +274,14 @@ def main_gui(my_sql,a_user,a_pass):
                     username = inp_user.get()
                     passwords = inp_password.get()
                     
-                    sql.execute("SELECT * FROM `stock_list`.`accounts` WHERE `username` = '%s' AND `passwords` = '%s'AND `level` >= 2;" % (username,passwords))
+                    sql.execute("SELECT * FROM `stock_list`.`accounts` WHERE `username` = '%s' AND `passwords` = '%s'AND `level` >= %d;" % (username,passwords,lv))
                     resulte = sql.fetchone()
 
                     if (resulte):
                         btn_ok = CTkMessagebox(title="Success", message="Login Success", icon="check", option_1="OK")
 
                         if (btn_ok.get() == "OK"):
-                            upload_data.gui_upload(my_sql)
+                            fuc
                             level_gui.destroy()
                     else:
                         CTkMessagebox(title="Error", message="Username or Passwords is incorrect or You don't have permission to access.", icon="cancel", option_1="OK")
@@ -279,7 +299,7 @@ def main_gui(my_sql,a_user,a_pass):
             CTkMessagebox(title="Error", message=f"Something went wrong: {err}", icon="cancel", option_1="OK")
 
 
-    button_add = CTkButton(FLeft,font=("Arial Bold",16),command= check_level,width=60,height=30,corner_radius=20,text="+",text_color="black",fg_color="#38f388",hover_color="#6be59e")
+    button_add = CTkButton(FLeft,font=("Arial Bold",16),command= lambda: check_level(2,upload_data.gui_upload(my_sql)),width=60,height=30,corner_radius=20,text="+",text_color="black",fg_color="#38f388",hover_color="#6be59e")
     button_add.bind("<Enter>", lambda event: button_add.configure(width=65,height=35)) 
     button_add.bind("<Leave>", lambda event: button_add.configure(width=60,height=30)) 
 
