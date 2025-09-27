@@ -13,6 +13,7 @@ from CTkScrollableDropdown import *
 from customtkinter import *
 import customtkinter
 import upload_data
+import account
 
 def main_gui(my_sql,a_user,a_pass):
 # //-----------------------------------------------------
@@ -52,9 +53,9 @@ def main_gui(my_sql,a_user,a_pass):
     num_page = IntVar(value=0)
 # //----------------------------------------------------------------------
 
-# //----------------------------------------------------------------------
     def update_account(mysql):
-        print("Update Account")
+        account.gui_account(mysql)
+        
 # //----------------------------------------------------------------------
 
 # //----------------------------------------------------------------------
