@@ -49,6 +49,9 @@ def gui_account(my_sql):
     FRight = CTkFrame(account_gui,fg_color="#FFFFFF", corner_radius=0)
     FRight.pack(side=RIGHT, fill=BOTH,expand=True)
 
+    FRight.columnconfigure(0,weight=1)
+    FRight.rowconfigure(0,weight=1)
+
     ID = StringVar(value="")
     USER = StringVar(value="")
     PASS = StringVar(value="")
@@ -62,6 +65,18 @@ def gui_account(my_sql):
 
     inp_pass = CTkEntry(FLeft,placeholder_text="Password",text_color="#818181",textvariable=PASS,show="●",width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16),state="disabled")
     inp_pass.grid(row=1,column=0,pady=20,padx=20)
+
+    def add_track():
+        table_account.insert("",END,values=("","New","","","","","","","",""))
+
+    btn_add = CTkButton(FLeft,width=100,height=40,text="Add",corner_radius=20,command=add_track)
+    btn_add.grid(row=3,column=0,sticky="sw",padx=20,pady=20)
+
+    btn_del = CTkButton(FLeft,width=100,height=40,text="Remove",corner_radius=20,fg_color="#FF3939",hover_color="#DF4949",cursor="hand2")
+    btn_del.grid(row=3,column=1,sticky="se",padx=20,pady=20)
+
+    btn_apply = CTkButton(FRight,width=100,height=40,text="Apply",corner_radius=20)
+    btn_apply.grid(row=1,column=0,sticky="se",padx=20,pady=20)
 
     def edit():
         if (inp_user.cget("state") == "disabled"):
@@ -126,7 +141,7 @@ def gui_account(my_sql):
 
     scrollbar = ttk.Scrollbar(FRight, orient="vertical", command=table_account.yview)
     table_account.configure(yscrollcommand=scrollbar.set)
-    scrollbar.pack(side="right", fill=Y)
+    scrollbar.grid(row=0, column=1, sticky="ns")
 
     table_account.heading("ID",text="ID")
     table_account.heading("Username",text="Username")
@@ -145,7 +160,7 @@ def gui_account(my_sql):
     table_account.column("Address",width=0,stretch=False)
     table_account.column("Contact",width=0,stretch=False)
 
-    table_account.pack(fill=BOTH,expand=True,pady=20,padx=20)
+    table_account.grid(row=0, column=0, sticky="nsew")
 
     def select_data(event):
         select = table_account.focus()
