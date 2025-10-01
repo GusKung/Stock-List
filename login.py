@@ -73,16 +73,19 @@ def boder_bottom(gui,obj1,obj2):
 Titel = CTkLabel(FrameRight,text="Stock List",font=("Arial",35))
 Titel.place(x=30,y=40)
 
-inp_username = CTkEntry(FrameRight,placeholder_text="Username",width=350,height=35,corner_radius=14,fg_color="transparent",border_width=0,font=("Arial",16))
+USER = StringVar(value="")
+PASS = StringVar(value="")
+
+inp_username = CTkEntry(FrameRight,placeholder_text="Username",textvariable=USER,width=350,height=35,corner_radius=14,fg_color="transparent",border_width=0,font=("Arial",16))
 inp_username.place(x=30,y=120)
 boder_bottom(Login,inp_username,FrameRight)
 
-inp_pass = CTkEntry(FrameRight,placeholder_text="Password",show="●",width=350,height=35,corner_radius=14,fg_color="transparent",border_width=0,font=("Arial",16))
+inp_pass = CTkEntry(FrameRight,placeholder_text="Password",show="●",textvariable=PASS,width=350,height=35,corner_radius=14,fg_color="transparent",border_width=0,font=("Arial",16))
 inp_pass.place(x=30,y=200)
 
-inp_pass.configure(show="●")
 Login.update()
 inp_pass.focus_set()
+
 boder_bottom(Login,inp_pass,FrameRight)
 
 # //------------------------------------------------------------//
@@ -292,8 +295,6 @@ btn_remember.place(y=300,relx=.22,anchor="center")
 btn_login = CTkButton(FrameRight,text="Login",command=login_connect,width=200,height=50,corner_radius=20,fg_color="#0ea0f9",bg_color="transparent",border_width=0,font=("Arial",16))
 btn_login.place(y=300,relx=.67,anchor="center")
 
-
-
 # //--------------------------------------
 
 inp_pass.bind("<Return>",lambda e:login_connect())
@@ -316,14 +317,10 @@ a_pass = os.getenv("Account_Passwords")
 a_on_off = os.getenv("OnOff")
 
 if (int(a_on_off) == 1):
-    
-    inp_username.delete(0,customtkinter.END)
-    inp_username.insert(0,a_user)
-
-    inp_pass.delete(0,customtkinter.END)
-    inp_pass.insert(0,a_pass)
-
+    USER.set(a_user)
+    PASS.set(a_pass)
     btn_remember.toggle()
+    inp_pass.icursor(END)
 
 
 with open(file_account,"rb") as original_file_account:
