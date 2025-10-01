@@ -70,6 +70,27 @@ def gui_account(my_sql):
             inp_pass.configure(state="normal",text_color="#000000",border_color="#000000",fg_color="#FFFFFF")
             data_employee.configure(state="normal",text_color="#000000",border_color="#8D8D8D",fg_color="#FFFFFF")
             btn_edit.configure(text="Save")
+
+            def protect_readonly(event):
+                cursor_pos = data_employee.index("insert")
+                
+                prev_index = data_employee.index(f"{cursor_pos} -1c")
+                
+                if event.keysym in ("BackSpace", "Delete"):
+                    if "readonly" in data_employee.tag_names(prev_index):
+                        return "break"
+                
+                if event.keysym not in ("BackSpace", "Delete"):
+                    if "readonly" in data_employee.tag_names(cursor_pos):
+                        
+                        insert_after = data_employee.index(f"{prev_index} +1c")
+                        data_employee.mark_set("insert", insert_after)
+
+
+            data_employee.bind("<Key>", protect_readonly)
+            data_employee.bind("<BackSpace>", protect_readonly)
+            data_employee.bind("<Delete>", protect_readonly)
+
         else:
             inp_user.configure(state="disabled",text_color="#818181",border_color="#8D8D8D",fg_color="#FCFCFC")
             inp_level.configure(state="disabled",border_color="#8D8D8D",fg_color="#FCFCFC")
@@ -77,13 +98,19 @@ def gui_account(my_sql):
             data_employee.configure(state="disabled",text_color="#818181",border_color="#A7A7A7",fg_color="#FCFCFC")
             btn_edit.configure(text="Edit")
 
+            em_id = data_employee.get("1.0","3.0").rstrip("\n").replace("Employee ID : ","")
+
+            name = data_employee.get("3.0","5.0").rstrip("\n").replace("Name : ","").split("\n")[0]
+            full_name = name.split(" ")
+            f_name = full_name[0]
+            l_name = full_name[1]
+
+            contact = data_employee.get("5.0","7.0").rstrip("\n").replace("Contact : ","")
+            address = data_employee.get("7.0","9.0").rstrip("\n").replace("Address : ","")
+
             print(ID.get(),USER.get(),LEVEL.get(),PASS.get())
-            print(data_employee.get("1.0","1.end"))
-            print(data_employee.get("2.0","2.end"))
-            print(data_employee.get("3.0","3.end"))
-            print(data_employee.get("4.0","4.end"))
-
-
+            print(em_id,f_name,l_name,contact,address)
+      
     btn_edit = CTkButton(FLeft,text="Edit",width=150,corner_radius=14,height=30,font=("Arial", 16),command=edit)
     btn_edit.grid(row=1,column=1,pady=20,padx=20)
 
@@ -145,10 +172,19 @@ def gui_account(my_sql):
 
         data_employee.configure(state="normal")
         data_employee.delete("0.0","end")
-        data_employee.insert("1.0",f"Employee ID : {id_employee}\n\n")
-        data_employee.insert("2.0",f"Name : {f_name} {l_name}\n\n")
-        data_employee.insert("3.0",f"Address : {address}\n\n")
-        data_employee.insert("4.0",f"Contact : {contact}\n\n")
+
+        data_employee.insert("1.0","Employee ID : ","readonly")
+        data_employee.insert("1.end",f"{id_employee}\n\n")
+
+        data_employee.insert("3.0",f"Name : ","readonly")
+        data_employee.insert("3.end",f"{f_name} {l_name}\n\n")
+
+        data_employee.insert("5.0",f"Contact : ","readonly")
+        data_employee.insert("5.end",f"{contact}\n\n")
+
+        data_employee.insert("7.0",f"Address : ","readonly")
+        data_employee.insert("7.end",f"{address}\n\n")
+
         data_employee.configure(state="disabled")
 
     table_account.bind("<Double-1>", select_data)
