@@ -57,6 +57,8 @@ def gui_account(my_sql):
     PASS = StringVar(value="")
     LEVEL = StringVar(value="")
 
+    data_account = []
+
     inp_user = CTkEntry(FLeft,placeholder_text="Username",text_color="#818181",textvariable=USER,width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16),state="disabled")
     inp_user.grid(row=0,column=0,pady=(40,10),padx=20)
 
@@ -75,7 +77,16 @@ def gui_account(my_sql):
     btn_del = CTkButton(FLeft,width=100,height=40,text="Remove",corner_radius=20,fg_color="#FF3939",hover_color="#DF4949",cursor="hand2")
     btn_del.grid(row=3,column=1,sticky="se",padx=20,pady=20)
 
-    btn_apply = CTkButton(FRight,width=100,height=40,text="Apply",corner_radius=20)
+    def apply():
+        for id_account , user , level , password , id , f_name , l_name , contact , address in data_account:
+ 
+            sql = my_sql.cursor()
+            sql.execute("update `stock_list`.`employee` join `stock_list`.`accounts` on `employee`.`account_id` = `accounts`.`id` set `accounts`.`username` = '%s', `accounts`.`passwords` = '%s', `accounts`.`level` = %s, `employee`.`emp_id` = '%s' ,`employee`.`first_name` = '%s', `employee`.`last_name` = '%s', `employee`.`contact` = '%s', `employee`.`address` = '%s' where `accounts`.`id` = %s;" % (user,password,level,id,f_name,l_name,contact,address,id_account))
+            my_sql.commit()
+            succ = CTkMessagebox(title="Success",message="Apply Changes Successfully!",icon="check",option_1="OK")
+            
+            
+    btn_apply = CTkButton(FRight,width=100,height=40,text="Apply",corner_radius=20,command=apply)
     btn_apply.grid(row=1,column=0,sticky="se",padx=20,pady=20)
 
     def edit():
@@ -123,8 +134,14 @@ def gui_account(my_sql):
             contact = data_employee.get("5.0","7.0").rstrip("\n").replace("Contact : ","")
             address = data_employee.get("7.0","9.0").rstrip("\n").replace("Address : ","")
 
-            print(ID.get(),USER.get(),LEVEL.get(),PASS.get())
-            print(em_id,f_name,l_name,contact,address)
+            if (ID.get(),USER.get(),LEVEL.get(),PASS.get(),em_id,f_name,l_name,contact,address) not in data_account:
+
+                for i, record in enumerate(data_account):
+                    if record[0] == ID.get():
+                        data_account[i] = (ID.get(),USER.get(),LEVEL.get(),PASS.get(),em_id,f_name,l_name,contact,address)
+
+                        data_account.remove(data_account[i])
+                data_account.append((ID.get(),USER.get(),LEVEL.get(),PASS.get(),em_id,f_name,l_name,contact,address))
       
     btn_edit = CTkButton(FLeft,text="Edit",width=150,corner_radius=14,height=30,font=("Arial", 16),command=edit)
     btn_edit.grid(row=1,column=1,pady=20,padx=20)
