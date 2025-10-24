@@ -159,13 +159,13 @@ def connect_login(username,passwords,gui,connect_server):
     connect_server.config(database = "stock_list")
     connect_server.reconnect()
     sql = connect_server.cursor()
-    sql.execute("SELECT * FROM `accounts` WHERE `username` = '%s' AND `passwords` = '%s' AND `onlines` = 0" % (username,passwords))
+    sql.execute("SELECT * FROM `accounts` WHERE `username` = %s AND `passwords` = %s AND `onlines` = 0" , (username,passwords))
     result = sql.fetchone()
 
     if (username == "" or passwords == ""):
         CTkMessagebox(title="Error",message="Please fill in all fields",icon="cancel",option_1="Ok")
     elif (result):
-        onlines = sql.execute("Update `accounts` SET `onlines` = 1 WHERE `username` = '%s'" % (username))
+        onlines = sql.execute("Update `accounts` SET `onlines` = 1 WHERE `username` = %s" , (username,))
         connect_server.commit()
         
         gui.withdraw()
@@ -174,5 +174,5 @@ def connect_login(username,passwords,gui,connect_server):
     else:
         error = CTkMessagebox(title="Error",message="The password is incorrect or someone has already connected to this account.",icon="cancel",option_1="Ok")
         if(error.get() == "Ok"):
-            onlines = sql.execute("Update `accounts` SET `onlines` = 0 WHERE `username` = '%s'" % (username))
+            onlines = sql.execute("Update `accounts` SET `onlines` = 0 WHERE `username` = %s" , (username,))
             connect_server.commit()

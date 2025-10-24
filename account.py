@@ -68,8 +68,21 @@ def gui_account(my_sql):
     inp_pass = CTkEntry(FLeft,placeholder_text="Password",text_color="#818181",textvariable=PASS,show="●",width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16),state="disabled")
     inp_pass.grid(row=1,column=0,pady=20,padx=20)
 
+
+    id_ac = 8000  
+    id_em = 6000
     def add_track():
-        table_account.insert("",END,values=("","New","","","","","","","",""))
+        nonlocal id_ac , id_em
+        sql = my_sql.cursor()
+        sql.execute("SELECT id FROM `stock_list`.`accounts`;")
+        resulte = sql.fetchall()
+        len_id_ac = len(resulte) + id_ac
+        len_id_em = len(resulte) + id_em
+
+        table_account.insert("",END,values=(len_id_em,len_id_ac,"New","","","","","","",""))
+        id_ac += 1
+        id_em += 1
+        
 
     btn_add = CTkButton(FLeft,width=100,height=40,text="Add",corner_radius=20,command=add_track)
     btn_add.grid(row=3,column=0,sticky="sw",padx=20,pady=20)
@@ -81,11 +94,12 @@ def gui_account(my_sql):
         for id_account , user , level , password , id , f_name , l_name , contact , address in data_account:
  
             sql = my_sql.cursor()
-            sql.execute("update `stock_list`.`employee` join `stock_list`.`accounts` on `employee`.`account_id` = `accounts`.`id` set `accounts`.`username` = '%s', `accounts`.`passwords` = '%s', `accounts`.`level` = %s, `employee`.`emp_id` = '%s' ,`employee`.`first_name` = '%s', `employee`.`last_name` = '%s', `employee`.`contact` = '%s', `employee`.`address` = '%s' where `accounts`.`id` = %s;" % (user,password,level,id,f_name,l_name,contact,address,id_account))
+            sql.execute("""update `stock_list`.`employee` join `stock_list`.`accounts` on `employee`.`account_id` = `accounts`.`id` set `accounts`.`username` = %s, `accounts`.`passwords` = %s, `accounts`.`level` = %s, `employee`.`emp_id` = %s ,`employee`.`first_name` = %s, `employee`.`last_name` = %s, `employee`.`contact` = %s, `employee`.`address` = %s where `accounts`.`id` = %s;""" , (user,password,level,id,f_name,l_name,contact,address,id_account))
             my_sql.commit()
-            succ = CTkMessagebox(title="Success",message="Apply Changes Successfully!",icon="check",option_1="OK")
-            
-            
+        succ = CTkMessagebox(title="Success",message="Apply Changes Successfully!",icon="check",option_1="OK")
+        if (succ.get() == "OK"):
+            load_data()
+     
     btn_apply = CTkButton(FRight,width=100,height=40,text="Apply",corner_radius=20,command=apply)
     btn_apply.grid(row=1,column=0,sticky="se",padx=20,pady=20)
 
@@ -142,7 +156,7 @@ def gui_account(my_sql):
 
                         data_account.remove(data_account[i])
                 data_account.append((ID.get(),USER.get(),LEVEL.get(),PASS.get(),em_id,f_name,l_name,contact,address))
-      
+                print(data_account)
     btn_edit = CTkButton(FLeft,text="Edit",width=150,corner_radius=14,height=30,font=("Arial", 16),command=edit)
     btn_edit.grid(row=1,column=1,pady=20,padx=20)
 
@@ -221,21 +235,24 @@ def gui_account(my_sql):
 
     table_account.bind("<Double-1>", select_data)
 
-    sql = my_sql.cursor()
-    sql.execute("SELECT * FROM stock_list.employee join `stock_list`.`accounts` on `employee`.`account_id` = `accounts`.`id` order by `accounts`.`level` desc;")
-    resulte = sql.fetchall()
+    def load_data():
+        table_account.delete(*table_account.get_children())
+        sql = my_sql.cursor()
+        sql.execute("SELECT * FROM stock_list.employee join `stock_list`.`accounts` on `employee`.`account_id` = `accounts`.`id` order by `accounts`.`id` asc;")
+        resulte = sql.fetchall()
 
-    for i in resulte:
-        id_employee = i[0] 
-        id_user = i[1]
-        user = i[7]
-        level = i[9]
-        employee = i[2]
+        for i in resulte:
+            id_employee = i[0] 
+            id_user = i[1]
+            user = i[7]
+            level = i[9]
+            employee = i[2]
 
-        f_name = i[2]
-        l_name = i[3]
-        password = i[8]
-        address = i[4]
-        contact = i[5]
+            f_name = i[2]
+            l_name = i[3]
+            password = i[8]
+            address = i[4]
+            contact = i[5]
 
-        table_account.insert("",END,values=(id_employee,id_user,user,level,employee,f_name,l_name,password,address,contact))
+            table_account.insert("",END,values=(id_employee,id_user,user,level,employee,f_name,l_name,password,address,contact))
+    load_data()

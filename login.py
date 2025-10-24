@@ -237,7 +237,7 @@ def login_connect():
     try:
         # connect_server.config(database = "stock_list")
         # connect_server.reconnect()
-        sql.execute("SELECT * FROM `accounts` WHERE `username` = '%s' AND `passwords` = '%s' AND `onlines` = 0" % (username,passwords))
+        sql.execute("""SELECT * FROM `accounts` WHERE `username` = %s AND `passwords` = %s AND `onlines` = 0""" , (username,passwords))
         result = sql.fetchone()
     
 
@@ -246,7 +246,7 @@ def login_connect():
             CTkMessagebox(title="Error",message="Please fill in all fields",icon="cancel",option_1="Ok")
         
         elif (result):
-            onlines = sql.execute("Update `accounts` SET `onlines` = 1 WHERE `username` = '%s'" % (username))
+            onlines = sql.execute("""Update `accounts` SET `onlines` = 1 WHERE `username` = %s""" , (username,))
             connect_server.commit()
         
             Login.withdraw()
@@ -254,7 +254,7 @@ def login_connect():
         else:
             error = CTkMessagebox(title="Error",message="The password is incorrect or someone has already connected to this account.",icon="cancel",option_1="Ok")
             if(error.get() == "Ok"):
-                onlines = sql.execute("Update `accounts` SET `onlines` = 0 WHERE `username` = '%s'" % (username))
+                onlines = sql.execute("""Update `accounts` SET `onlines` = 0 WHERE `username` = %s""" , (username,))
                 connect_server.commit()
     except:
         try:
@@ -262,7 +262,7 @@ def login_connect():
         except:
             error = CTkMessagebox(title="Error",message="The program has a problem. Restart the program or notify the developer.",icon="cancel",option_1="Ok")
             if(error.get() == "Ok"):
-                onlines = sql.execute("Update `accounts` SET `onlines` = 0 WHERE `username` = '%s'" % (username))
+                onlines = sql.execute("""Update `accounts` SET `onlines` = 0 WHERE `username` = %s""" , (username,))
                 connect_server.commit()
                 os._exit(0)
 

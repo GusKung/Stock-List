@@ -148,7 +148,7 @@ def main_gui(my_sql,a_user,a_pass):
         bar_code = code[find_star+1:]
 
         if (find_star <= -1):
-            sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_id` = '%s';" % (bar_code))
+            sql.execute("""SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_id` = %s;""" , (bar_code,))
             product = sql.fetchone()
             try:
                 id = product[0]
@@ -179,7 +179,7 @@ def main_gui(my_sql,a_user,a_pass):
 
 
         elif (find_star >= 0):
-            sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_id` = '%s';" % (bar_code))
+            sql.execute("""SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_id` = %s;""" , (bar_code,))
             product = sql.fetchone()
 
             try:
@@ -239,7 +239,7 @@ def main_gui(my_sql,a_user,a_pass):
 
     def check_level(lv,func):
         try:
-            sql.execute("SELECT IF(`accounts`.`level`>= %d, `accounts`.`level`, `accounts`.`level`) as `status`FROM `stock_list`.`accounts` where `accounts`.`username` = '%s';" % (lv,a_user))
+            sql.execute("""SELECT IF(`accounts`.`level`>= %s, `accounts`.`level`, `accounts`.`level`) as `status`FROM `stock_list`.`accounts` where `accounts`.`username` = %s;""" , (lv,a_user))
 
             level = sql.fetchone()
             
@@ -274,7 +274,7 @@ def main_gui(my_sql,a_user,a_pass):
                     username = inp_user.get()
                     passwords = inp_password.get()
                     
-                    sql.execute("SELECT * FROM `stock_list`.`accounts` WHERE `username` = '%s' AND `passwords` = '%s'AND `level` >= %d;" % (username,passwords,lv))
+                    sql.execute("""SELECT * FROM `stock_list`.`accounts` WHERE `username` = %s AND `passwords` = %sAND `level` >= %s;""" , (username,passwords,lv))
                     resulte = sql.fetchone()
 
                     if (resulte):
@@ -321,7 +321,7 @@ def main_gui(my_sql,a_user,a_pass):
 
     def show_products(num):
 
-        sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` ORDER BY `p_name` LIMIT 40 offset %d;" % (num*40))
+        sql.execute("""SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` ORDER BY `p_name` LIMIT 40 offset %s;""" , (num*40,))
         products = sql.fetchall()
         
 
@@ -405,7 +405,7 @@ def main_gui(my_sql,a_user,a_pass):
 
     def offline():
         
-        sql.execute("Update `accounts` SET `onlines` = 0 WHERE `username` = '%s'" % (a_user))
+        sql.execute("""Update `accounts` SET `onlines` = 0 WHERE `username` = %s""" , (a_user,))
         my_sql.commit()
 
         os._exit(0)
