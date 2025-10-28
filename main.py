@@ -319,6 +319,13 @@ def main_gui(my_sql,a_user,a_pass):
     FBottom= CTkFrame(FRight,fg_color="#1DF38F",corner_radius=0,border_width=0,border_color="black")
     FBottom.pack(side=BOTTOM,fill=BOTH)
 
+    FBottomPay= CTkFrame(FBottom,fg_color="#1DF38F",corner_radius=0,border_width=0,border_color="black")
+
+    FBottomPay.columnconfigure(0,weight=1)
+    FBottomPay.columnconfigure(1,weight=1)
+
+    FBottomPay.pack(side=BOTTOM,fill=BOTH)
+
     def show_products(num):
 
         sql.execute("""SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` ORDER BY `p_name` LIMIT 40 offset %s;""" , (num*40,))
@@ -380,7 +387,7 @@ def main_gui(my_sql,a_user,a_pass):
         p_amount_list.set(int(amount) + p_amount_list.get())
         vat = float(p_price.get())/100*7
 
-        num_price.configure(text=f"{float(p_price.get())}\n\n{p_amount_list.get()}\n\n{vat:.2f}\n\n{float(p_price.get())+vat:.2f}",font=("Arial",24),justify="right")
+        num_price.configure(text=f"{float(p_price.get())}\n\n{p_amount_list.get()}\n\n{float(p_price.get())}",font=("Arial",24),justify="right")
 
         btn_del.bind("<Enter>",lambda e: hover_enter())
         btn_del.bind("<Leave>",lambda e: hover_leave())
@@ -393,7 +400,7 @@ def main_gui(my_sql,a_user,a_pass):
 
         bill_list.remove(BillProduct)
 
-        num_price.configure(text=f"{p_price.get()}\n\n{p_amount_list.get()}\n\n{vat:.2f}\n\n{float(p_price.get())+vat:.2f}")
+        num_price.configure(text=f"{p_price.get()}\n\n{p_amount_list.get()}\n\n{float(p_price.get())}")
 
 
     def hover_enter():
@@ -414,7 +421,7 @@ def main_gui(my_sql,a_user,a_pass):
         p_price.set(value=0)
         p_amount_list.set(value=0)
 
-        num_price.configure(text=f"{p_price.get()}\n\n{p_amount_list.get()}\n\n{vat:.2f}\n\n{float(p_price.get())+vat}")
+        num_price.configure(text=f"{p_price.get()}\n\n{p_amount_list.get()}\n\n{float(p_price.get())}")
         for i in bill_list:
             i.destroy()
 
@@ -431,11 +438,17 @@ def main_gui(my_sql,a_user,a_pass):
     btn_clear.bind("<Enter>",lambda e: hover_enter())
     btn_clear.bind("<Leave>",lambda e: hover_leave())
 
-    label_price = CTkLabel(FBottom,text="Price :\n\nAmount :\n\nVAT :\n\nTotal :",font=("Arial",24),justify="left")
-    label_price.pack(side=LEFT,anchor="w",padx=20)
+    label_price = CTkLabel(FBottom,text="Price :\n\nAmount :\n\nTotal :",font=("Arial",24),justify="left")
+    label_price.pack(side=LEFT,anchor="w",padx=20,pady=20)
 
-    num_price = CTkLabel(FBottom,text=f"{float(p_price.get())}\n\n{p_amount_list.get()}\n\n{vat:.2f}\n\n{float(p_price.get())+vat:.2f}",font=("Arial",24),justify="right")
-    num_price.pack(side=RIGHT,anchor="w",padx=20)
+    num_price = CTkLabel(FBottom,text=f"{float(p_price.get())}\n\n{p_amount_list.get()}\n\n{float(p_price.get())}",font=("Arial",24),justify="right")
+    num_price.pack(side=RIGHT,anchor="w",padx=20,pady=20)
+
+    pay_cash = CTkButton(FBottomPay,text="Cash",cursor="hand2",width=200,height=60,corner_radius=0,fg_color="#ffb326",hover_color="#e5d96b",font=("Arial",24))
+    pay_cash.grid(row=0,column=0,sticky="nsew")
+
+    pay_bank = CTkButton(FBottomPay,text="Bank",cursor="hand2",width=200,height=60,corner_radius=0,fg_color="#26ffe2",hover_color="#6be5df",font=("Arial",24))
+    pay_bank.grid(row=0,column=1,sticky="nsew")
 
     show_products(num_page.get())
 
