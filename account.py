@@ -87,18 +87,45 @@ def gui_account(my_sql):
     btn_add = CTkButton(FLeft,width=100,height=40,text="Add",corner_radius=20,command=add_track)
     btn_add.grid(row=3,column=0,sticky="sw",padx=20,pady=20)
 
-    btn_del = CTkButton(FLeft,width=100,height=40,text="Remove",corner_radius=20,fg_color="#FF3939",hover_color="#DF4949",cursor="hand2")
+    def del_track():
+        sure = CTkMessagebox(title="Delete Account",message="Are you sure to delete this account?",icon="warning",option_1="No",option_2="Yes")
+        if (sure.get() == "No"):
+            return
+        else:
+            selected_item = table_account.selection()
+            if selected_item:
+                for item in selected_item:
+                    values = table_account.item(item, "values")
+                id_account = values[1]  
+                sql = my_sql.cursor()
+                sql.execute("DELETE FROM `stock_list`.`accounts` WHERE `id` = %s;", (id_account,))
+                my_sql.commit()
+                load_data()
+
+
+    btn_del = CTkButton(FLeft,width=100,height=40,text="Remove",corner_radius=20,fg_color="#FF3939",hover_color="#DF4949",cursor="hand2",command=del_track)
     btn_del.grid(row=3,column=1,sticky="se",padx=20,pady=20)
 
     def apply():
         for id_account , user , level , password , id , f_name , l_name , contact , address in data_account:
- 
+
             sql = my_sql.cursor()
-            sql.execute("""update `stock_list`.`employee` join `stock_list`.`accounts` on `employee`.`account_id` = `accounts`.`id` set `accounts`.`username` = %s, `accounts`.`passwords` = %s, `accounts`.`level` = %s, `employee`.`emp_id` = %s ,`employee`.`first_name` = %s, `employee`.`last_name` = %s, `employee`.`contact` = %s, `employee`.`address` = %s where `accounts`.`id` = %s;""" , (user,password,level,id,f_name,l_name,contact,address,id_account))
-            my_sql.commit()
+            sql.execute("SELECT id FROM `stock_list`.`accounts` WHERE id = %s;", (id_account,))
+            resulte = sql.fetchall()
+            if (not resulte):
+                sql.execute("INSERT INTO `stock_list`.`accounts` (`id`, `username`, `passwords`, `level` , `onlines`) VALUES (%s, %s, %s, %s,%s);", (id_account, user, password, level, 0))
+                my_sql.commit()
+
+                sql.execute("INSERT INTO `stock_list`.`employee` (`emp_id` ,`account_id`, `first_name`, `last_name` , `address` , `contact`) VALUES (%s,%s, %s, %s, %s, %s);", (id,id_account, f_name, l_name , address , contact))
+                my_sql.commit()
+            else:
+                sql.execute("""update `stock_list`.`employee` join `stock_list`.`accounts` on `employee`.`account_id` = `accounts`.`id` set `accounts`.`username` = %s, `accounts`.`passwords` = %s, `accounts`.`level` = %s, `employee`.`emp_id` = %s ,`employee`.`first_name` = %s, `employee`.`last_name` = %s, `employee`.`contact` = %s, `employee`.`address` = %s where `accounts`.`id` = %s;""" , (user,password,level,id,f_name,l_name,contact,address,id_account))
+                my_sql.commit()
+         
         succ = CTkMessagebox(title="Success",message="Apply Changes Successfully!",icon="check",option_1="OK")
         if (succ.get() == "OK"):
             load_data()
+
      
     btn_apply = CTkButton(FRight,width=100,height=40,text="Apply",corner_radius=20,command=apply)
     btn_apply.grid(row=1,column=0,sticky="se",padx=20,pady=20)
@@ -156,7 +183,7 @@ def gui_account(my_sql):
 
                         data_account.remove(data_account[i])
                 data_account.append((ID.get(),USER.get(),LEVEL.get(),PASS.get(),em_id,f_name,l_name,contact,address))
-                print(data_account)
+
     btn_edit = CTkButton(FLeft,text="Edit",width=150,corner_radius=14,height=30,font=("Arial", 16),command=edit)
     btn_edit.grid(row=1,column=1,pady=20,padx=20)
 
