@@ -113,13 +113,13 @@ def gui_account(my_sql):
             sql.execute("SELECT id FROM `stock_list`.`accounts` WHERE id = %s;", (id_account,))
             resulte = sql.fetchall()
             if (not resulte):
-                sql.execute("INSERT INTO `stock_list`.`accounts` (`id`, `username`, `passwords`, `level` , `onlines`) VALUES (%s, %s, %s, %s,%s);", (id_account, user, password, level, 0))
+                sql.execute("INSERT INTO `stock_list`.`accounts` (`id`, `username`, `passwords`, `level` , `onlines`) VALUES (%s, %s, SHA2(%s,256), %s,%s);", (id_account, user, password, level, 0))
                 my_sql.commit()
 
                 sql.execute("INSERT INTO `stock_list`.`employee` (`emp_id` ,`account_id`, `first_name`, `last_name` , `address` , `contact`) VALUES (%s,%s, %s, %s, %s, %s);", (id,id_account, f_name, l_name , address , contact))
                 my_sql.commit()
             else:
-                sql.execute("""update `stock_list`.`employee` join `stock_list`.`accounts` on `employee`.`account_id` = `accounts`.`id` set `accounts`.`username` = %s, `accounts`.`passwords` = %s, `accounts`.`level` = %s, `employee`.`emp_id` = %s ,`employee`.`first_name` = %s, `employee`.`last_name` = %s, `employee`.`contact` = %s, `employee`.`address` = %s where `accounts`.`id` = %s;""" , (user,password,level,id,f_name,l_name,contact,address,id_account))
+                sql.execute("""update `stock_list`.`employee` join `stock_list`.`accounts` on `employee`.`account_id` = `accounts`.`id` set `accounts`.`username` = %s, `accounts`.`passwords` = SHA2(%s,256), `accounts`.`level` = %s, `employee`.`emp_id` = %s ,`employee`.`first_name` = %s, `employee`.`last_name` = %s, `employee`.`contact` = %s, `employee`.`address` = %s where `accounts`.`id` = %s;""" , (user,password,level,id,f_name,l_name,contact,address,id_account))
                 my_sql.commit()
          
         succ = CTkMessagebox(title="Success",message="Apply Changes Successfully!",icon="check",option_1="OK")

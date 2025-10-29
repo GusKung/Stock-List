@@ -159,7 +159,7 @@ def connect_login(username,passwords,gui,connect_server):
     connect_server.config(database = "stock_list")
     connect_server.reconnect()
     sql = connect_server.cursor()
-    sql.execute("SELECT * FROM `accounts` WHERE `username` = %s AND `passwords` = %s AND `onlines` = 0" , (username,passwords))
+    sql.execute("SELECT * FROM `accounts` WHERE `username` = %s AND `passwords` = SHA2(%s,256) AND `onlines` = 0" , (username,passwords))
     result = sql.fetchone()
 
     if (username == "" or passwords == ""):

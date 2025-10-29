@@ -274,7 +274,7 @@ def main_gui(my_sql,a_user,a_pass):
                     username = inp_user.get()
                     passwords = inp_password.get()
                     
-                    sql.execute("""SELECT * FROM `stock_list`.`accounts` WHERE `username` = %s AND `passwords` = %sAND `level` >= %s;""" , (username,passwords,lv))
+                    sql.execute("""SELECT * FROM `stock_list`.`accounts` WHERE `username` = %s AND `passwords` = SHA2(%s,256) AND `level` >= %s;""" , (username,passwords,lv))
                     resulte = sql.fetchone()
 
                     if (resulte):
