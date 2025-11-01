@@ -13,7 +13,7 @@ from CTkScrollableDropdown import *
 from customtkinter import *
 import customtkinter
 import upload_data
-import account
+import update_data
 
 def main_gui(my_sql,a_user,a_pass):
 # //-----------------------------------------------------
@@ -61,12 +61,14 @@ def main_gui(my_sql,a_user,a_pass):
 
         dropdown = CustomDropdownMenu(widget=file_menu,bg_color="#FFFFFF")
 
-        func_account = lambda:account.gui_account(my_sql)
+        func_account = lambda:update_data.gui_account(my_sql)
         dropdown.add_option(option="Account",command= lambda:check_level(3,func_account))
 
-        dropdown.add_option(option="Produtcs")
+
+        func_product = lambda: update_data.gui_products(my_sql)
+        dropdown.add_option(option="Produtcs",command= lambda:check_level(2,func_product))
     except Exception as e:
-        print(e)
+        CTkMessagebox(title="Error", message=f"Something went wrong: {e}", icon="cancel", option_1="OK")
 # //----------------------------------------------------------------------
 
 
