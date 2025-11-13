@@ -110,10 +110,10 @@ def main_gui(my_sql,a_user,a_pass):
     FProducts = CTkScrollableFrame(FLeft,width=650,height=600,fg_color="#D4D4D4",corner_radius=0)
     FProducts.grid(row=1,column=0,columnspan=3,sticky="news")
 
-    btn_next = CTkButton(FLeft,font=("Arial",18),command=next_page,text=">",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
+    btn_next = CTkButton(FLeft,font=("Arial Bold",18),command=next_page,text=">",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
     btn_next.grid(row=2,column=1,sticky="SE",pady=20,padx=(0,100))
 
-    btn_last_next = CTkButton(FLeft,font=("Arial",18),command=next_last_page,text=">>",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
+    btn_last_next = CTkButton(FLeft,font=("Arial Bold",18),command=next_last_page,text=">>",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
     btn_last_next.grid(row=2,column=1,sticky="SE",pady=20,padx=(0,20))
 
     def change_page(page):
@@ -127,13 +127,13 @@ def main_gui(my_sql,a_user,a_pass):
 
     CTkScrollableDropdown(amount_page,values=value,justify="left", button_color="transparent",command=change_page)
 
-    btn_back = CTkButton(FLeft,font=("Arial",18),command=back_last_page,text="<<",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
+    btn_back = CTkButton(FLeft,font=("Arial Bold",18),command=back_last_page,text="<<",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
     btn_back.grid(row=2,column=0,sticky="SW",pady=20,padx=(20,0))
 
-    btn_last_back = CTkButton(FLeft,font=("Arial",18),command=back_page,text="<",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
+    btn_last_back = CTkButton(FLeft,font=("Arial Bold",18),command=back_page,text="<",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
     btn_last_back.grid(row=2,column=0,sticky="SW",pady=20,padx=(100,0))
 
-    inp_product = CTkEntry(FLeft,font=("Arial",14),width=250,corner_radius=20,border_color="#3B3B3B")
+    inp_product = CTkEntry(FLeft,font=("Arial Bold",14),width=250,corner_radius=20,border_color="#3B3B3B")
 
     inp_product.grid(row=0, column=0,padx=(20,10),pady=20,sticky="WE")
 
@@ -311,11 +311,18 @@ def main_gui(my_sql,a_user,a_pass):
 
     button_add.grid(row=0,column=1,padx=(0,20),sticky="E")
 
+    all_type = sql.execute("SELECT DISTINCT p_type FROM stock_list.products;")
+    products_type = sql.fetchall()
 
-    FRight= CTkFrame(main,fg_color="#EEABAB",corner_radius=0,border_width=0,border_color="black",width=600)
+    type_list = ["ทั้งหมด"]+[t[0] for t in products_type]
+
+    box_type = CTkComboBox(FLeft,width=100,values=type_list)
+    box_type.grid(row=0,column=1,padx=(0,115),sticky="E")
+
+    FRight= CTkFrame(main,corner_radius=0,border_width=0,border_color="black",width=600)
     FRight.pack(side=RIGHT,fill=BOTH)
 
-    FProducts_Scroll = CTkScrollableFrame(FRight,fg_color="#EEABAB",border_width=0,border_color="black",width=600)
+    FProducts_Scroll = CTkScrollableFrame(FRight,fg_color="#dfdfdf",border_width=0,border_color="black",width=600)
     FProducts_Scroll.pack(fill=BOTH,expand=True)
 
     FBottom= CTkFrame(FRight,fg_color="#1DF38F",corner_radius=0,border_width=0,border_color="black")
@@ -446,10 +453,10 @@ def main_gui(my_sql,a_user,a_pass):
     num_price = CTkLabel(FBottom,text=f"{float(p_price.get())}\n\n{p_amount_list.get()}\n\n{float(p_price.get())}",font=("Arial",24),justify="right")
     num_price.pack(side=RIGHT,anchor="w",padx=20,pady=20)
 
-    pay_cash = CTkButton(FBottomPay,text="Cash",cursor="hand2",width=200,height=60,corner_radius=0,fg_color="#ffad15",hover_color="#e29e45",font=("Arial",24))
+    pay_cash = CTkButton(FBottomPay,text="Cash",cursor="hand2",text_color="black",width=200,height=60,corner_radius=0,fg_color="#ffad15",hover_color="#e29e45",font=("Arial Bold",24))
     pay_cash.grid(row=0,column=0,sticky="nsew")
 
-    pay_bank = CTkButton(FBottomPay,text="Bank",cursor="hand2",width=200,height=60,corner_radius=0,fg_color="#264eff",hover_color="#2e5fe6",font=("Arial",24))
+    pay_bank = CTkButton(FBottomPay,text="Bank",cursor="hand2",text_color="black",width=200,height=60,corner_radius=0,fg_color="#264eff",hover_color="#2e5fe6",font=("Arial Bold",24))
     pay_bank.grid(row=0,column=1,sticky="nsew")
 
     show_products(num_page.get())
