@@ -51,6 +51,7 @@ def main_gui(my_sql,a_user,a_pass):
     main = CTKUI("Stock List",1280,720,"#D4D4D4","light")
     
     num_page = IntVar(value=0)
+    all_row = IntVar(value=0)
 # //----------------------------------------------------------------------
 
 
@@ -75,32 +76,29 @@ def main_gui(my_sql,a_user,a_pass):
 # //----------------------------------------------------------------------
     def next_page():
         num =  num_page.get()
-        if (num < all_row):
+        if (num < all_row.get()):
             num_page.set(num+1)
             amount_page.set(num_page.get())
-            show_products(num_page.get())
+            show_products(box_type.get(),num_page.get())
     
     def next_last_page():
-        num_page.set(all_row)
+        num_page.set(all_row.get())
         amount_page.set(num_page.get())
-        show_products(all_row)
+        show_products(box_type.get(),all_row.get())
 
     def back_page():
         num =  num_page.get()
         if (num > 0):
             num_page.set(num-1)
             amount_page.set(num_page.get())
-            show_products(num_page.get())
+            show_products(box_type.get(),num_page.get())
 
     def back_last_page():
         num_page.set(0)
         amount_page.set(num_page.get())
-        show_products(0)
+        show_products(box_type.get(),0)
 
     sql = my_sql.cursor()
-    sql.execute("SELECT * FROM `products`;")
-    all_product = sql.fetchall()
-    all_row = int(len(all_product)/40)
 
     FLeft= CTkFrame(main,fg_color="#D4D4D4",corner_radius=0,border_color="black",border_width=0)
     FLeft.pack(side=LEFT,fill=BOTH,expand=True)
@@ -119,13 +117,14 @@ def main_gui(my_sql,a_user,a_pass):
     def change_page(page):
         num_page.set(page)
         amount_page.set(num_page.get())
-        show_products(num_page.get())
+        show_products(box_type.get(),num_page.get())
 
-    value =[f"{i}"for i in range(all_row+1)]
+    value =[f"{i}"for i in range(all_row.get()+1)]
+
     amount_page = CTkComboBox(FLeft,width=80,values=value)
     amount_page.grid(row=2,column=0,columnspan=2,sticky="S",pady=25)
 
-    CTkScrollableDropdown(amount_page,values=value,justify="left", button_color="transparent",command=change_page)
+    amount_page_scroll = CTkScrollableDropdown(amount_page,values=value,justify="left", button_color="transparent",command=change_page)
 
     btn_back = CTkButton(FLeft,font=("Arial Bold",18),command=back_last_page,text="<<",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
     btn_back.grid(row=2,column=0,sticky="SW",pady=20,padx=(20,0))
@@ -138,13 +137,12 @@ def main_gui(my_sql,a_user,a_pass):
     inp_product.grid(row=0, column=0,padx=(20,10),pady=20,sticky="WE")
 
     inp_product.focus_set()
-    inp_product.bind("<Return>",lambda e:serch_product())
+    inp_product.bind("<Return>",lambda e:serch_product(inp_product.get()))
 
     open_search_icon = Image.open(icon/"search.png")
     search_icon = CTkImage(light_image=open_search_icon,dark_image=open_search_icon,size=(20,20))
 
-    def serch_product():
-        code = inp_product.get()
+    def serch_product(code):
         find_star = code.find("*")
         amount = code[0:find_star]
         bar_code = code[find_star+1:]
@@ -214,7 +212,7 @@ def main_gui(my_sql,a_user,a_pass):
                 inp_product.focus_set()
 
     
-    button_product = CTkButton(FLeft,font=("Arial Bold",16),width=60,height=30,command=serch_product,corner_radius=20,image=search_icon,text="",text_color="white",fg_color="#38f388",hover_color="#6be59e")
+    button_product = CTkButton(FLeft,font=("Arial Bold",16),width=60,height=30,command=lambda e:serch_product(inp_product.get()),corner_radius=20,image=search_icon,text="",text_color="white",fg_color="#38f388",hover_color="#6be59e")
     button_product.bind("<Enter>", lambda event: button_product.configure(width=65,height=35)) 
     button_product.bind("<Leave>", lambda event: button_product.configure(width=60,height=30)) 
 
@@ -229,7 +227,7 @@ def main_gui(my_sql,a_user,a_pass):
 
     def reconnect():
         my_sql.reconnect()
-        show_products(0)
+        show_products(box_type.get(),0)
 
     button_re = CTkButton(FLeft,font=("Arial Bold",16),command=reconnect,width=60,height=30,corner_radius=20,text="",image=re_icon,text_color="white",fg_color="#38f388",hover_color="#6be59e")
     button_re.bind("<Enter>", lambda event: button_re.configure(width=65,height=35)) 
@@ -316,7 +314,7 @@ def main_gui(my_sql,a_user,a_pass):
 
     type_list = ["ทั้งหมด"]+[t[0] for t in products_type]
 
-    box_type = CTkComboBox(FLeft,width=100,values=type_list)
+    box_type = CTkComboBox(FLeft,width=100,values=type_list,command=lambda value: show_products(value,0)) 
     box_type.grid(row=0,column=1,padx=(0,115),sticky="E")
 
     FRight= CTkFrame(main,corner_radius=0,border_width=0,border_color="black",width=600)
@@ -335,10 +333,26 @@ def main_gui(my_sql,a_user,a_pass):
 
     FBottomPay.pack(side=BOTTOM,fill=BOTH)
 
-    def show_products(num):
+    def show_products(type_products,num):
+        if (type_products != "ทั้งหมด"):
+            sql.execute("""SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_type` = %s ORDER BY `p_name` LIMIT 40 offset %s;""" , (type_products,(num)*40,))
+        else:
+            sql.execute("""SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` ORDER BY `p_name` LIMIT 40 offset %s;""" , (num*40,))
 
-        sql.execute("""SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` ORDER BY `p_name` LIMIT 40 offset %s;""" , (num*40,))
         products = sql.fetchall()
+
+        if (type_products != "ทั้งหมด"):
+            sql.execute("SELECT COUNT(*) FROM `stock_list`.`products` WHERE `p_type` =  %s",(type_products,))
+        else:
+            sql.execute("SELECT COUNT(*) FROM `stock_list`.`products`")
+
+
+        all_amount = sql.fetchone()[0]
+
+        all_row.set(int(all_amount)//40)
+        values =[f"{i}"for i in range(all_row.get()+1)]
+        amount_page.configure(values=values)
+        amount_page_scroll.configure(values=values)
         
 
         img_products = appdir / "products"
@@ -364,13 +378,13 @@ def main_gui(my_sql,a_user,a_pass):
             pro_frame = CTkLabel(pro,image=pimg,text="")
             pro_frame.pack()
 
-            pro_frame.bind("<Button-1>",lambda e, e_image = open_pimg ,e_id = id,e_name = name, e_amount = 1, e_price = price :get_values(e_image,e_id,e_name,e_amount,e_price))
+            pro_frame.bind("<Button-1>",lambda e,e_id = id:(inp_product.insert(END,e_id),
+            serch_product(inp_product.get())))
         
             pro_frame.bind("<Enter>",lambda e: hover_enter())
             pro_frame.bind("<Leave>",lambda e: hover_leave())
         
             FProducts.grid_columnconfigure(pro,weight=1)
-            # print(num*40, col , row)
 
     bill_list = []
     def get_values(img,id,name,amount,price):
@@ -459,6 +473,6 @@ def main_gui(my_sql,a_user,a_pass):
     pay_bank = CTkButton(FBottomPay,text="Bank",cursor="hand2",text_color="black",width=200,height=60,corner_radius=0,fg_color="#264eff",hover_color="#2e5fe6",font=("Arial Bold",24))
     pay_bank.grid(row=0,column=1,sticky="nsew")
 
-    show_products(num_page.get())
+    show_products("ทั้งหมด",num_page.get())
 
     FLeft.bind("<Destroy>",lambda e: offline())
