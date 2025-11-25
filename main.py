@@ -79,24 +79,24 @@ def main_gui(my_sql,a_user,a_pass):
         if (num < all_row.get()):
             num_page.set(num+1)
             amount_page.set(num_page.get())
-            show_products(box_type.get(),num_page.get())
+            show_products(box_type.get(),num_page.get(),False)
     
     def next_last_page():
         num_page.set(all_row.get())
         amount_page.set(num_page.get())
-        show_products(box_type.get(),all_row.get())
+        show_products(box_type.get(),all_row.get(),False)
 
     def back_page():
         num =  num_page.get()
         if (num > 0):
             num_page.set(num-1)
             amount_page.set(num_page.get())
-            show_products(box_type.get(),num_page.get())
+            show_products(box_type.get(),num_page.get(),False)
 
     def back_last_page():
         num_page.set(0)
         amount_page.set(num_page.get())
-        show_products(box_type.get(),0)
+        show_products(box_type.get(),0,False)
 
     sql = my_sql.cursor()
 
@@ -117,7 +117,7 @@ def main_gui(my_sql,a_user,a_pass):
     def change_page(page):
         num_page.set(page)
         amount_page.set(num_page.get())
-        show_products(box_type.get(),num_page.get())
+        show_products(box_type.get(),num_page.get(),False)
 
     value =[f"{i}"for i in range(all_row.get()+1)]
 
@@ -227,7 +227,7 @@ def main_gui(my_sql,a_user,a_pass):
 
     def reconnect():
         my_sql.reconnect()
-        show_products(box_type.get(),0)
+        show_products(box_type.get(),0,False)
 
     button_re = CTkButton(FLeft,font=("Arial Bold",16),command=reconnect,width=60,height=30,corner_radius=20,text="",image=re_icon,text_color="white",fg_color="#38f388",hover_color="#6be59e")
     button_re.bind("<Enter>", lambda event: button_re.configure(width=65,height=35)) 
@@ -314,7 +314,7 @@ def main_gui(my_sql,a_user,a_pass):
 
     type_list = ["ทั้งหมด"]+[t[0] for t in products_type]
 
-    box_type = CTkComboBox(FLeft,width=100,values=type_list,command=lambda value: show_products(value,0)) 
+    box_type = CTkComboBox(FLeft,width=100,values=type_list,command=lambda value: show_products(value,0,True)) 
     box_type.grid(row=0,column=1,padx=(0,115),sticky="E")
 
     FRight= CTkFrame(main,corner_radius=0,border_width=0,border_color="black",width=600)
@@ -333,7 +333,7 @@ def main_gui(my_sql,a_user,a_pass):
 
     FBottomPay.pack(side=BOTTOM,fill=BOTH)
 
-    def show_products(type_products,num):
+    def show_products(type_products,num,on):
         if (type_products != "ทั้งหมด"):
             sql.execute("""SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_type` = %s ORDER BY `p_name` LIMIT 40 offset %s;""" , (type_products,(num)*40,))
         else:
@@ -345,6 +345,10 @@ def main_gui(my_sql,a_user,a_pass):
             sql.execute("SELECT COUNT(*) FROM `stock_list`.`products` WHERE `p_type` =  %s",(type_products,))
         else:
             sql.execute("SELECT COUNT(*) FROM `stock_list`.`products`")
+        
+        if (on == True):
+            num_page.set(0)
+            amount_page.set(num_page.get())
 
 
         all_amount = sql.fetchone()[0]
@@ -473,6 +477,6 @@ def main_gui(my_sql,a_user,a_pass):
     pay_bank = CTkButton(FBottomPay,text="Bank",cursor="hand2",text_color="black",width=200,height=60,corner_radius=0,fg_color="#264eff",hover_color="#2e5fe6",font=("Arial Bold",24))
     pay_bank.grid(row=0,column=1,sticky="nsew")
 
-    show_products("ทั้งหมด",num_page.get())
+    show_products("ทั้งหมด",num_page.get(),True)
 
     FLeft.bind("<Destroy>",lambda e: offline())
