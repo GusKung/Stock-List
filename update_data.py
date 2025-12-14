@@ -309,6 +309,8 @@ def gui_stock(my_sql):
 
 # //-----------------------------------------------------
 
+
+# //----------------------GUI-------------------------------
     stockt_gui = CTKUI("Stock List", 1280, 600, "#7cffac", "light")
     stockt_gui.attributes("-topmost",True)
 
@@ -322,7 +324,12 @@ def gui_stock(my_sql):
     FRight.pack(side=RIGHT, fill=BOTH,expand=True)
 
     FRight.columnconfigure(0,weight=1)
-    FRight.rowconfigure(0,weight=1)
+    FRight.rowconfigure(1,weight=1)
+
+# //-----------------------------------------------------
+
+
+# //---------------------Frame-------------------------------
 
     ID = StringVar(value="")
     NAME = StringVar(value="")
@@ -332,25 +339,12 @@ def gui_stock(my_sql):
     AMOUNT = IntVar(value="")
 
     data_stock= []
-    value_type = ["บรรจุภัณฑ์",
-                  "เครื่องปรุงและอาหารแห้ง",
-                  "ผลิตภัณฑ์สำหรับผู้ชายและบุหรี่",
-                  "อุปกรณ์เครื่องเขียน",
-                  "เครื่องดื่ม",
-                  "กระดาษทิชชู่",
-                  "ผลิตภัณฑ์ดูแลช่องปาก",
-                  "ผลิตภัณฑ์ดูแลผิวกายและผิวหน้า",
-                  "ลูกอม",
-                  "ผงซักฟอกและน้ำยาซักผ้า",
-                  "ผลิตภัณฑ์สำหรับสุภาพสตรีและเด็ก",
-                  "ผลิตภัณฑ์ทำความสะอาดบ้าน",
-                  "ผลิตภัณฑ์ดูแลเส้นผม",
-                  "ขนมขบเคี้ยว",
-                  "ของใช้ในบ้าน",
-                  "ยา",
-                  "น้ำยาปรับผ้านุ่ม",
-                  "น้ำยาล้างห้องน้ำและน้ำยาถูพื้น",
-                  "อาหารแช่แข็ง"]
+
+    sql = my_sql.cursor()
+    all_type = sql.execute("SELECT DISTINCT p_type FROM stock_list.products;")
+    products_type = sql.fetchall()
+
+    type_list = [t[0] for t in products_type]
 
     inp_id = CTkEntry(FLeft,placeholder_text="ID",text_color="#818181",textvariable=ID,width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16),state="disabled")
     inp_id.grid(row=0,column=0,pady=(40,10),padx=20)
@@ -358,14 +352,16 @@ def gui_stock(my_sql):
     inp_name = CTkEntry(FLeft,placeholder_text="NAME",text_color="#818181",textvariable=NAME,width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16),state="disabled")
     inp_name.grid(row=0,column=1,pady=(40,10),padx=20)
 
-    type_box = CTkComboBox(FLeft,values=value_type,variable=TYPE,state="disabled",width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16))
-    type_box.grid(row=1,column=0,pady=10,padx=20)
+    box_type = CTkComboBox(FLeft,values=type_list,variable=TYPE,state="disabled",width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16))
+    box_type.grid(row=1,column=0,pady=10,padx=20)
 
+
+# //-----------------------Button Edit------------------------------
     def edit():
         if (inp_name.cget("state") == "disabled"):
             inp_id.configure(state="normal",text_color="#000000",border_color="#000000",fg_color="#FFFFFF")
             inp_name.configure(state="normal",text_color="#000000",border_color="#000000",fg_color="#FFFFFF")
-            type_box.configure(state="normal",border_color="#000000",fg_color="#FFFFFF")
+            box_type.configure(state="normal",border_color="#000000",fg_color="#FFFFFF")
             data_products.configure(state="normal",text_color="#000000",border_color="#8D8D8D",fg_color="#FFFFFF")
             btn_edit.configure(text="Save")
 
@@ -392,14 +388,16 @@ def gui_stock(my_sql):
         else:
             inp_id.configure(state="disabled",text_color="#818181",border_color="#8D8D8D",fg_color="#FCFCFC")
             inp_name.configure(state="disabled",text_color="#818181",border_color="#8D8D8D",fg_color="#FCFCFC")
-            type_box.configure(state="disabled",border_color="#8D8D8D",fg_color="#FCFCFC")
+            box_type.configure(state="disabled",border_color="#8D8D8D",fg_color="#FCFCFC")
             data_products.configure(state="disabled",text_color="#818181",border_color="#A7A7A7",fg_color="#FCFCFC")
             btn_edit.configure(text="Edit")
 
 
     btn_edit = CTkButton(FLeft,text="Edit",command=edit,width=200,corner_radius=14,height=30,font=("Arial", 16))
     btn_edit.grid(row=1,column=1,pady=10,padx=20)
+# //-----------------------------------------------------
 
+# //----------------------TextBox-------------------------------
     data_products= CTkTextbox(FLeft,width=400,height=200,corner_radius=20,font=("Arial", 16),border_width=2,border_color="#A7A7A7",fg_color="#FCFCFC",text_color="#818181")
     data_products.configure(state="disabled")
     data_products.grid(row=2,column=0,columnspan=2,pady=10,padx=20,sticky="nsew")
@@ -409,32 +407,69 @@ def gui_stock(my_sql):
 
     btn_del = CTkButton(FLeft,width=100,height=40,text="Remove",corner_radius=20,fg_color="#FF3939",hover_color="#DF4949",cursor="hand2")
     btn_del.grid(row=3,column=1,sticky="se",padx=20,pady=20)
+# //-----------------------------------------------------
 
-    table_stock = ttk.Treeview(FRight,columns=("ID","NAME","TYPE","COST_PRICE","PRICE","AMOUNT"),show="headings")
 
-    # style = ttk.Style(stockt_gui)
-    # style.configure("Treeview", font=("Arial", 12), rowheight=40,borderwidth=0, highlightthickness=0)       
-    # style.configure("Treeview.Heading", font=("Arial Bold", 12))  
+# //----------------------Table-------------------------------
+    style = ttk.Style(stockt_gui)
+    style.configure("Treeview", font=("Arial", 12), rowheight=40,borderwidth=0, highlightthickness=0)       
+    style.configure("Treeview.Heading", font=("Arial Bold", 12))  
 
-    # table_products = ttk.Treeview(FRight,columns=("ID","NAME","TYPE","COST_PRICE","PRICE","AMOUNT","SELL"),show="headings")
+    type_list_bar = ["ทั้งหมด"]+[t[0] for t in products_type]
 
-    # scrollbar = ttk.Scrollbar(FRight, orient="vertical", command=table_stock.yview)
-    # table_stock.configure(yscrollcommand=scrollbar.set)
-    # scrollbar.grid(row=0, column=1, sticky="ns")
+    bar_type = CTkComboBox(FRight,width=200,values=type_list_bar) 
+    bar_type.grid(row=0,column=0,padx=20,sticky="w")
 
-    # table_stock.heading("ID",text="ID")
-    # table_stock.heading("NAME",text="NAME")
-    # table_stock.heading("AMOUNT",text="AMOUNT")
-    # table_stock.heading("PRICE",text="PRICE")
+    inp_search = CTkEntry(FRight,placeholder_text="Search",text_color="#818181",width=300,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16))
+    inp_search.grid(row=0,column=0,pady=10,padx=140,sticky="e")
 
-    # table_stock.column("ID",width=30,anchor=CENTER)
-    # table_stock.column("NAME",width=200,anchor=CENTER)
-    # table_stock.column("AMOUNT",width=50,anchor=CENTER)
-    # table_stock.column("PRICE",width=70,anchor=CENTER)
+    appdir = Path(__file__).parent
+    icon = appdir / "icon" 
 
-    # table_products.column("TYPE",width=0,stretch=False)
-    # table_products.column("COST_PRICE",width=0,stretch=False)
-    # table_products.column("SELL",width=0,stretch=False)
+    open_search_icon = Image.open(icon/"search.png")
+    search_icon = CTkImage(light_image=open_search_icon,dark_image=open_search_icon,size=(20,20))
 
-    # table_stock.grid(row=0, column=0, sticky="nsew")
+    btn_search = CTkButton(FRight,width=100,height=30,text="",corner_radius=20,image=search_icon,fg_color="#7cffac",hover_color="#6ae69e",cursor="hand2")
+    btn_search.grid(row=0,column=0,pady=10,padx=20,sticky="e") 
+
+
+    table_stock = ttk.Treeview(FRight,columns=("ID","NAME","TYPE","COST_PRICE","PRICE","AMOUNT","SELL"),show="headings")
+
+    scrollbar = ttk.Scrollbar(FRight, orient="vertical", command=table_stock.yview)
+    table_stock.configure(yscrollcommand=scrollbar.set)
+    scrollbar.grid(row=1, column=1, sticky="ns")
+
+    table_stock.heading("ID",text="ID")
+    table_stock.heading("NAME",text="NAME")
+    table_stock.heading("AMOUNT",text="AMOUNT")
+    table_stock.heading("PRICE",text="PRICE")
+
+    table_stock.column("ID",width=80,anchor=CENTER)
+    table_stock.column("NAME",width=250,anchor="w")
+    table_stock.column("AMOUNT",width=40,anchor=CENTER)
+    table_stock.column("PRICE",width=40,anchor=CENTER)
+
+    table_stock.column("TYPE",width=0,stretch=False)
+    table_stock.column("COST_PRICE",width=0,stretch=False)
+    table_stock.column("SELL",width=0,stretch=False)
+
+    table_stock.grid(row=1, column=0, sticky="nsew")
+
+    def show_products(num):
+        table_stock.delete(*table_stock.get_children())
+        sql = my_sql.cursor()
+        sql.execute("SELECT * FROM `stock_list`.`products`  ORDER BY `p_name` LIMIT 40 offset %s; ",(num,) )
+        resulte = sql.fetchall()
+
+        for i in resulte:
+           id = i[0]
+           name = i[1]
+           p_type = i[2]
+           cost_price = i[3]
+           price = i[4]
+           amount = i[5]
+           sell = i[6]
+
+           table_stock.insert("",END,values=(id,name,p_type,cost_price,price,amount,sell))
+    show_products(0)
 
