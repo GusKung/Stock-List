@@ -237,7 +237,7 @@ def login_connect():
     try:
         # connect_server.config(database = "stock_list")
         # connect_server.reconnect()
-        sql.execute("""SELECT * FROM `accounts` WHERE `username` = %s AND `passwords` = SHA2(%s,256) AND `onlines` = 0""" , (username,passwords))
+        sql.execute("""SELECT * FROM `accounts` WHERE `username` = %s AND `passwords` = %s AND `onlines` = 0""" , (username,passwords))
         result = sql.fetchone()
     
 
