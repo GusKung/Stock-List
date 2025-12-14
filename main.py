@@ -66,8 +66,8 @@ def main_gui(my_sql,a_user,a_pass):
         dropdown.add_option(option="Account",command= lambda:check_level(3,func_account))
 
 
-        func_product = lambda: update_data.gui_products(my_sql)
-        dropdown.add_option(option="Produtcs",command= lambda:check_level(2,func_product))
+        func_product = lambda: update_data.gui_stock(my_sql)
+        dropdown.add_option(option="Stock",command= lambda:check_level(2,func_product))
     except Exception as e:
         CTkMessagebox(title="Error", message=f"Something went wrong: {e}", icon="cancel", option_1="OK")
 # //----------------------------------------------------------------------
