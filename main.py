@@ -333,20 +333,21 @@ def main_gui(my_sql,a_user,a_pass):
 
     FBottomPay.pack(side=BOTTOM,fill=BOTH)
 
-    def show_products(type_products,num,on):
-        if (type_products != "ทั้งหมด"):
+    def show_products(type_products,num,reset):
+
+        if (type_products != "ทั้งหมด"): #// ดึงข้อมูลตามประเภท
             sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_type` = %s ORDER BY `p_name` LIMIT 40 offset %s;" , (type_products,(num)*40,))
         else:
             sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` ORDER BY `p_name` LIMIT 40 offset %s;" , (num*40,))
 
         products = sql.fetchall()
 
-        if (type_products != "ทั้งหมด"):
+        if (type_products != "ทั้งหมด"): #// นับจำนวนข้อมูลตามประเภท
             sql.execute("SELECT COUNT(*) FROM `stock_list`.`products` WHERE `p_type` =  %s",(type_products,))
         else:
             sql.execute("SELECT COUNT(*) FROM `stock_list`.`products`")
         
-        if (on == True):
+        if (reset == True): #// รีเซ็ตหน้าเมื่อเปลี่ยนประเภท
             num_page.set(0)
             amount_page.set(num_page.get())
 

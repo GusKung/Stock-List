@@ -406,7 +406,10 @@ def gui_stock(my_sql):
     btn_add.grid(row=3,column=0,sticky="sw",padx=20,pady=20)
 
     btn_del = CTkButton(FLeft,width=100,height=40,text="Remove",corner_radius=20,fg_color="#FF3939",hover_color="#DF4949",cursor="hand2")
-    btn_del.grid(row=3,column=1,sticky="se",padx=20,pady=20)
+    btn_del.grid(row=3,column=0,columnspan=2 ,sticky="s",padx=20,pady=20)
+
+    btn_apply = CTkButton(FLeft,width=100,height=40,text="Apply",corner_radius=20)
+    btn_apply.grid(row=3,column=1,sticky="se",padx=20,pady=20)
 # //-----------------------------------------------------
 
 
@@ -417,7 +420,7 @@ def gui_stock(my_sql):
 
     type_list_bar = ["ทั้งหมด"]+[t[0] for t in products_type]
 
-    bar_type = CTkComboBox(FRight,width=200,values=type_list_bar) 
+    bar_type = CTkComboBox(FRight,width=200,values=type_list_bar,command=lambda value: show_products(value,0,True)) 
     bar_type.grid(row=0,column=0,padx=20,sticky="w")
 
     inp_search = CTkEntry(FRight,placeholder_text="Search",text_color="#818181",width=300,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16))
@@ -429,7 +432,7 @@ def gui_stock(my_sql):
     open_search_icon = Image.open(icon/"search.png")
     search_icon = CTkImage(light_image=open_search_icon,dark_image=open_search_icon,size=(20,20))
 
-    btn_search = CTkButton(FRight,width=100,height=30,text="",corner_radius=20,image=search_icon,fg_color="#7cffac",hover_color="#6ae69e",cursor="hand2")
+    btn_search = CTkButton(FRight,width=100,height=30,text="",corner_radius=20,image=search_icon,fg_color="#38f388",hover_color="#6be59e",cursor="hand2")
     btn_search.grid(row=0,column=0,pady=10,padx=20,sticky="e") 
 
 
@@ -455,12 +458,37 @@ def gui_stock(my_sql):
 
     table_stock.grid(row=1, column=0, sticky="nsew")
 
-    def show_products(num):
+    num_page = IntVar(value=0)
+    all_row = IntVar(value=0)
+
+    def show_products(type_products,num,reset):
         table_stock.delete(*table_stock.get_children())
         sql = my_sql.cursor()
-        sql.execute("SELECT * FROM `stock_list`.`products`  ORDER BY `p_name` LIMIT 40 offset %s; ",(num,) )
+
+        if (type_products != "ทั้งหมด"): #// ดึงข้อมูลตามประเภท
+            sql.execute("SELECT * FROM `stock_list`.`products` WHERE `p_type` = %s ORDER BY `p_name` LIMIT 50 offset %s;" , (type_products,(num)*50,))
+        else:
+            sql.execute("SELECT * FROM `stock_list`.`products` ORDER BY `p_name` LIMIT 50 offset %s;" , (num*50,))
+
         resulte = sql.fetchall()
 
+        if (type_products != "ทั้งหมด"): #// นับจำนวนข้อมูลตามประเภท
+            sql.execute("SELECT COUNT(*) FROM `stock_list`.`products` WHERE `p_type` =  %s",(type_products,))
+        else:
+            sql.execute("SELECT COUNT(*) FROM `stock_list`.`products`")
+        
+        if (reset == True): #// รีเซ็ตหน้าเมื่อเปลี่ยนประเภท
+            num_page.set(0)
+            amount_page.set(num_page.get())
+
+
+        all_amount = sql.fetchone()[0]
+
+        all_row.set(int(all_amount)//40)
+        values =[f"{i}"for i in range(all_row.get()+1)]
+        amount_page.configure(values=values)
+        amount_page_scroll.configure(values=values)
+        
         for i in resulte:
            id = i[0]
            name = i[1]
@@ -471,5 +499,36 @@ def gui_stock(my_sql):
            sell = i[6]
 
            table_stock.insert("",END,values=(id,name,p_type,cost_price,price,amount,sell))
-    show_products(0)
+    
+# //-----------------------------------------------------
 
+# //----------------------Button Next Page-------------------------------
+
+    def next_page():
+        num =  num_page.get()
+        if (num < all_row.get()):
+            num_page.set(num+1)
+            amount_page.set(num_page.get())
+            show_products(bar_type.get(),num_page.get(),False)
+
+    def back_page():
+        num =  num_page.get()
+        if (num > 0):
+            num_page.set(num-1)
+            amount_page.set(num_page.get())
+            show_products(bar_type.get(),num_page.get(),False)     
+
+    btn_next = CTkButton(FRight,width=100,height=40,font=("Arial Bold",16),text=">",corner_radius=20,fg_color="#38f388",hover_color="#6be59e",text_color="black",cursor="hand2",command=next_page)
+    btn_next.grid(row=2,column=0,sticky="se",padx=(0,20),pady=20)
+
+    btn_back = CTkButton(FRight,width=100,height=40,font=("Arial Bold",16),text="<",corner_radius=20,fg_color="#38f388",hover_color="#6be59e",text_color="black",cursor="hand2",command=back_page)
+    btn_back.grid(row=2,column=0,sticky="sw",padx=(20,0),pady=20)
+
+    value =[f"{i}"for i in range(all_row.get()+1)]
+
+    amount_page = CTkComboBox(FRight,width=80,values=value)
+    amount_page.grid(row=2,column=0,columnspan=2,sticky="S",pady=25)
+
+    amount_page_scroll = CTkScrollableDropdown(amount_page,values=value,justify="left", button_color="transparent")
+
+    show_products("ทั้งหมด",num_page.get(),True)
