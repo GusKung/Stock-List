@@ -336,9 +336,9 @@ def main_gui(my_sql,a_user,a_pass):
     def show_products(type_products,num,reset):
 
         if (type_products != "ทั้งหมด"): #// ดึงข้อมูลตามประเภท
-            sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_type` = %s ORDER BY `p_name` LIMIT 40 offset %s;" , (type_products,(num)*40,))
+            sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_type` = %s ORDER BY `p_type`,`p_id`,`p_name` ASC LIMIT 40 offset %s;" , (type_products,(num)*40,))
         else:
-            sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` ORDER BY `p_name` LIMIT 40 offset %s;" , (num*40,))
+            sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` ORDER BY `p_type`,`p_id`,`p_name` ASC LIMIT 40 offset %s;" , (num*40,))
 
         products = sql.fetchall()
 

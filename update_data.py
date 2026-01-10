@@ -71,6 +71,7 @@ def gui_account(my_sql):
 
     id_ac = 8000  
     id_em = 6000
+
     def add_track():
         nonlocal id_ac , id_em
         sql = my_sql.cursor()
@@ -82,10 +83,6 @@ def gui_account(my_sql):
         table_account.insert("",END,values=(len_id_em,len_id_ac,"New","","","","","","",""))
         id_ac += 1
         id_em += 1
-        
-
-    btn_add = CTkButton(FLeft,width=100,height=40,text="Add",corner_radius=20,command=add_track)
-    btn_add.grid(row=3,column=0,sticky="sw",padx=20,pady=20)
 
     def del_track():
         sure = CTkMessagebox(title="Delete Account",message="Are you sure to delete this account?",icon="warning",option_1="No",option_2="Yes")
@@ -101,10 +98,6 @@ def gui_account(my_sql):
                 sql.execute("DELETE FROM `stock_list`.`accounts` WHERE `id` = %s;", (id_account,))
                 my_sql.commit()
                 load_data()
-
-
-    btn_del = CTkButton(FLeft,width=100,height=40,text="Remove",corner_radius=20,fg_color="#FF3939",hover_color="#DF4949",cursor="hand2",command=del_track)
-    btn_del.grid(row=3,column=1,sticky="se",padx=20,pady=20)
 
     def apply():
         for id_account , user , level , password , id , f_name , l_name , contact , address in data_account:
@@ -126,9 +119,17 @@ def gui_account(my_sql):
         if (succ.get() == "OK"):
             load_data()
 
-     
-    btn_apply = CTkButton(FRight,width=100,height=40,text="Apply",corner_radius=20,command=apply)
-    btn_apply.grid(row=1,column=0,sticky="se",padx=20,pady=20)
+
+    btn_add = CTkButton(FLeft,width=100,height=40,text="Add",corner_radius=20,command=add_track)
+    btn_add.grid(row=3,column=0,sticky="sw",padx=20,pady=20)
+
+    btn_del = CTkButton(FLeft,width=100,height=40,text="Remove",corner_radius=20,fg_color="#FF3939",hover_color="#DF4949",cursor="hand2",command=del_track)
+    btn_del.grid(row=3,column=0,columnspan=2,sticky="s",padx=20,pady=20)
+
+    btn_apply = CTkButton(FLeft,width=100,height=40,text="Apply",corner_radius=20,command=apply)
+    btn_apply.grid(row=3,column=1,sticky="se",padx=20,pady=20)
+
+   
 
     def edit():
         if (inp_user.cget("state") == "disabled"):
@@ -397,7 +398,7 @@ def gui_stock(my_sql):
     btn_edit.grid(row=1,column=1,pady=10,padx=20)
 # //-----------------------------------------------------
 
-# //----------------------TextBox-------------------------------
+# //----------------------Left Button-------------------------------
     data_products= CTkTextbox(FLeft,width=400,height=200,corner_radius=20,font=("Arial", 16),border_width=2,border_color="#A7A7A7",fg_color="#FCFCFC",text_color="#818181")
     data_products.configure(state="disabled")
     data_products.grid(row=2,column=0,columnspan=2,pady=10,padx=20,sticky="nsew")

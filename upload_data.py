@@ -93,8 +93,17 @@ def gui_upload(my_sql):
         data["inp_amount"] = CTkEntry(Frame_Center,width=150,height=30,corner_radius=10,placeholder_text="Amount",font=("Arial",16))
         data["inp_amount"].grid(row=2,column=1,sticky="ew")
 
-        data["btn_remove"] = CTkButton(Frame_Center,width=60,height=30,corner_radius=20,text="Remove",text_color="white",fg_color="#f33838",hover_color="#f66b6b",command=lambda: remove_track(data,Frame_Center))
-        data["btn_remove"].grid(row=2,column=2,padx=(25,10),sticky="ew")
+        sql = my_sql.cursor()
+        all_type = sql.execute("SELECT DISTINCT p_type FROM stock_list.products;")
+        products_type = sql.fetchall()
+
+        type_list = [t[0] for t in products_type]
+
+        data["inp_type"] = CTkComboBox(Frame_Center,width=80,values=type_list)
+        data["inp_type"].grid(row=2,column=2,padx=(25,10),sticky="ew")
+
+        data["btn_remove"] = CTkButton(Frame_Center,width=60,height=30,corner_radius=0,text="Remove",text_color="white",fg_color="#f33838",hover_color="#f66b6b",command=lambda: remove_track(data,Frame_Center))
+        data["btn_remove"].grid(row=3,column=1,columnspan=2,padx=(0,0),pady=(0,20),sticky="nesw")
 
         data_list.append(data)
         
@@ -111,18 +120,11 @@ def gui_upload(my_sql):
         for i in products:
             barcode = str(i["inp_barcode"].get())
             name = str(i["inp_name"].get())
+            type_product = str(i["inp_type"].get())
             cost_price = float(i["inp_cost_price"].get())
             price = float(i["inp_price"].get())
             amount = int(i["inp_amount"].get())
-            
             sql = my_sql.cursor()
-
-            try:
-                sql.execute("INSERT IGNORE products VALUES ('%s', '%s', %.2f, %.2f, %d , %d) " % (barcode, name, cost_price, price, amount,0))
-                my_sql.commit()
-            except mysql.connector.Error as err:
-                CTkMessagebox(gui, title="Error", message=f"Something went wrong: {err}", icon="cancel", option_1="OK")
-
 
             try:
                 img = i["img_open"]
@@ -134,11 +136,15 @@ def gui_upload(my_sql):
             except:
                 pass
 
+            try:
+                sql.execute("INSERT IGNORE `stock_list`.`products` VALUES (%s, %s, %s, %s, %s, %s, %s) " , (barcode, name, type_product, cost_price, price, amount, 0))
+                my_sql.commit()
+            except mysql.connector.Error as err:
+                CTkMessagebox(gui, title="Error", message=f"Something went wrong: {err}", icon="cancel", option_1="OK")
+
         btn_message = CTkMessagebox(gui, title="Success", message="Upload Complete", icon="check", option_1="OK")
         if btn_message.get() == "OK":
             gui.destroy()
-
-            
 
     btn_upload = CTkButton(gui,font=("Arial",16),command=lambda: upload(data_list[:]),width=60,height=30,corner_radius=20,text="Upload",text_color="white",fg_color="#38f388",hover_color="#6be59e")
     btn_upload.pack(side=RIGHT,anchor="se",padx=10,pady=10)
