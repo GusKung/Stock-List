@@ -53,9 +53,9 @@ def gui_account(my_sql):
     FRight.rowconfigure(0,weight=1)
 
     ID = StringVar(value="")
-    USER = StringVar(value="")
-    PASS = StringVar(value="")
-    LEVEL = StringVar(value="")
+    USER = StringVar(value="Username")
+    PASS = StringVar(value="Password")
+    LEVEL = StringVar(value="Level")
 
     data_account = []
 
@@ -97,7 +97,7 @@ def gui_account(my_sql):
                 sql = my_sql.cursor()
                 sql.execute("DELETE FROM `stock_list`.`accounts` WHERE `id` = %s;", (id_account,))
                 my_sql.commit()
-                load_data()
+                load_data(0)
 
     def apply():
         for id_account , user , level , password , id , f_name , l_name , contact , address in data_account:
@@ -117,7 +117,7 @@ def gui_account(my_sql):
          
         succ = CTkMessagebox(title="Success",message="Apply Changes Successfully!",icon="check",option_1="OK")
         if (succ.get() == "OK"):
-            load_data()
+            load_data(0)
 
 
     btn_add = CTkButton(FLeft,width=100,height=40,text="Add",corner_radius=20,command=add_track)
@@ -129,8 +129,37 @@ def gui_account(my_sql):
     btn_apply = CTkButton(FLeft,width=100,height=40,text="Apply",corner_radius=20,command=apply)
     btn_apply.grid(row=3,column=1,sticky="se",padx=20,pady=20)
 
-   
+# //-----------------------Button Next Page------------------------------
+    num = IntVar(value=0)
+    def next_page():
+        if (num.get() < all_row):
+            num.set(num.get()+1)
+            amount_page.set(num.get())
+            load_data(num.get())
 
+    def back_page():
+        if (num.get() > 0):
+            num.set(num.get()-1)
+            amount_page.set(num.get())
+            load_data(num.get())
+
+    sql = my_sql.cursor()
+    sql.execute("SELECT COUNT(*) FROM `stock_list`.`accounts`;")
+    all_amount = sql.fetchone()[0]
+    all_row = int(all_amount)//50
+    value =[f"{i}"for i in range(all_row+1)]
+
+    btn_next = CTkButton(FRight,width=100,height=40,font=("Arial Bold",16),text=">",corner_radius=20,fg_color="#38f388",hover_color="#6be59e",text_color="black",cursor="hand2",command=next_page)
+    btn_next.grid(row=2,column=0,sticky="se",padx=(0,20),pady=20)
+
+    btn_back = CTkButton(FRight,width=100,height=40,font=("Arial Bold",16),text="<",corner_radius=20,fg_color="#38f388",hover_color="#6be59e",text_color="black",cursor="hand2",command=back_page)
+    btn_back.grid(row=2,column=0,sticky="sw",padx=(20,0),pady=20)
+
+    amount_page = CTkComboBox(FRight,width=80,values=value)
+    amount_page.grid(row=2,column=0,columnspan=2,sticky="S",pady=25)
+
+
+# //-----------------------Button Edit------------------------------
     def edit():
         if (inp_user.cget("state") == "disabled"):
             inp_user.configure(state="normal",text_color="#000000",border_color="#000000",fg_color="#FFFFFF")
@@ -188,6 +217,8 @@ def gui_account(my_sql):
     btn_edit = CTkButton(FLeft,text="Edit",width=150,corner_radius=14,height=30,font=("Arial", 16),command=edit)
     btn_edit.grid(row=1,column=1,pady=20,padx=20)
 
+
+# //-------------------------Table----------------------------
     data_employee = CTkTextbox(FLeft,width=400,height=200,corner_radius=20,font=("Arial", 16),border_width=2,border_color="#A7A7A7",fg_color="#FCFCFC",text_color="#818181")
     data_employee.configure(state="disabled")
     data_employee.grid(row=2,column=0,columnspan=2,pady=10,padx=20,sticky="nsew")
@@ -263,10 +294,11 @@ def gui_account(my_sql):
 
     table_account.bind("<Double-1>", select_data)
 
-    def load_data():
+# //-----------------------Load Data------------------------------
+    def load_data(num):
         table_account.delete(*table_account.get_children())
         sql = my_sql.cursor()
-        sql.execute("SELECT * FROM stock_list.employee join `stock_list`.`accounts` on `employee`.`account_id` = `accounts`.`id` order by `accounts`.`id` asc;")
+        sql.execute("SELECT * FROM stock_list.employee join `stock_list`.`accounts` on `employee`.`account_id` = `accounts`.`id` order by `accounts`.`id` asc limit 50 offset %s;" ,(num*50,))
         resulte = sql.fetchall()
 
         for i in resulte:
@@ -283,7 +315,7 @@ def gui_account(my_sql):
             contact = i[5]
 
             table_account.insert("",END,values=(id_employee,id_user,user,level,employee,f_name,l_name,password,address,contact))
-    load_data()
+    load_data(0)
 
 
 def gui_stock(my_sql):
@@ -319,7 +351,7 @@ def gui_stock(my_sql):
     FLeft.pack(side=LEFT, fill=BOTH)
 
     FLeft.columnconfigure(0,weight=1)
-    FLeft.rowconfigure(2,weight=1)
+    FLeft.rowconfigure(4,weight=1)
 
     FRight = CTkFrame(stockt_gui,fg_color="#FFFFFF", corner_radius=0)
     FRight.pack(side=RIGHT, fill=BOTH,expand=True)
@@ -332,12 +364,12 @@ def gui_stock(my_sql):
 
 # //---------------------Frame-------------------------------
 
-    ID = StringVar(value="")
-    NAME = StringVar(value="")
-    TYPE = StringVar(value="")
-    COST_PRICE = IntVar(value="")
-    PRICE = IntVar(value="")
-    AMOUNT = IntVar(value="")
+    ID = StringVar(value="Barcode")
+    NAME = StringVar(value="Name Product")
+    TYPE = StringVar(value="Type")
+    COST_PRICE = IntVar(value="Cost Price")
+    PRICE = IntVar(value="Price")
+    AMOUNT = IntVar(value="Amount")
 
     data_stock= []
 
@@ -356,6 +388,35 @@ def gui_stock(my_sql):
     box_type = CTkComboBox(FLeft,values=type_list,variable=TYPE,state="disabled",width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16))
     box_type.grid(row=1,column=0,pady=10,padx=20)
 
+    btn_amount = CTkEntry(FLeft,placeholder_text="AMOUNT",text_color="#818181",textvariable=AMOUNT,width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16),state="disabled")
+    btn_amount.grid(row=1,column=1,pady=10,padx=20)
+
+    btn_cost_price = CTkEntry(FLeft,placeholder_text="COST PRICE",text_color="#818181",textvariable=COST_PRICE,width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16),state="disabled")
+    btn_cost_price.grid(row=2,column=0,pady=10,padx=20)
+
+    btn_price = CTkEntry(FLeft,placeholder_text="PRICE",text_color="#818181",textvariable=PRICE,width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16),state="disabled")
+    btn_price.grid(row=2,column=1,pady=10,padx=20)
+
+    add_dir = Path(__file__).parent
+    img_path = add_dir / "icon" / "upload.png"
+    img_open = Image.open(img_path)
+    img = CTkImage(light_image=img_open,dark_image=img_open,size=(200,200))
+
+    def upload_img():
+            stockt_gui.attributes("-topmost",False)
+
+            file_path = customtkinter.filedialog.askopenfilename(title="Select Image",filetypes=(("JPG files","*.jpg"),("JPEG files","*.jpeg"),("PNG files","*.png")))
+            if (file_path):
+                img_open = Image.open(file_path)
+
+                img = CTkImage(light_image=img_open ,dark_image=img_open,size=(200,200))
+                btn_image.configure(image=img)
+                
+            stockt_gui.attributes("-topmost",True)
+
+    btn_image = CTkButton(FLeft,state="disabled",command=upload_img,width=200,height=200,text="",image=img,fg_color="#FFFFFF",hover_color="#F7F7F7",corner_radius=0)
+    btn_image.grid(row=4,column=0,columnspan=2,sticky="news",pady=10,padx=20)
+
 
 # //-----------------------Button Edit------------------------------
     def edit():
@@ -363,54 +424,38 @@ def gui_stock(my_sql):
             inp_id.configure(state="normal",text_color="#000000",border_color="#000000",fg_color="#FFFFFF")
             inp_name.configure(state="normal",text_color="#000000",border_color="#000000",fg_color="#FFFFFF")
             box_type.configure(state="normal",border_color="#000000",fg_color="#FFFFFF")
-            data_products.configure(state="normal",text_color="#000000",border_color="#8D8D8D",fg_color="#FFFFFF")
+            btn_amount.configure(state="normal",text_color="#000000",border_color="#000000",fg_color="#FFFFFF")
+            btn_cost_price.configure(state="normal",text_color="#000000",border_color="#000000",fg_color="#FFFFFF")
+            btn_price.configure(state="normal",text_color="#000000",border_color="#000000",fg_color="#FFFFFF")
+            btn_image.configure(state="normal")
+
             btn_edit.configure(text="Save")
-
-            def protect_readonly(event):
-                cursor_pos = data_products.index("insert")
-                
-                prev_index = data_products.index(f"{cursor_pos} -1c")
-                
-                if event.keysym in ("BackSpace", "Delete"):
-                    if "readonly" in data_products.tag_names(prev_index):
-                        return "break"
-                
-                if event.keysym not in ("BackSpace", "Delete"):
-                    if "readonly" in data_products.tag_names(cursor_pos):
-                        
-                        insert_after = data_products.index(f"{prev_index} +1c")
-                        data_products.mark_set("insert", insert_after)
-
-
-            data_products.bind("<Key>", protect_readonly)
-            data_products.bind("<BackSpace>", protect_readonly)
-            data_products.bind("<Delete>", protect_readonly)
 
         else:
             inp_id.configure(state="disabled",text_color="#818181",border_color="#8D8D8D",fg_color="#FCFCFC")
             inp_name.configure(state="disabled",text_color="#818181",border_color="#8D8D8D",fg_color="#FCFCFC")
             box_type.configure(state="disabled",border_color="#8D8D8D",fg_color="#FCFCFC")
-            data_products.configure(state="disabled",text_color="#818181",border_color="#A7A7A7",fg_color="#FCFCFC")
             btn_edit.configure(text="Edit")
+            btn_amount.configure(state="disabled",text_color="#818181",border_color="#8D8D8D",fg_color="#FCFCFC")
+            btn_cost_price.configure(state="disabled",text_color="#818181",border_color="#8D8D8D",fg_color="#FCFCFC")
+            btn_price.configure(state="disabled",text_color="#818181",border_color="#8D8D8D",fg_color="#FCFCFC")
+            btn_image.configure(state="disabled")
 
 
     btn_edit = CTkButton(FLeft,text="Edit",command=edit,width=200,corner_radius=14,height=30,font=("Arial", 16))
-    btn_edit.grid(row=1,column=1,pady=10,padx=20)
+    btn_edit.grid(row=3,column=0,columnspan=2,sticky="ew",pady=10,padx=20)
 # //-----------------------------------------------------
 
 # //----------------------Left Button-------------------------------
-    data_products= CTkTextbox(FLeft,width=400,height=200,corner_radius=20,font=("Arial", 16),border_width=2,border_color="#A7A7A7",fg_color="#FCFCFC",text_color="#818181")
-    data_products.configure(state="disabled")
-    data_products.grid(row=2,column=0,columnspan=2,pady=10,padx=20,sticky="nsew")
 
     btn_add = CTkButton(FLeft,width=100,height=40,text="Add",corner_radius=20)
-    btn_add.grid(row=3,column=0,sticky="sw",padx=20,pady=20)
+    btn_add.grid(row=5,column=0,sticky="sw",padx=20,pady=20)
 
     btn_del = CTkButton(FLeft,width=100,height=40,text="Remove",corner_radius=20,fg_color="#FF3939",hover_color="#DF4949",cursor="hand2")
-    btn_del.grid(row=3,column=0,columnspan=2 ,sticky="s",padx=20,pady=20)
+    btn_del.grid(row=5,column=0,columnspan=2 ,sticky="s",padx=20,pady=20)
 
     btn_apply = CTkButton(FLeft,width=100,height=40,text="Apply",corner_radius=20)
-    btn_apply.grid(row=3,column=1,sticky="se",padx=20,pady=20)
+    btn_apply.grid(row=5,column=1,sticky="se",padx=20,pady=20)
 # //-----------------------------------------------------
 
 
@@ -485,7 +530,7 @@ def gui_stock(my_sql):
 
         all_amount = sql.fetchone()[0]
 
-        all_row.set(int(all_amount)//40)
+        all_row.set(int(all_amount)//50)
         values =[f"{i}"for i in range(all_row.get()+1)]
         amount_page.configure(values=values)
         amount_page_scroll.configure(values=values)

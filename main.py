@@ -472,10 +472,10 @@ def main_gui(my_sql,a_user,a_pass):
     num_price = CTkLabel(FBottom,text=f"{float(p_price.get())}\n\n{p_amount_list.get()}\n\n{float(p_price.get())}",font=("Arial",24),justify="right")
     num_price.pack(side=RIGHT,anchor="w",padx=20,pady=20)
 
-    pay_cash = CTkButton(FBottomPay,text="Cash",cursor="hand2",text_color="black",width=200,height=60,corner_radius=0,fg_color="#ffad15",hover_color="#e29e45",font=("Arial Bold",24))
+    pay_cash = CTkButton(FBottomPay,text="Cash",cursor="hand2",text_color="white",width=200,height=60,corner_radius=0,fg_color="#ffad15",hover_color="#e29e45",font=("Arial Bold",24))
     pay_cash.grid(row=0,column=0,sticky="nsew")
 
-    pay_bank = CTkButton(FBottomPay,text="Bank",cursor="hand2",text_color="black",width=200,height=60,corner_radius=0,fg_color="#264eff",hover_color="#2e5fe6",font=("Arial Bold",24))
+    pay_bank = CTkButton(FBottomPay,text="Bank",cursor="hand2",text_color="white",width=200,height=60,corner_radius=0,fg_color="#264eff",hover_color="#2e5fe6",font=("Arial Bold",24))
     pay_bank.grid(row=0,column=1,sticky="nsew")
 
     show_products("ทั้งหมด",num_page.get(),True)
