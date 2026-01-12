@@ -55,19 +55,14 @@ def main_gui(my_sql,a_user,a_pass):
 # //----------------------------------------------------------------------
 
 
-# //----------------------------------------------------------------------
+# //-------------------------------Menu---------------------------------------
     menu = CTkMenuBar(main)
     try:
-        file_menu = menu.add_cascade("Setting",fg_color="white")
-
-        dropdown = CustomDropdownMenu(widget=file_menu,bg_color="#FFFFFF")
-
         func_account = lambda:update_data.gui_account(my_sql)
-        dropdown.add_option(option="Account",command= lambda:check_level(3,func_account))
-
+        account_menu = menu.add_cascade("Account",fg_color="white",command= lambda:check_level(3,func_account))
 
         func_product = lambda: update_data.gui_stock(my_sql)
-        dropdown.add_option(option="Stock",command= lambda:check_level(2,func_product))
+        stock_menu = menu.add_cascade("Stock",command= lambda:check_level(2,func_product))
     except Exception as e:
         CTkMessagebox(title="Error", message=f"Something went wrong: {e}", icon="cancel", option_1="OK")
 # //----------------------------------------------------------------------

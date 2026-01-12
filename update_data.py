@@ -130,18 +130,18 @@ def gui_account(my_sql):
     btn_apply.grid(row=3,column=1,sticky="se",padx=20,pady=20)
 
 # //-----------------------Button Next Page------------------------------
-    num = IntVar(value=0)
+    num_page = IntVar(value=0)
     def next_page():
-        if (num.get() < all_row):
-            num.set(num.get()+1)
-            amount_page.set(num.get())
-            load_data(num.get())
+        if (num_page.get() < all_row):
+            num_page.set(num_page.get()+1)
+            amount_page.set(num_page.get())
+            load_data(num_page.get())
 
     def back_page():
-        if (num.get() > 0):
-            num.set(num.get()-1)
-            amount_page.set(num.get())
-            load_data(num.get())
+        if (num_page.get() > 0):
+            num_page.set(num_page.get()-1)
+            amount_page.set(num_page.get())
+            load_data(num_page.get())
 
     sql = my_sql.cursor()
     sql.execute("SELECT COUNT(*) FROM `stock_list`.`accounts`;")
@@ -155,7 +155,13 @@ def gui_account(my_sql):
     btn_back = CTkButton(FRight,width=100,height=40,font=("Arial Bold",16),text="<",corner_radius=20,fg_color="#38f388",hover_color="#6be59e",text_color="black",cursor="hand2",command=back_page)
     btn_back.grid(row=2,column=0,sticky="sw",padx=(20,0),pady=20)
 
+    def change_page(page):
+        num_page.set(page)
+        amount_page.set(num_page.get())
+        load_data(num_page.get())
+
     amount_page = CTkComboBox(FRight,width=80,values=value)
+    amount_page_scroll = CTkScrollableDropdown(amount_page,values=value,justify="left", button_color="transparent",command=change_page)
     amount_page.grid(row=2,column=0,columnspan=2,sticky="S",pady=25)
 
 
@@ -491,15 +497,16 @@ def gui_stock(my_sql):
     table_stock.heading("ID",text="ID")
     table_stock.heading("NAME",text="NAME")
     table_stock.heading("AMOUNT",text="AMOUNT")
+    table_stock.heading("COST_PRICE",text="PRICE")
     table_stock.heading("PRICE",text="PRICE")
 
-    table_stock.column("ID",width=80,anchor=CENTER)
-    table_stock.column("NAME",width=250,anchor="w")
-    table_stock.column("AMOUNT",width=40,anchor=CENTER)
-    table_stock.column("PRICE",width=40,anchor=CENTER)
+    table_stock.column("ID",width=75,anchor=CENTER)
+    table_stock.column("NAME",width=220,anchor="w")
+    table_stock.column("AMOUNT",width=30,anchor=CENTER)
+    table_stock.column("COST_PRICE",width=30,anchor=CENTER)
+    table_stock.column("PRICE",width=30,anchor=CENTER)
 
     table_stock.column("TYPE",width=0,stretch=False)
-    table_stock.column("COST_PRICE",width=0,stretch=False)
     table_stock.column("SELL",width=0,stretch=False)
 
     table_stock.grid(row=1, column=0, sticky="nsew")
@@ -572,9 +579,14 @@ def gui_stock(my_sql):
 
     value =[f"{i}"for i in range(all_row.get()+1)]
 
-    amount_page = CTkComboBox(FRight,width=80,values=value)
-    amount_page.grid(row=2,column=0,columnspan=2,sticky="S",pady=25)
+    def change_page(page):
+        num_page.set(page)
+        amount_page.set(num_page.get())
+        show_products(bar_type.get(),num_page.get(),False)
 
-    amount_page_scroll = CTkScrollableDropdown(amount_page,values=value,justify="left", button_color="transparent")
+
+    amount_page = CTkComboBox(FRight,width=80,values=value)
+    amount_page_scroll = CTkScrollableDropdown(amount_page,values=value,justify="left", button_color="transparent",command=change_page)
+    amount_page.grid(row=2,column=0,columnspan=2,sticky="S",pady=25)
 
     show_products("ทั้งหมด",num_page.get(),True)
