@@ -57,7 +57,7 @@ def gui_account(my_sql):
     PASS = StringVar(value="Password")
     LEVEL = StringVar(value="Level")
 
-    data_account = []
+    data_account = {}
 
     inp_user = CTkEntry(FLeft,placeholder_text="Username",text_color="#818181",textvariable=USER,width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16),state="disabled")
     inp_user.grid(row=0,column=0,pady=(40,10),padx=20)
@@ -100,20 +100,21 @@ def gui_account(my_sql):
                 load_data(0)
 
     def apply():
-        for id_account , user , level , password , id , f_name , l_name , contact , address in data_account:
+        sql = my_sql.cursor()
+        for id_account , values in data_account.items():
 
-            sql = my_sql.cursor()
-            sql.execute("SELECT id FROM `stock_list`.`accounts` WHERE id = %s;", (id_account,))
+            user , level , password , emp_id , f_name , l_name , contact , address = values
+
+            sql.execute("SELECT `id` FROM `stock_list`.`accounts` WHERE `id` = %s;", (id_account,))
             resulte = sql.fetchall()
             if (not resulte):
                 sql.execute("INSERT INTO `stock_list`.`accounts` (`id`, `username`, `passwords`, `level` , `onlines`) VALUES (%s, %s, %s, %s,%s);", (id_account, user, password, level, 0))
-                my_sql.commit()
 
-                sql.execute("INSERT INTO `stock_list`.`employee` (`emp_id` ,`account_id`, `first_name`, `last_name` , `address` , `contact`) VALUES (%s,%s, %s, %s, %s, %s);", (id,id_account, f_name, l_name , address , contact))
-                my_sql.commit()
+                sql.execute("INSERT INTO `stock_list`.`employee` (`emp_id` ,`account_id`, `first_name`, `last_name` , `address` , `contact`) VALUES (%s,%s, %s, %s, %s, %s);", (emp_id,id_account, f_name, l_name , address , contact))
             else:
-                sql.execute("""update `stock_list`.`employee` join `stock_list`.`accounts` on `employee`.`account_id` = `accounts`.`id` set `accounts`.`username` = %s, `accounts`.`passwords` = %s, `accounts`.`level` = %s, `employee`.`emp_id` = %s ,`employee`.`first_name` = %s, `employee`.`last_name` = %s, `employee`.`contact` = %s, `employee`.`address` = %s where `accounts`.`id` = %s;""" , (user,password,level,id,f_name,l_name,contact,address,id_account))
-                my_sql.commit()
+                sql.execute("""update `stock_list`.`employee` join `stock_list`.`accounts` on `employee`.`account_id` = `accounts`.`id` set `accounts`.`username` = %s, `accounts`.`passwords` = %s, `accounts`.`level` = %s, `employee`.`emp_id` = %s ,`employee`.`first_name` = %s, `employee`.`last_name` = %s, `employee`.`contact` = %s, `employee`.`address` = %s where `accounts`.`id` = %s;""" , (user,password,level,emp_id,f_name,l_name,contact,address,id_account))
+        
+        my_sql.commit()
          
         succ = CTkMessagebox(title="Success",message="Apply Changes Successfully!",icon="check",option_1="OK")
         if (succ.get() == "OK"):
@@ -212,15 +213,13 @@ def gui_account(my_sql):
             contact = data_employee.get("5.0","7.0").rstrip("\n").replace("Contact : ","")
             address = data_employee.get("7.0","9.0").rstrip("\n").replace("Address : ","")
 
-            if (ID.get(),USER.get(),LEVEL.get(),PASS.get(),em_id,f_name,l_name,contact,address) not in data_account:
+            id = ID.get()
+            user = USER.get()
+            level = LEVEL.get()
+            password = PASS.get()
 
-                for i, record in enumerate(data_account):
-                    if record[0] == ID.get():
-                        data_account[i] = (ID.get(),USER.get(),LEVEL.get(),PASS.get(),em_id,f_name,l_name,contact,address)
-
-                        data_account.remove(data_account[i])
-                data_account.append((ID.get(),USER.get(),LEVEL.get(),PASS.get(),em_id,f_name,l_name,contact,address))
-
+            data_account[id] = (user,level,password,em_id,f_name,l_name,contact,address)
+                
     btn_edit = CTkButton(FLeft,text="Edit",width=150,corner_radius=14,height=30,font=("Arial", 16),command=edit)
     btn_edit.grid(row=1,column=1,pady=20,padx=20)
 
@@ -379,7 +378,7 @@ def gui_stock(my_sql):
     PRICE = IntVar(value="Price")
     AMOUNT = IntVar(value="Amount")
 
-    data_stock= []
+    data_stock= {}
 
     sql = my_sql.cursor()
     all_type = sql.execute("SELECT DISTINCT p_type FROM stock_list.products;")
@@ -410,6 +409,8 @@ def gui_stock(my_sql):
     img_open = Image.open(img_path)
     img = CTkImage(light_image=img_open,dark_image=img_open,size=(200,200))
 
+    images = {}
+
     def upload_img():
             stockt_gui.attributes("-topmost",False)
 
@@ -419,6 +420,9 @@ def gui_stock(my_sql):
 
                 img = CTkImage(light_image=img_open ,dark_image=img_open,size=(200,200))
                 btn_image.configure(image=img)
+
+                barcode = ID.get()
+                images[barcode] = img_open
                 
             stockt_gui.attributes("-topmost",True)
 
@@ -449,10 +453,52 @@ def gui_stock(my_sql):
             btn_price.configure(state="disabled",text_color="#818181",border_color="#8D8D8D",fg_color="#FCFCFC")
             btn_image.configure(state="disabled")
 
+            barcode = ID.get()
+            name_product = NAME.get()
+            type_product = TYPE.get()
+            cost_price = COST_PRICE.get()
+            price = PRICE.get()
+            amount = AMOUNT.get()
+
+            data_stock[barcode] = (name_product,type_product,cost_price,price,amount)
 
     btn_edit = CTkButton(FLeft,text="Edit",command=edit,width=200,corner_radius=14,height=30,font=("Arial", 16))
     btn_edit.grid(row=3,column=0,columnspan=2,sticky="ew",pady=10,padx=20)
 # //-----------------------------------------------------
+
+# //---------------------------Apply-----------------------------------------
+    def apply():
+        sql = my_sql.cursor()
+        for barcode , values in data_stock.items():
+
+            name_product , type_product , cost_price , price , amount = values
+
+            sql.execute("SELECT `p_id` FROM `stock_list`.`products` WHERE `p_id` = %s;", (barcode,))
+            resulte = sql.fetchall()
+            if (not resulte):
+                sql.execute("INSERT INTO `stock_list`.`products` (`p_id`, `p_name`, `p_type`, `p_cost_price`, `p_price`, `p_amount`, `p_sell`) VALUES (%s, %s, %s, %s, %s, %s, %s);", (barcode, name_product, type_product, cost_price, price, amount, 0))
+            else:
+                sql.execute("UPDATE `stock_list`.`products` SET `p_name` = %s, `p_type` = %s, `p_cost_price` = %s, `p_price` = %s, `p_amount` = %s WHERE `p_id` = %s;", (name_product, type_product, cost_price, price, amount, barcode))
+        
+        my_sql.commit()
+        data_stock.clear()
+         
+        for barcode, img in images.items():
+            try:
+                rgb_img = img.convert('RGB')
+                appdir = Path(__file__).parent
+                save_path = appdir / "products" / f"{barcode}.jpg"
+                
+                rgb_img.save(save_path, optimize=True, format='JPEG', quality=10)
+            
+            except Exception as e:
+                pass
+
+        images.clear()        
+
+        succ = CTkMessagebox(title="Success",message="Apply Changes Successfully!",icon="check",option_1="OK")
+        if (succ.get() == "OK"):
+            show_products("ทั้งหมด",num_page.get(),False)
 
 # //----------------------Left Button-------------------------------
 
@@ -462,7 +508,7 @@ def gui_stock(my_sql):
     btn_del = CTkButton(FLeft,width=100,height=40,text="Remove",corner_radius=20,fg_color="#FF3939",hover_color="#DF4949",cursor="hand2")
     btn_del.grid(row=5,column=0,columnspan=2 ,sticky="s",padx=20,pady=20)
 
-    btn_apply = CTkButton(FLeft,width=100,height=40,text="Apply",corner_radius=20,cursor="hand2")
+    btn_apply = CTkButton(FLeft,width=100,height=40,text="Apply",corner_radius=20,cursor="hand2",command=apply)
     btn_apply.grid(row=5,column=1,sticky="se",padx=20,pady=20)
 # //-----------------------------------------------------
 
