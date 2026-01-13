@@ -315,8 +315,8 @@ def main_gui(my_sql,a_user,a_pass):
     FRight= CTkFrame(main,corner_radius=0,border_width=0,border_color="black",width=600)
     FRight.pack(side=RIGHT,fill=BOTH)
 
-    FProducts_Scroll = CTkScrollableFrame(FRight,fg_color="#dfdfdf",border_width=0,border_color="black",width=600)
-    FProducts_Scroll.pack(fill=BOTH,expand=True)
+    Fbill_Scroll = CTkScrollableFrame(FRight,fg_color="#dfdfdf",border_width=0,border_color="black",width=600)
+    Fbill_Scroll.pack(fill=BOTH,expand=True)
 
     FBottom= CTkFrame(FRight,fg_color="#1DF38F",corner_radius=0,border_width=0,border_color="black")
     FBottom.pack(side=BOTTOM,fill=BOTH)
@@ -329,6 +329,9 @@ def main_gui(my_sql,a_user,a_pass):
     FBottomPay.pack(side=BOTTOM,fill=BOTH)
 
     def show_products(type_products,num,reset):
+
+        for widget in FProducts.winfo_children():
+            widget.destroy()
 
         if (type_products != "ทั้งหมด"): #// ดึงข้อมูลตามประเภท
             sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_type` = %s ORDER BY `p_type`,`p_id`,`p_name` ASC LIMIT 40 offset %s;" , (type_products,(num)*40,))
@@ -386,9 +389,12 @@ def main_gui(my_sql,a_user,a_pass):
         
             FProducts.grid_columnconfigure(pro,weight=1)
 
+        FProducts._parent_canvas.yview_moveto(0.0)
+   
+
     bill_list = []
     def get_values(img,id,name,amount,price):
-        frame_product = CTkFrame(FProducts_Scroll,fg_color="white",corner_radius=20)
+        frame_product = CTkFrame(Fbill_Scroll,fg_color="white",corner_radius=20)
         frame_product.pack(padx=10,pady=5,anchor="nw")
 
         bill_list.append(frame_product)
@@ -455,7 +461,7 @@ def main_gui(my_sql,a_user,a_pass):
     open_image = Image.open(icon/"clean.png")
     clean_image = CTkImage(light_image=open_image,dark_image=open_image,size=(20,20))
 
-    btn_clear = CTkButton(FProducts_Scroll,text="",image=clean_image,width=20,height=20,fg_color="#FF2C2C",hover_color="#F14141",corner_radius=15,command=clear)
+    btn_clear = CTkButton(Fbill_Scroll,text="",image=clean_image,width=20,height=20,fg_color="#FF2C2C",hover_color="#F14141",corner_radius=15,command=clear)
     btn_clear.pack(anchor="ne")
 
     btn_clear.bind("<Enter>",lambda e: hover_enter())

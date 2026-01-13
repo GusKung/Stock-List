@@ -136,6 +136,7 @@ def gui_account(my_sql):
             num_page.set(num_page.get()+1)
             amount_page.set(num_page.get())
             load_data(num_page.get())
+           
 
     def back_page():
         if (num_page.get() > 0):
@@ -246,7 +247,7 @@ def gui_account(my_sql):
 
     table_account.column("ID_EM",width=0,stretch=False)
     table_account.column("ID",width=30,anchor=CENTER)
-    table_account.column("Username",width=100,anchor=CENTER)
+    table_account.column("Username",width=100,anchor="w")
     table_account.column("Level",width=30,anchor=CENTER)
     table_account.column("Employee",width=100,anchor=CENTER)
 
@@ -321,6 +322,7 @@ def gui_account(my_sql):
             contact = i[5]
 
             table_account.insert("",END,values=(id_employee,id_user,user,level,employee,f_name,l_name,password,address,contact))
+        table_account.yview_moveto(0)
     load_data(0)
 
 
@@ -454,13 +456,13 @@ def gui_stock(my_sql):
 
 # //----------------------Left Button-------------------------------
 
-    btn_add = CTkButton(FLeft,width=100,height=40,text="Add",corner_radius=20)
+    btn_add = CTkButton(FLeft,width=100,height=40,text="Add",corner_radius=20,cursor="hand2")
     btn_add.grid(row=5,column=0,sticky="sw",padx=20,pady=20)
 
     btn_del = CTkButton(FLeft,width=100,height=40,text="Remove",corner_radius=20,fg_color="#FF3939",hover_color="#DF4949",cursor="hand2")
     btn_del.grid(row=5,column=0,columnspan=2 ,sticky="s",padx=20,pady=20)
 
-    btn_apply = CTkButton(FLeft,width=100,height=40,text="Apply",corner_radius=20)
+    btn_apply = CTkButton(FLeft,width=100,height=40,text="Apply",corner_radius=20,cursor="hand2")
     btn_apply.grid(row=5,column=1,sticky="se",padx=20,pady=20)
 # //-----------------------------------------------------
 
@@ -497,7 +499,7 @@ def gui_stock(my_sql):
     table_stock.heading("ID",text="ID")
     table_stock.heading("NAME",text="NAME")
     table_stock.heading("AMOUNT",text="AMOUNT")
-    table_stock.heading("COST_PRICE",text="PRICE")
+    table_stock.heading("COST_PRICE",text="COST PRICE")
     table_stock.heading("PRICE",text="PRICE")
 
     table_stock.column("ID",width=75,anchor=CENTER)
@@ -511,6 +513,40 @@ def gui_stock(my_sql):
 
     table_stock.grid(row=1, column=0, sticky="nsew")
 
+    def select_product(event):
+        select = table_stock.focus()
+        values = table_stock.item(select,"values")
+
+        barcode = values[0]
+        name_product = values[1]
+        type_product = values[2]
+        cost_price = values[3]
+        price = values[4]
+        amount = values[5]
+
+        ID.set(barcode)
+        NAME.set(name_product)
+        TYPE.set(type_product)
+        COST_PRICE.set(cost_price)
+        PRICE.set(price)
+        AMOUNT.set(amount)
+
+        appdir = Path(__file__).parent
+        img = appdir / "products"
+
+        try:
+            open_pimg = Image.open(f"{img/barcode}.jpg")
+            pimg = CTkImage(light_image=open_pimg,dark_image=open_pimg,size=(200,250))
+        except FileNotFoundError:
+            open_pimg = Image.open(f"{img/"Default.jpg"}")
+            pimg = CTkImage(light_image=open_pimg,dark_image=open_pimg,size=(200,250))
+
+        btn_image.configure(image=pimg)
+
+    table_stock.bind("<Double-1>", select_product)
+# //-----------------------------------------------------
+
+# //----------------------Show Products-------------------------------
     num_page = IntVar(value=0)
     all_row = IntVar(value=0)
 
@@ -552,6 +588,7 @@ def gui_stock(my_sql):
            sell = i[6]
 
            table_stock.insert("",END,values=(id,name,p_type,cost_price,price,amount,sell))
+        table_stock.yview_moveto(0)
     
 # //-----------------------------------------------------
 
