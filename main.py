@@ -132,12 +132,12 @@ def main_gui(my_sql,a_user,a_pass):
     inp_product.grid(row=0, column=0,padx=(20,10),pady=20,sticky="WE")
 
     inp_product.focus_set()
-    inp_product.bind("<Return>",lambda e:serch_product(inp_product.get()))
+    inp_product.bind("<Return>",lambda e:search_product(inp_product.get()))
 
     open_search_icon = Image.open(icon/"search.png")
     search_icon = CTkImage(light_image=open_search_icon,dark_image=open_search_icon,size=(20,20))
 
-    def serch_product(code):
+    def search_product(code):
         find_star = code.find("*")
         amount = code[0:find_star]
         bar_code = code[find_star+1:]
@@ -206,8 +206,9 @@ def main_gui(my_sql,a_user,a_pass):
                 inp_product.delete(0,END)
                 inp_product.focus_set()
 
+
     
-    button_product = CTkButton(FLeft,font=("Arial Bold",16),width=60,height=30,command=lambda e:serch_product(inp_product.get()),corner_radius=20,image=search_icon,text="",text_color="white",fg_color="#38f388",hover_color="#6be59e")
+    button_product = CTkButton(FLeft,font=("Arial Bold",16),width=60,height=30,command=lambda :search_product(inp_product.get()),corner_radius=20,image=search_icon,text="",text_color="white",fg_color="#38f388",hover_color="#6be59e")
     button_product.bind("<Enter>", lambda event: button_product.configure(width=65,height=35)) 
     button_product.bind("<Leave>", lambda event: button_product.configure(width=60,height=30)) 
 
@@ -382,7 +383,7 @@ def main_gui(my_sql,a_user,a_pass):
             pro_frame.pack()
 
             pro_frame.bind("<Button-1>",lambda e,e_id = id:(inp_product.insert(END,e_id),
-            serch_product(inp_product.get())))
+            search_product(inp_product.get())))
         
             pro_frame.bind("<Enter>",lambda e: hover_enter())
             pro_frame.bind("<Leave>",lambda e: hover_leave())
