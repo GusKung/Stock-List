@@ -100,8 +100,8 @@ def main_gui(my_sql,a_user,a_pass):
     FLeft.columnconfigure(1,weight=1)
     FLeft.rowconfigure(1,weight=1)
 
-    FProducts = CTkScrollableFrame(FLeft,width=650,height=600,fg_color="#D4D4D4",corner_radius=0)
-    FProducts.grid(row=1,column=0,columnspan=3,sticky="news")
+    FProducts_Scroll = CTkScrollableFrame(FLeft,width=650,height=600,fg_color="#D4D4D4",corner_radius=0)
+    FProducts_Scroll.grid(row=1,column=0,columnspan=3,sticky="news")
 
     btn_next = CTkButton(FLeft,font=("Arial Bold",18),command=next_page,text=">",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
     btn_next.grid(row=2,column=1,sticky="SE",pady=20,padx=(0,100))
@@ -330,7 +330,7 @@ def main_gui(my_sql,a_user,a_pass):
 
     def show_products(type_products,num,reset):
 
-        for widget in FProducts.winfo_children():
+        for widget in FProducts_Scroll.winfo_children():
             widget.destroy()
 
         if (type_products != "ทั้งหมด"): #// ดึงข้อมูลตามประเภท
@@ -375,7 +375,7 @@ def main_gui(my_sql,a_user,a_pass):
                 open_pimg = Image.open(f"{img_products/"Default.jpg"}")
                 pimg = CTkImage(light_image=open_pimg,dark_image=open_pimg,size=(150,200))
         
-            pro = CTkFrame(FProducts,fg_color="white",width=250,height=250,corner_radius=16)
+            pro = CTkFrame(FProducts_Scroll,fg_color="white",width=250,height=250,corner_radius=16)
             pro.grid(column=col,row=row,padx=5,pady=5,sticky="news")
 
             pro_frame = CTkLabel(pro,image=pimg,text="")
@@ -387,9 +387,9 @@ def main_gui(my_sql,a_user,a_pass):
             pro_frame.bind("<Enter>",lambda e: hover_enter())
             pro_frame.bind("<Leave>",lambda e: hover_leave())
         
-            FProducts.grid_columnconfigure(pro,weight=1)
+            FProducts_Scroll.grid_columnconfigure(pro,weight=1)
 
-        FProducts._parent_canvas.yview_moveto(0.0)
+        FProducts_Scroll._parent_canvas.yview_moveto(0.0)
    
 
     bill_list = []
