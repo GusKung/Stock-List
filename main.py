@@ -79,17 +79,16 @@ def main_gui(my_sql,a_user,a_pass):
             if (on == False):
                 show_products(box_type.get(),num_page.get(),False)
             else:
-                search_products_shows(name_search.get(),num_page.get())
+                search_products_shows(name_search.get(),num_page.get(),False)
     
     def next_last_page(on):
         num_page.set(all_row.get())
         amount_page.set(num_page.get())
 
         if (on == False):
-            show_products(box_type.get(),all_row.get(),False)
+            show_products(box_type.get(),num_page.get(),False)
         else:
-            search_products_shows(name_search.get(),all_row.get())
-
+            search_products_shows(name_search.get(),all_row.get(),False)
     def back_page(on):
         num =  num_page.get()
         if (num > 0):
@@ -98,7 +97,7 @@ def main_gui(my_sql,a_user,a_pass):
             if (on == False):
                 show_products(box_type.get(),num_page.get(),False)
             else:
-                search_products_shows(name_search.get(),num_page.get())
+                search_products_shows(name_search.get(),num_page.get(),False)
 
     def back_last_page(on):
         num_page.set(0)
@@ -106,7 +105,7 @@ def main_gui(my_sql,a_user,a_pass):
         if (on == False):
             show_products(box_type.get(),0,False)
         else:
-            search_products_shows(name_search.get(),0)
+            search_products_shows(name_search.get(),0,False)
 
     sql = my_sql.cursor()
 
@@ -124,17 +123,20 @@ def main_gui(my_sql,a_user,a_pass):
     btn_last_next = CTkButton(FLeft,font=("Arial Bold",18),command=lambda:next_last_page(on_page.get()),text=">>",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
     btn_last_next.grid(row=2,column=1,sticky="SE",pady=20,padx=(0,20))
 
-    def change_page(page):
+    def change_page(page,on):
         num_page.set(page)
         amount_page.set(num_page.get())
-        show_products(box_type.get(),num_page.get(),False)
+        if (on == False):
+            show_products(box_type.get(),num_page.get(),False)
+        else:
+            search_products_shows(name_search.get(),num_page.get(),False)
 
     value =[f"{i}"for i in range(all_row.get()+1)]
 
     amount_page = CTkComboBox(FLeft,width=80,values=value)
     amount_page.grid(row=2,column=0,columnspan=2,sticky="S",pady=25)
 
-    amount_page_scroll = CTkScrollableDropdown(amount_page,values=value,justify="left", button_color="transparent",command=change_page)
+    amount_page_scroll = CTkScrollableDropdown(amount_page,values=value,justify="left", button_color="transparent",command=lambda page:change_page(page, on_page.get()))
 
     btn_back = CTkButton(FLeft,font=("Arial Bold",18),command=lambda:back_last_page(on_page.get()),text="<<",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
     btn_back.grid(row=2,column=0,sticky="SW",pady=20,padx=(20,0))
@@ -152,8 +154,8 @@ def main_gui(my_sql,a_user,a_pass):
     open_search_icon = Image.open(icon/"search.png")
     search_icon = CTkImage(light_image=open_search_icon,dark_image=open_search_icon,size=(20,20))
 
-    def search_products_shows(bar_code,num_page):
-        sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_name` LIKE %s LIMIT 40 offset %s;",(f"%{bar_code}%",num_page*40))  
+    def search_products_shows(bar_code,num,reset):
+        sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_name` LIKE %s ORDER BY  `p_name` ,`p_id` ,`p_type` asc LIMIT 40 offset %s;",(f"%{bar_code}%",num*40))  
         products = sql.fetchall()
 
         sql.execute("SELECT COUNT(*) FROM `stock_list`.`products` WHERE `p_name` LIKE %s;",(f"%{bar_code}%",))
@@ -166,6 +168,11 @@ def main_gui(my_sql,a_user,a_pass):
         values =[f"{i}"for i in range(all_row.get()+1)]
         amount_page.configure(values=values)
         amount_page_scroll.configure(values=values)
+
+        if (reset == True): #// รีเซ็ตหน้า
+            num_page.set(0)
+            amount_page.set(num_page.get())
+
 
         for widget in FProducts_Scroll.winfo_children():
                 widget.destroy()
@@ -197,6 +204,8 @@ def main_gui(my_sql,a_user,a_pass):
             pro_frame.bind("<Leave>",lambda e: hover_leave())
         
             FProducts_Scroll.grid_columnconfigure(pro,weight=1)
+
+        FProducts_Scroll._parent_canvas.yview_moveto(0.0)
 
         inp_product.delete(0,END)
         inp_product.focus_set()
@@ -240,7 +249,7 @@ def main_gui(my_sql,a_user,a_pass):
                     inp_product.focus_set()
             elif (bar_code != ""):
                 name_search.set(bar_code)
-                search_products_shows(name_search.get(),0)
+                search_products_shows(name_search.get(),0,True)
             else:
                 show_products("ทั้งหมด",0,True)
                 name_search.set("")
