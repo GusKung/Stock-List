@@ -52,6 +52,8 @@ def main_gui(my_sql,a_user,a_pass):
     
     num_page = IntVar(value=0)
     all_row = IntVar(value=0)
+    on_page = BooleanVar(value=False)
+    name_search = StringVar(value="")
 # //----------------------------------------------------------------------
 
 
@@ -69,29 +71,42 @@ def main_gui(my_sql,a_user,a_pass):
 
 
 # //----------------------------------------------------------------------
-    def next_page():
+    def next_page(on):
         num =  num_page.get()
         if (num < all_row.get()):
             num_page.set(num+1)
             amount_page.set(num_page.get())
-            show_products(box_type.get(),num_page.get(),False)
+            if (on == False):
+                show_products(box_type.get(),num_page.get(),False)
+            else:
+                search_products_shows(name_search.get(),num_page.get())
     
-    def next_last_page():
+    def next_last_page(on):
         num_page.set(all_row.get())
         amount_page.set(num_page.get())
-        show_products(box_type.get(),all_row.get(),False)
 
-    def back_page():
+        if (on == False):
+            show_products(box_type.get(),all_row.get(),False)
+        else:
+            search_products_shows(name_search.get(),all_row.get())
+
+    def back_page(on):
         num =  num_page.get()
         if (num > 0):
             num_page.set(num-1)
             amount_page.set(num_page.get())
-            show_products(box_type.get(),num_page.get(),False)
+            if (on == False):
+                show_products(box_type.get(),num_page.get(),False)
+            else:
+                search_products_shows(name_search.get(),num_page.get())
 
-    def back_last_page():
+    def back_last_page(on):
         num_page.set(0)
         amount_page.set(num_page.get())
-        show_products(box_type.get(),0,False)
+        if (on == False):
+            show_products(box_type.get(),0,False)
+        else:
+            search_products_shows(name_search.get(),0)
 
     sql = my_sql.cursor()
 
@@ -103,10 +118,10 @@ def main_gui(my_sql,a_user,a_pass):
     FProducts_Scroll = CTkScrollableFrame(FLeft,width=650,height=600,fg_color="#D4D4D4",corner_radius=0)
     FProducts_Scroll.grid(row=1,column=0,columnspan=3,sticky="news")
 
-    btn_next = CTkButton(FLeft,font=("Arial Bold",18),command=next_page,text=">",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
+    btn_next = CTkButton(FLeft,font=("Arial Bold",18),command=lambda:next_page(on_page.get()),text=">",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
     btn_next.grid(row=2,column=1,sticky="SE",pady=20,padx=(0,100))
 
-    btn_last_next = CTkButton(FLeft,font=("Arial Bold",18),command=next_last_page,text=">>",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
+    btn_last_next = CTkButton(FLeft,font=("Arial Bold",18),command=lambda:next_last_page(on_page.get()),text=">>",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
     btn_last_next.grid(row=2,column=1,sticky="SE",pady=20,padx=(0,20))
 
     def change_page(page):
@@ -121,10 +136,10 @@ def main_gui(my_sql,a_user,a_pass):
 
     amount_page_scroll = CTkScrollableDropdown(amount_page,values=value,justify="left", button_color="transparent",command=change_page)
 
-    btn_back = CTkButton(FLeft,font=("Arial Bold",18),command=back_last_page,text="<<",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
+    btn_back = CTkButton(FLeft,font=("Arial Bold",18),command=lambda:back_last_page(on_page.get()),text="<<",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
     btn_back.grid(row=2,column=0,sticky="SW",pady=20,padx=(20,0))
 
-    btn_last_back = CTkButton(FLeft,font=("Arial Bold",18),command=back_page,text="<",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
+    btn_last_back = CTkButton(FLeft,font=("Arial Bold",18),command=lambda:back_page(on_page.get()),text="<",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
     btn_last_back.grid(row=2,column=0,sticky="SW",pady=20,padx=(100,0))
 
     inp_product = CTkEntry(FLeft,font=("Arial Bold",14),width=250,corner_radius=20,border_color="#3B3B3B")
@@ -137,41 +152,98 @@ def main_gui(my_sql,a_user,a_pass):
     open_search_icon = Image.open(icon/"search.png")
     search_icon = CTkImage(light_image=open_search_icon,dark_image=open_search_icon,size=(20,20))
 
+    def search_products_shows(bar_code,num_page):
+        sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_name` LIKE %s LIMIT 40 offset %s;",(f"%{bar_code}%",num_page*40))  
+        products = sql.fetchall()
+
+        sql.execute("SELECT COUNT(*) FROM `stock_list`.`products` WHERE `p_name` LIKE %s;",(f"%{bar_code}%",))
+        all_amount = sql.fetchone()[0]
+
+        appdir = Path(__file__).parent
+        img_products = appdir / "products" 
+
+        all_row.set(int(all_amount)//40)
+        values =[f"{i}"for i in range(all_row.get()+1)]
+        amount_page.configure(values=values)
+        amount_page_scroll.configure(values=values)
+
+        for widget in FProducts_Scroll.winfo_children():
+                widget.destroy()
+        for num,value in enumerate(products):
+            col = num % 4
+            row = num // 4
+
+            id = value[0] 
+            name = value[1]
+            price = value[2]
+
+            try:
+                open_pimg = Image.open(f"{img_products/id}.jpg")
+                pimg = CTkImage(light_image=open_pimg,dark_image=open_pimg,size=(150,200))
+            except FileNotFoundError:
+                open_pimg = Image.open(f"{img_products/"Default.jpg"}")
+                pimg = CTkImage(light_image=open_pimg,dark_image=open_pimg,size=(150,200))
+    
+            pro = CTkFrame(FProducts_Scroll,fg_color="white",width=250,height=250,corner_radius=16)
+            pro.grid(column=col,row=row,padx=5,pady=5,sticky="news")
+
+            pro_frame = CTkLabel(pro,image=pimg,text="")
+            pro_frame.pack()
+
+            pro_frame.bind("<Button-1>",lambda e,e_id = id:(inp_product.insert(END,e_id),
+            search_product(inp_product.get())))
+        
+            pro_frame.bind("<Enter>",lambda e: hover_enter())
+            pro_frame.bind("<Leave>",lambda e: hover_leave())
+        
+            FProducts_Scroll.grid_columnconfigure(pro,weight=1)
+
+        inp_product.delete(0,END)
+        inp_product.focus_set()
+        on_page.set(True)
+
     def search_product(code):
         find_star = code.find("*")
         amount = code[0:find_star]
         bar_code = code[find_star+1:]
 
+        appdir = Path(__file__).parent
+        img_products = appdir / "products" 
+
         if (find_star <= -1):
             sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_id` = %s;" , (bar_code,))
             product = sql.fetchone()
-            try:
-                id = product[0]
-                
-                appdir = Path(__file__).parent
-                img_products = appdir / "products" 
 
+            if (product):
                 try:
-                    name_img = product[0]+".jpg"
+                    id = product[0]
+                    
+                    try:
+                        name_img = product[0]+".jpg"
 
-                    open_image = Image.open(img_products/name_img)
-                    image = CTkImage(light_image=open_image,dark_image=open_image,size=(20,20))
-                except FileNotFoundError:
-                    name_img = "Default.jpg"
-                    open_image = Image.open(img_products/name_img)
-                    image = CTkImage(light_image=open_image,dark_image=open_image,size=(20,20))
+                        open_image = Image.open(img_products/name_img)
+                        image = CTkImage(light_image=open_image,dark_image=open_image,size=(20,20))
+                    except FileNotFoundError:
+                        name_img = "Default.jpg"
+                        open_image = Image.open(img_products/name_img)
+                        image = CTkImage(light_image=open_image,dark_image=open_image,size=(20,20))
 
-                name = product[1]
-                price = product[2]
-                get_values(open_image,id,name,1,price)
+                    name = product[1]
+                    price = product[2]
+                    get_values(open_image,id,name,1,price)
 
-                inp_product.delete(0,END)
-                inp_product.focus_set()
+                    inp_product.delete(0,END)
+                    inp_product.focus_set()
 
-            except TypeError:
-                inp_product.delete(0,END)
-                inp_product.focus_set()
-
+                except TypeError:
+                    inp_product.delete(0,END)
+                    inp_product.focus_set()
+            elif (bar_code != ""):
+                name_search.set(bar_code)
+                search_products_shows(name_search.get(),0)
+            else:
+                show_products("ทั้งหมด",0,True)
+                name_search.set("")
 
         elif (find_star >= 0):
             sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_id` = %s;" , (bar_code,))
@@ -179,9 +251,6 @@ def main_gui(my_sql,a_user,a_pass):
 
             try:
                 id = product[0]
-                
-                appdir = Path(__file__).parent
-                img_products = appdir / "products" 
 
                 try:
                     name_img = product[0]+".jpg"
@@ -330,6 +399,7 @@ def main_gui(my_sql,a_user,a_pass):
     FBottomPay.pack(side=BOTTOM,fill=BOTH)
 
     def show_products(type_products,num,reset):
+        name_search.set("")
 
         for widget in FProducts_Scroll.winfo_children():
             widget.destroy()
@@ -391,6 +461,7 @@ def main_gui(my_sql,a_user,a_pass):
             FProducts_Scroll.grid_columnconfigure(pro,weight=1)
 
         FProducts_Scroll._parent_canvas.yview_moveto(0.0)
+        on_page.set(False)
    
 
     bill_list = []
