@@ -52,7 +52,7 @@ def main_gui(my_sql,a_user,a_pass):
     
     num_page = IntVar(value=0)
     all_row = IntVar(value=0)
-    on_page = BooleanVar(value=False)
+    on_seacrch = BooleanVar(value=False)
     name_search = StringVar(value="")
 # //----------------------------------------------------------------------
 
@@ -117,10 +117,10 @@ def main_gui(my_sql,a_user,a_pass):
     FProducts_Scroll = CTkScrollableFrame(FLeft,width=650,height=600,fg_color="#D4D4D4",corner_radius=0)
     FProducts_Scroll.grid(row=1,column=0,columnspan=3,sticky="news")
 
-    btn_next = CTkButton(FLeft,font=("Arial Bold",18),command=lambda:next_page(on_page.get()),text=">",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
+    btn_next = CTkButton(FLeft,font=("Arial Bold",18),command=lambda:next_page(on_seacrch.get()),text=">",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
     btn_next.grid(row=2,column=1,sticky="SE",pady=20,padx=(0,100))
 
-    btn_last_next = CTkButton(FLeft,font=("Arial Bold",18),command=lambda:next_last_page(on_page.get()),text=">>",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
+    btn_last_next = CTkButton(FLeft,font=("Arial Bold",18),command=lambda:next_last_page(on_seacrch.get()),text=">>",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
     btn_last_next.grid(row=2,column=1,sticky="SE",pady=20,padx=(0,20))
 
     def change_page(page,on):
@@ -136,12 +136,12 @@ def main_gui(my_sql,a_user,a_pass):
     amount_page = CTkComboBox(FLeft,width=80,values=value)
     amount_page.grid(row=2,column=0,columnspan=2,sticky="S",pady=25)
 
-    amount_page_scroll = CTkScrollableDropdown(amount_page,values=value,justify="left", button_color="transparent",command=lambda page:change_page(page, on_page.get()))
+    amount_page_scroll = CTkScrollableDropdown(amount_page,values=value,justify="left", button_color="transparent",command=lambda page:change_page(page, on_seacrch.get()))
 
-    btn_back = CTkButton(FLeft,font=("Arial Bold",18),command=lambda:back_last_page(on_page.get()),text="<<",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
+    btn_back = CTkButton(FLeft,font=("Arial Bold",18),command=lambda:back_last_page(on_seacrch.get()),text="<<",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
     btn_back.grid(row=2,column=0,sticky="SW",pady=20,padx=(20,0))
 
-    btn_last_back = CTkButton(FLeft,font=("Arial Bold",18),command=lambda:back_page(on_page.get()),text="<",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
+    btn_last_back = CTkButton(FLeft,font=("Arial Bold",18),command=lambda:back_page(on_seacrch.get()),text="<",text_color="black",width=65,height=40,corner_radius=12,fg_color="#38f388",hover_color="#6be59e")
     btn_last_back.grid(row=2,column=0,sticky="SW",pady=20,padx=(100,0))
 
     inp_product = CTkEntry(FLeft,font=("Arial Bold",14),width=250,corner_radius=20,border_color="#3B3B3B")
@@ -209,7 +209,7 @@ def main_gui(my_sql,a_user,a_pass):
 
         inp_product.delete(0,END)
         inp_product.focus_set()
-        on_page.set(True)
+        on_seacrch.set(True)
 
     def search_product(code):
         find_star = code.find("*")
@@ -470,7 +470,7 @@ def main_gui(my_sql,a_user,a_pass):
             FProducts_Scroll.grid_columnconfigure(pro,weight=1)
 
         FProducts_Scroll._parent_canvas.yview_moveto(0.0)
-        on_page.set(False)
+        on_seacrch.set(False)
    
 
     bill_list = []
