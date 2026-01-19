@@ -61,10 +61,10 @@ def main_gui(my_sql,a_user,a_pass):
     menu = CTkMenuBar(main)
     try:
         func_account = lambda:update_data.gui_account(my_sql)
-        account_menu = menu.add_cascade("Account",fg_color="white",command= lambda:check_level(3,func_account))
+        account_menu = menu.add_cascade("Account",fg_color="white",command= lambda:check_level(3,func_account,"Account"))
 
         func_product = lambda: update_data.gui_stock(my_sql)
-        stock_menu = menu.add_cascade("Stock",command= lambda:check_level(2,func_product))
+        stock_menu = menu.add_cascade("Stock",command= lambda:check_level(2,func_product,"Stock"))
     except Exception as e:
         CTkMessagebox(title="Error", message=f"Something went wrong: {e}", icon="cancel", option_1="OK")
 # //----------------------------------------------------------------------
@@ -309,7 +309,7 @@ def main_gui(my_sql,a_user,a_pass):
     button_re.bind("<Enter>",lambda e: hover_enter())
     button_re.bind("<Leave>",lambda e: hover_leave())
 
-    def check_level(lv,func):
+    def check_level(lv,func,title):
         try:
             sql.execute("SELECT IF(`accounts`.`level`>= %s, `accounts`.`level`, `accounts`.`level`) as `status`FROM `stock_list`.`accounts` where `accounts`.`username` = %s;" , (lv,a_user))
 
@@ -318,7 +318,7 @@ def main_gui(my_sql,a_user,a_pass):
             if (level[0] >= lv):
                 func()
             else:
-                level_gui = CTKUI("Stock List",480,360,"#D4D4D4","light")
+                level_gui = CTKUI(title,480,360,"#D4D4D4","light")
                 level_gui.resizable(False,False)
                 level_gui.attributes("-topmost",True)
 
@@ -372,7 +372,7 @@ def main_gui(my_sql,a_user,a_pass):
 
     func_upload = lambda: upload_data.gui_upload(my_sql)
 
-    button_add = CTkButton(FLeft,font=("Arial Bold",16),command= lambda: check_level(2,func_upload),width=60,height=30,corner_radius=20,text="+",text_color="black",fg_color="#38f388",hover_color="#6be59e")
+    button_add = CTkButton(FLeft,font=("Arial Bold",16),command= lambda: check_level(2,func_upload,"Add Products"),width=60,height=30,corner_radius=20,text="+",text_color="black",fg_color="#38f388",hover_color="#6be59e")
     button_add.bind("<Enter>", lambda event: button_add.configure(width=65,height=35)) 
     button_add.bind("<Leave>", lambda event: button_add.configure(width=60,height=30)) 
 
