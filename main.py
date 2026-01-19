@@ -72,9 +72,8 @@ def main_gui(my_sql,a_user,a_pass):
 
 # //----------------------------------------------------------------------
     def next_page(on):
-        num =  num_page.get()
-        if (num < all_row.get()):
-            num_page.set(num+1)
+        if (num_page.get() < all_row.get()):
+            num_page.set(num_page.get()+1)
             amount_page.set(num_page.get())
             if (on == False):
                 show_products(box_type.get(),num_page.get(),False)
@@ -90,9 +89,8 @@ def main_gui(my_sql,a_user,a_pass):
         else:
             search_products_shows(name_search.get(),all_row.get(),False)
     def back_page(on):
-        num =  num_page.get()
-        if (num > 0):
-            num_page.set(num-1)
+        if (num_page.get() > 0):
+            num_page.set(num_page.get()-1)
             amount_page.set(num_page.get())
             if (on == False):
                 show_products(box_type.get(),num_page.get(),False)
