@@ -52,9 +52,9 @@ FrameLeft.pack(side=LEFT,fill=Y,expand=NO,ipadx=60)
 appdir = Path(__file__).parent
 photo = appdir / "icon" / "icon.png"
 
-logo_image = Image.open(photo)
+open_logo = Image.open(photo)
 
-logo_image = CTkImage(light_image=logo_image, dark_image=logo_image , size=(140,140))
+logo_image = CTkImage(light_image=open_logo, dark_image=open_logo , size=(140,140))
 
 logo = CTkLabel(master=FrameLeft,image=logo_image,text="")
 logo.pack(fill=Y,expand=YES) 

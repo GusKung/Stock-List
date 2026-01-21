@@ -495,7 +495,7 @@ def main_gui(my_sql,a_user,a_pass):
         p_amount_list.set(int(amount) + p_amount_list.get())
         vat = float(p_price.get())/100*7
 
-        num_price.configure(text=f"{float(p_price.get())}\n\n{p_amount_list.get()}\n\n{float(p_price.get())}",font=("Arial",24),justify="right")
+        num_price.configure(text=f"{float(p_price.get())}\n\n{p_amount_list.get()}",font=("Arial",24),justify="right")
 
         btn_del.bind("<Enter>",lambda e: hover_enter())
         btn_del.bind("<Leave>",lambda e: hover_leave())
@@ -508,7 +508,7 @@ def main_gui(my_sql,a_user,a_pass):
 
         bill_list.remove(BillProduct)
 
-        num_price.configure(text=f"{p_price.get()}\n\n{p_amount_list.get()}\n\n{float(p_price.get())}")
+        num_price.configure(text=f"{p_price.get()}\n\n{p_amount_list.get()}")
 
 
     def hover_enter():
@@ -529,7 +529,7 @@ def main_gui(my_sql,a_user,a_pass):
         p_price.set(value=0)
         p_amount_list.set(value=0)
 
-        num_price.configure(text=f"{p_price.get()}\n\n{p_amount_list.get()}\n\n{float(p_price.get())}")
+        num_price.configure(text=f"{p_price.get()}\n\n{p_amount_list.get()}")
         for i in bill_list:
             i.destroy()
 
@@ -546,10 +546,10 @@ def main_gui(my_sql,a_user,a_pass):
     btn_clear.bind("<Enter>",lambda e: hover_enter())
     btn_clear.bind("<Leave>",lambda e: hover_leave())
 
-    label_price = CTkLabel(FBottom,text="Price :\n\nAmount :\n\nTotal :",font=("Arial",24),justify="left")
+    label_price = CTkLabel(FBottom,text="Price :\n\nAmount :",font=("Arial",24),justify="left")
     label_price.pack(side=LEFT,anchor="w",padx=20,pady=20)
 
-    num_price = CTkLabel(FBottom,text=f"{float(p_price.get())}\n\n{p_amount_list.get()}\n\n{float(p_price.get())}",font=("Arial",24),justify="right")
+    num_price = CTkLabel(FBottom,text=f"{float(p_price.get())}\n\n{p_amount_list.get()}",font=("Arial",24),justify="right")
     num_price.pack(side=RIGHT,anchor="w",padx=20,pady=20)
 
     pay_cash = CTkButton(FBottomPay,text="Cash",cursor="hand2",text_color="white",width=200,height=60,corner_radius=0,fg_color="#ffad15",hover_color="#e29e45",font=("Arial Bold",24))
@@ -561,3 +561,28 @@ def main_gui(my_sql,a_user,a_pass):
     show_products("ทั้งหมด",num_page.get(),True)
 
     FLeft.bind("<Destroy>",lambda e: offline())
+
+# //----------------------Guest-------------------------------
+
+    guest = CTKUI("Stock List",1280,720,"#D4D4D4","light")
+    FLest = CTkFrame(guest,fg_color="#D4D4D4",corner_radius=0,border_color="black",border_width=0)
+    FLest.pack(side=LEFT,fill=BOTH,expand=True)
+
+    FRight= CTkFrame(guest,corner_radius=0,fg_color="#6be59e",border_width=0,border_color="black",width=500)
+    FRight.pack(side=RIGHT,fill=BOTH)
+
+    LPrice = CTkLabel(FRight,text="Price :\n\nAmount :",font=("Arial",24),justify="left")
+    LPrice.pack(side=LEFT,anchor="nw",padx=(20,100),pady=20)
+
+    LAmountPrice = CTkLabel(FRight,text=f"{float(p_price.get())}\n\n{p_amount_list.get()}",font=("Arial",24),justify="right")
+    LAmountPrice.pack(side=RIGHT,anchor="nw",padx=(100,20),pady=20)    
+
+    appdir = Path(__file__).parent
+    icon = appdir / "icon" / "icon.png"
+    open_logo = Image.open(icon)
+
+    LIcon =CTkImage(light_image=open_logo, dark_image=open_logo , size=(180,180))
+    logo = CTkLabel(FRight,image=LIcon,text="")
+    logo.pack(side=BOTTOM,anchor="s",fill=Y,expand=YES)
+
+
