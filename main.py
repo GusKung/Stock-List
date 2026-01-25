@@ -153,10 +153,10 @@ def main_gui(my_sql,a_user,a_pass):
     search_icon = CTkImage(light_image=open_search_icon,dark_image=open_search_icon,size=(20,20))
 
     def search_products_shows(bar_code,num,reset):
-        sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_name` LIKE %s ORDER BY  `p_name` ,`p_id` ,`p_type` asc LIMIT 40 offset %s;",(f"%{bar_code}%",num*40))  
+        sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_amount` > 0 AND `p_name` LIKE %s ORDER BY  `p_name` ,`p_id` ,`p_type` asc LIMIT 40 offset %s;",(f"%{bar_code}%",num*40))  
         products = sql.fetchall()
 
-        sql.execute("SELECT COUNT(*) FROM `stock_list`.`products` WHERE `p_name` LIKE %s;",(f"%{bar_code}%",))
+        sql.execute("SELECT COUNT(*) FROM `stock_list`.`products` WHERE `p_amount` > 0 AND `p_name` LIKE %s;",(f"%{bar_code}%",))
         all_amount = sql.fetchone()[0]
 
         appdir = Path(__file__).parent
@@ -218,7 +218,7 @@ def main_gui(my_sql,a_user,a_pass):
         img_products = appdir / "products" 
 
         if (find_star <= -1):
-            sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_id` = %s;" , (bar_code,))
+            sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_amount` > 0 AND `p_id` = %s;" , (bar_code,))
             product = sql.fetchone()
 
             if (product):
@@ -253,7 +253,7 @@ def main_gui(my_sql,a_user,a_pass):
                 name_search.set("")
 
         elif (find_star >= 0):
-            sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_id` = %s;" , (bar_code,))
+            sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_amount` > 0 AND `p_id` = %s;" , (bar_code,))
             product = sql.fetchone()
 
             try:
@@ -413,16 +413,16 @@ def main_gui(my_sql,a_user,a_pass):
             widget.destroy()
 
         if (type_products != "ทั้งหมด"): #// ดึงข้อมูลตามประเภท
-            sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_type` = %s ORDER BY `p_type`,`p_id`,`p_name` ASC LIMIT 40 offset %s;" , (type_products,(num)*40,))
+            sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_amount` > 0 AND `p_type` = %s ORDER BY `p_type`,`p_id`,`p_name` ASC LIMIT 40 offset %s;" , (type_products,(num)*40,))
         else:
-            sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` ORDER BY `p_type`,`p_id`,`p_name` ASC LIMIT 40 offset %s;" , (num*40,))
+            sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_amount` > 0 ORDER BY `p_type`,`p_id`,`p_name` ASC LIMIT 40 offset %s;" , (num*40,))
 
         products = sql.fetchall()
 
         if (type_products != "ทั้งหมด"): #// นับจำนวนข้อมูลตามประเภท
-            sql.execute("SELECT COUNT(*) FROM `stock_list`.`products` WHERE `p_type` =  %s",(type_products,))
+            sql.execute("SELECT COUNT(*) FROM `stock_list`.`products` WHERE `p_amount` > 0 AND `p_type` =  %s",(type_products,))
         else:
-            sql.execute("SELECT COUNT(*) FROM `stock_list`.`products`")
+            sql.execute("SELECT COUNT(*) FROM `stock_list`.`products` WHERE `p_amount` > 0")
         
         if (reset == True): #// รีเซ็ตหน้าเมื่อเปลี่ยนประเภท
             num_page.set(0)
@@ -473,6 +473,7 @@ def main_gui(my_sql,a_user,a_pass):
    
 
     obg_bill = []
+    bill_list = {}
     def get_values(img,id,name,amount,price):
         frame_product = CTkFrame(Fbill_Scroll,fg_color="white",corner_radius=20)
         frame_product.pack(padx=10,pady=5,anchor="nw")
@@ -488,6 +489,15 @@ def main_gui(my_sql,a_user,a_pass):
 
         open_pimg = Image.open(f"{img_products/"bin.png"}")
         del_img = CTkImage(light_image=open_pimg,dark_image=open_pimg,size=(20,20))
+        
+        if (id in bill_list):
+            old_name , old_amount , old_price = bill_list[id]
+            new_amount = int(old_amount) + int(amount)
+            new_price = float(old_price) + float(price)
+            bill_list[id] = (name,new_amount,new_price)
+        else:
+            bill_list[id] = (name,amount,price)
+
 
         bproducts = CTkLabel(frame_product,font=("Airal",12),text=f"\t{name[0:20]}...\t\tX{amount}\t {price}",image=pimg,compound="left", anchor="w",width=600)
         bproducts.pack()
@@ -495,7 +505,7 @@ def main_gui(my_sql,a_user,a_pass):
         guestproducts = CTkLabel(frame_product_guest,font=("Airal",12),text=f"\t{name[0:20]}...\t\tX{amount}\t {price}",image=pimg,compound="left",anchor="w",width=600)
         guestproducts.pack()
 
-        btn_del = CTkButton(frame_product,width=20,height=20,text="",corner_radius=5,fg_color="#FF2C2C",hover_color="#F14141",image=del_img,command=lambda:del_product(frame_product,frame_product_guest,int(amount),price))
+        btn_del = CTkButton(frame_product,width=20,height=20,text="",corner_radius=5,fg_color="#FF2C2C",hover_color="#F14141",image=del_img,command=lambda:del_product(id,frame_product,frame_product_guest,int(amount),price))
         btn_del.place(relx=0.87,y=35)
 
         p_price.set(price+float(p_price.get()))
@@ -508,7 +518,7 @@ def main_gui(my_sql,a_user,a_pass):
         btn_del.bind("<Enter>",lambda e: hover_enter())
         btn_del.bind("<Leave>",lambda e: hover_leave())
 
-    def del_product(BillProduct,BillProductGuest,Amount,Price):
+    def del_product(ID,BillProduct,BillProductGuest,Amount,Price):
         BillProduct.destroy()
         BillProductGuest.destroy()
         p_price.set(float(p_price.get())- Price)
@@ -516,6 +526,14 @@ def main_gui(my_sql,a_user,a_pass):
         vat = (float(p_price.get())/100*7)
 
         obg_bill.remove((BillProduct,BillProductGuest))
+        
+        if (ID in bill_list):
+            old_name , old_amount , old_price = bill_list[ID]
+            new_amount = int(old_amount) - int(Amount)
+            new_price = float(old_price) - float(Price)
+            bill_list[ID] = (old_name,new_amount,new_price)
+            if (new_amount <= 0):
+                bill_list.pop(ID)
 
         num_price.configure(text=f"{p_price.get()}\n\n{p_amount_list.get()}")
         LAmountPrice.configure(text=f"{float(p_price.get())}\n\n{p_amount_list.get()}",font=("Arial",24),justify="right")
@@ -545,6 +563,7 @@ def main_gui(my_sql,a_user,a_pass):
             i.destroy()
             r.destroy()
         obg_bill.clear()
+        bill_list.clear()
 
     p_price = StringVar(value=0)
     p_amount_list = IntVar(value=0)
