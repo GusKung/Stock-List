@@ -122,6 +122,7 @@ if (check_file_serrver and check_file_account):
     host = os.getenv("Host")
     user = os.getenv("User")
     password = os.getenv("Passwords")
+    time_zone = os.getenv("Time_Zone")
 
     with open(file_server,"rb") as original_file:
             original = original_file.read()
@@ -138,6 +139,8 @@ if (check_file_serrver and check_file_account):
             password = password,
             database = "stock_list" )
             sql = connect_server.cursor()
+
+            sql.execute("SET time_zone = %s;", (time_zone,))
             
             connect_success = CTkMessagebox(title="Connect Server",message="Connected successfully",icon="check",option_1="Ok")
             
@@ -149,6 +152,8 @@ if (check_file_serrver and check_file_account):
             sql = connect_server.cursor()
             appdir = Path(__file__).parent
             file = appdir / "stock_list.sql"
+
+            sql.execute("SET time_zone = %s;", (time_zone,))
 
             with open(file,"r",encoding="utf-8") as f:
                 sql.execute(f.read())
@@ -164,26 +169,29 @@ else:
     server = [
         "Host=localhost",
         "User=root",
-        "Passwords="
+        "Passwords=",
+        "Time_Zone=+07:00"
         ]
     
     account = [
         "Account_User=admin",
         "Account_Passwords=1234",
-        "OnOff=0"
+        "OnOff=0",
+        "POS=pos1"
     ]
     
     with open(file_server,"w",newline="") as f:
-        f.write(f"{server[0]}\n{server[1]}\n{server[2]}")
+        f.write(f"{server[0]}\n{server[1]}\n{server[2]}\n{server[3]}")
 
     with open(file_account,"w",newline="") as f:
-        f.write(f"{account[0]}\n{account[1]}\n{account[2]}")
+        f.write(f"{account[0]}\n{account[1]}\n{account[2]}\n{account[3]}")
 
     load_dotenv(file_server)
 
     host = os.getenv("Host")
     user = os.getenv("User")
     password = os.getenv("Passwords")
+    time_zone = os.getenv("Time_Zone")
 
 
     with open(file_server,"rb") as original_file:
@@ -209,6 +217,7 @@ else:
             database = "stock_list" )
             sql = connect_server.cursor()
             
+            sql.execute("SET time_zone = %s;", (time_zone,))
             connect_success = CTkMessagebox(title="Connect Server",message="Connected successfully",icon="check",option_1="Ok")
             
         except:
@@ -216,7 +225,11 @@ else:
             host = host,
             user = user,
             password = password)
+
             sql = connect_server.cursor()
+
+            sql.execute("SET time_zone = %s;", (time_zone,))
+
             appdir = Path(__file__).parent
             file = appdir / "stock_list.sql"
             with open(file,"r",encoding="utf-8") as f:
@@ -315,6 +328,7 @@ load_dotenv(file_account)
 a_user = os.getenv("Account_User")
 a_pass = os.getenv("Account_Passwords")
 a_on_off = os.getenv("OnOff")
+a_pos = os.getenv("POS")
 
 if (int(a_on_off) == 1):
     USER.set(a_user)
