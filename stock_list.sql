@@ -52,12 +52,12 @@ DROP TABLE IF EXISTS `bills`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `bills` (
-  `b_ip` int NOT NULL AUTO_INCREMENT,
+  `b_id` int NOT NULL AUTO_INCREMENT,
   `day_times` datetime NOT NULL,
   `b_price` float NOT NULL,
   `b_pay` float NOT NULL,
-  `log` blob,
-  PRIMARY KEY (`b_ip`)
+  `log` json DEFAULT NULL,
+  PRIMARY KEY (`b_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1000000000 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -108,12 +108,12 @@ DROP TABLE IF EXISTS `pos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `pos` (
-  `p_ip` int NOT NULL AUTO_INCREMENT,
+  `pos_id` int NOT NULL AUTO_INCREMENT,
   `shift` int NOT NULL,
   `cost` float NOT NULL,
-  `p_price` float NOT NULL,
+  `sell` float NOT NULL,
   `profit` float NOT NULL,
-  PRIMARY KEY (`p_ip`)
+  PRIMARY KEY (`pos_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -164,4 +164,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-01-10 18:23:55
+-- Dump completed on 2026-01-25 19:38:30
