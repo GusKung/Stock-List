@@ -41,6 +41,9 @@ class Database_Mysql:
                 for result in self.sql.execute(sql_script, multi=True):
                     pass
                 self.connect.database = "stock_list"
+            elif (err.errno == 2003 or  err.errno == 1045):
+                self.sql = None
+  
 
         return self.sql
         

@@ -44,13 +44,15 @@ class LoginApp(CTk):
         self.db = database.Database_Mysql(self.host,self.user,self.pwd,self.database,self.time_zone)
         self.connect = self.db.connect_db()
 
-        self.top_ui = top_gui
+        self.top_ui = top_gui.TOPGUI()
 
         self.login_ui()
 
-        if (self.connect):
+        if (self.connect != None):
             self.text_alert("Success","Database Connected Successfully","check")
-            self.top_ui.connect_ui()
+        else:
+            self.text_alert("Connect Failed","Please connect again.","cancel")
+            self.top_ui.connect_ui("Connection",480,360,"#FFFFFF","light")
 
         
         print(self.host,self.user,self.pwd,self.database,self.time_zone)
@@ -96,8 +98,8 @@ class LoginApp(CTk):
         self.remember = CTkCheckBox(frameright, text="Remember", variable=self.remember_bol)
         self.remember.place(relx=0.15, rely=0.6, anchor="nw")
 
-        self.btn_login = CTkButton(frameright, width=200, height=40, text="Login",command=self.login)
-        self.btn_login.place(relx=0.9, rely=0.59, anchor="ne")
+        self.btn_login = CTkButton(frameright, corner_radius=20 ,width=200, height=40, text="Login",command=self.login)
+        self.btn_login.place(relx=0.9, rely=0.58, anchor="ne")
 
         self.btn_login.bind("<Enter>", lambda event: self.hover_enter())
         self.btn_login.bind("<Leave>", lambda event: self.hover_leave())

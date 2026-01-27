@@ -8,8 +8,12 @@ import encode_file
 import database
 
 class TOPGUI(CTkToplevel):
-    def __init__(self,title,wide,height,color,theme):
-        CTkToplevel.__init__(self)
+    def __init__(self):
+        super().__init__()
+        self.withdraw()
+    
+    def connect_ui(self,title,wide,height,color,theme):
+
         self.title(f"{title}")
         screen_x = self.winfo_screenwidth()
         screen_y = self.winfo_screenheight()
@@ -25,9 +29,7 @@ class TOPGUI(CTkToplevel):
         self.iconbitmap(icon)
         self.after(200, lambda: self.iconbitmap(icon))
     
-    def connect_ui(self):
         self.resizable(False,False)
-        self.lock()
 
         appdir = Path(__file__).parent
         photo = appdir / "icon" / "sql_connect.png"
@@ -41,22 +43,24 @@ class TOPGUI(CTkToplevel):
         F_Connect = CTkFrame(master=self,width=400,height=300,fg_color="white",bg_color="#3E3E3E")
         F_Connect.pack(anchor=CENTER,pady=30,expand=NO)
 
-        title = CTkLabel(master=F_Connect,font=("Airal",24),text="Connect Server")
-        title.place(relx=.3,rely=.05)
+        lable_title = CTkLabel(master=F_Connect,font=("Arial",24),text="Connect Server")
+        lable_title.place(relx=.3,rely=.05)
 
-        inp_host = CTkEntry(master=F_Connect,border_width=2,corner_radius=8,fg_color="#FBFBFB",border_color="#C1C1C1",placeholder_text="Host",width=300,height=40)
-        inp_host.place(relx=.12,rely=.2,anchor=NW)
+        self.inp_host = CTkEntry(master=F_Connect,border_width=2,corner_radius=8,fg_color="#FBFBFB",border_color="#C1C1C1",placeholder_text="Host",width=300,height=40)
+        self.inp_host.place(relx=.12,rely=.2,anchor=NW)
 
-        inp_user = CTkEntry(master=F_Connect,border_width=2,corner_radius=8,fg_color="#FBFBFB",border_color="#C1C1C1",placeholder_text="Username",width=300,height=40)
-        inp_user.place(relx=.12,rely=.4,anchor=NW)
+        self.inp_user = CTkEntry(master=F_Connect,border_width=2,corner_radius=8,fg_color="#FBFBFB",border_color="#C1C1C1",placeholder_text="Username",width=300,height=40)
+        self.inp_user.place(relx=.12,rely=.4,anchor=NW)
 
-        inp_password = CTkEntry(master=F_Connect,border_width=2,corner_radius=8,fg_color="#FBFBFB",border_color="#C1C1C1",placeholder_text="Password",show="●",width=300,height=40)
-        inp_password.place(relx=.12,rely=.6,anchor=NW)
+        self.inp_password = CTkEntry(master=F_Connect,border_width=2,corner_radius=8,fg_color="#FBFBFB",border_color="#C1C1C1",placeholder_text="Password",show="●",width=300,height=40)
+        self.inp_password.place(relx=.12,rely=.6,anchor=NW)
 
         # inp_password.bind("<Return>",lambda e:connect())
 
-        button_connect = CTkButton(master=F_Connect,corner_radius=20,text="Connect",width=300,height=45)
-        button_connect.place(relx=.12,rely=.8,anchor=NW)
+        self.button_connect = CTkButton(master=F_Connect,corner_radius=20,text="Connect",width=300,height=45)
+        self.button_connect.place(relx=.12,rely=.8,anchor=NW)
+
+        self.deiconify()
     
     def lock(self):
         self.grab_set()
