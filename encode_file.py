@@ -13,6 +13,9 @@ class EncodeDecode:
         self.server_file = self.stocklist_dir / "server.env"
         self.key = self.appdir / "mykey.key"
 
+        self.data_server = {}
+        self.data_account = {}
+
         self.server = [
             "HOST=localhost",
             "USER=root",
@@ -28,9 +31,7 @@ class EncodeDecode:
         ]
 
     def load_data(self):
-        data_server = {}
-        data_account = {}
-
+    
         if (not self.stocklist_dir.exists()):
             os.makedirs(self.stocklist_dir)
 
@@ -38,22 +39,23 @@ class EncodeDecode:
             with open(self.server_file, "wb") as ds:
                 ds.write("\n".join(self.server).encode("utf-8"))
             self.encode(self.server_file)
-            self.decode(self.server_file)
+            server = self.decode(self.server_file)
+            self.data_server.update(server)
         else:
             server = self.decode(self.server_file)
-            data_server.update(server)
-            
-        
+            self.data_server.update(server)
+
         if (not self.account_file.exists()):
             with open(self.account_file, "wb") as da:
                 da.write("\n".join(self.account).encode("utf-8"))
             self.encode(self.account_file)
-            self.decode(self.account_file)
+            account = self.decode(self.account_file)
+            self.data_account.update(account)
         else:
             account = self.decode(self.account_file)
-            data_account.update(account)
+            self.data_account.update(account)
 
-        return {**data_server, **data_account,"Server_File":self.server_file,"Account_File":self.account_file}
+        return {**self.data_server, **self.data_account,"Server_File":self.server_file,"Account_File":self.account_file}
            
     
     def encode(self, filepath):
@@ -92,14 +94,23 @@ class EncodeDecode:
         data = io.StringIO(decrypted)
 
         config = dotenv_values(stream=data)
-        config.update({item.split("=")[0]: item.split("=")[1] for item in new_data})
-        new_content_lines = [f"{key}={value}" for key, value in config.items()]
 
-        with open(filepath, "w") as file:
-            file.write("\n".join(new_content_lines))
+        config.update({item.split("=")[0]: item.split("=")[1] for item in new_data})
+
+        updated_content = "\n".join([f"{key}={value}" for key, value in config.items()])
         
+        with open(filepath, "wb") as file:
+            file.write(updated_content.encode("utf-8"))
+
+        if (filepath == self.server_file):
+            self.data_server.update(config)
+
+        elif (filepath == self.account_file):
+            self.data_account.update(config)
+
         self.encode(filepath)
-        
+
+
     def check_doc(self):
         user_home = Path.home()
         self.doc_folder = user_home / "Documents"

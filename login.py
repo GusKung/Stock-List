@@ -23,10 +23,11 @@ class LoginApp(CTk):
         self.appdir = Path(__file__).parent
         self.icon = self.appdir / "icon" / "icon.ico"
         self.iconbitmap(self.icon)
-        
-        self.login_ui()
-        self.load_data = encode_file.EncodeDecode().load_data()
+            
         self.data = encode_file.EncodeDecode()
+        self.load_data = encode_file.EncodeDecode().load_data()
+        self.file_server = self.load_data.get("Server_File")
+        self.file_account = self.load_data.get("Account_File")
 
         self.host = self.load_data.get("HOST")
         self.user = self.load_data.get("USER")
@@ -39,20 +40,13 @@ class LoginApp(CTk):
         self.remember_me = self.load_data.get("REMEMBER")
         self.pos = self.load_data.get("POS")
 
-        self.file_server = self.load_data.get("Server_File")
-        self.file_account = self.load_data.get("Account_File")
 
-        self.account_data = self.data.edit_data(self.file_account,[
-            "USERNAME=admin",
-            "PASSWORD=1234",
-            "REMEMBER=False",
-            "POS=1"
-        ])
+        self.login_ui()
 
     def login_ui(self):
         self.user = StringVar(value="")
         self.pwd = StringVar(value="")
-        self.remember_var = BooleanVar(value=False)
+        self.remember_var = BooleanVar(value=self.remember_me)
 
         self.menu = CTkTitleMenu(self)
         self.file_menu = self.menu.add_cascade("File")
@@ -75,16 +69,16 @@ class LoginApp(CTk):
         self.label_title = CTkLabel(self.frameright, text="Stock List", font=("Bold Arial",45))
         self.label_title.place(relx=0.15, rely=0.1, anchor="nw")
 
-        self.inp_user = CTkEntry(self.frameright, width=300, height=40, placeholder_text="Username",fg_color="transparent",border_width=0,font=("Arial",16))
+        self.inp_user = CTkEntry(self.frameright, width=300, height=40, placeholder_text="Username",fg_color="transparent",border_width=0,font=("Arial",16) , textvariable=self.user)
         self.inp_user.place(relx=0.5, rely=0.3, anchor=CENTER)
 
-        self.inp_pwd = CTkEntry(self.frameright, width=300, height=40, placeholder_text="Password", show="●",fg_color="transparent",border_width=0,font=("Arial",16))
+        self.inp_pwd = CTkEntry(self.frameright, width=300, height=40, placeholder_text="Password", show="●",fg_color="transparent",border_width=0,font=("Arial",16) , textvariable=self.pwd)
         self.inp_pwd.place(relx=0.5, rely=0.45, anchor=CENTER)
 
-        self.remember = CTkCheckBox(self.frameright, text="Remember")
+        self.remember = CTkCheckBox(self.frameright, text="Remember", variable=self.remember_var)
         self.remember.place(relx=0.15, rely=0.6, anchor="nw")
 
-        self.btn_login = CTkButton(self.frameright, width=200, height=40, text="Login")
+        self.btn_login = CTkButton(self.frameright, width=200, height=40, text="Login",command=self.login)
         self.btn_login.place(relx=0.9, rely=0.59, anchor="ne")
 
         self.btn_login.bind("<Enter>", lambda event: self.hover_enter())
@@ -97,6 +91,19 @@ class LoginApp(CTk):
 
         self.inp_pwd.focus()
 
+        if (self.remember == True):
+            self.inp_user.insert(0,self.username)
+            self.inp_pwd.insert(0,self.passwords)
+        else:
+            self.inp_user.delete(0,END)
+            self.inp_pwd.delete(0,END)
+
+    def login(self):
+        username = self.inp_user.get()
+        password = self.inp_pwd.get()
+        btn_rem = self.remember.get()
+
+        print(username,password)
         
 
     def about(self):
