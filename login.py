@@ -5,7 +5,8 @@ from CTkMessagebox import *
 from CTkMenuBar import *
 from PIL import Image
 import encode_file
-
+import database
+import top_gui
 class LoginApp(CTk):
     def __init__(self,title,width,height,color,theme):
         super().__init__()
@@ -31,7 +32,7 @@ class LoginApp(CTk):
 
         self.host = self.load_data.get("HOST")
         self.user = self.load_data.get("USER")
-        self.pwd = self.load_data.get("PASSWORD")
+        self.pwd = self.load_data.get("PWD")
         self.database = self.load_data.get("DATABASE")
         self.time_zone = self.load_data.get("TIME_ZONE")
 
@@ -40,54 +41,66 @@ class LoginApp(CTk):
         self.remember_me = self.load_data.get("REMEMBER")
         self.pos = self.load_data.get("POS")
 
+        self.db = database.Database_Mysql(self.host,self.user,self.pwd,self.database,self.time_zone)
+        self.connect = self.db.connect_db()
+
+        self.top_ui = top_gui
 
         self.login_ui()
 
+        if (self.connect):
+            self.text_alert("Success","Database Connected Successfully","check")
+            self.top_ui.connect_ui()
+
+        
+        print(self.host,self.user,self.pwd,self.database,self.time_zone)
+
     def login_ui(self):
-        self.user = StringVar(value="")
-        self.pwd = StringVar(value="")
-        self.remember_var = BooleanVar(value=self.remember_me)
+        self.user_str = StringVar(value="")
+        self.pwd_str = StringVar(value="")
+        self.remember_bol = BooleanVar(value=self.remember_me)
 
         self.menu = CTkTitleMenu(self)
-        self.file_menu = self.menu.add_cascade("File")
-        self.file_about = self.menu.add_cascade("About",command=self.about)
+        self.file_menu = self.menu.add_cascade("Connect")
+        self.file_about = self.menu.add_cascade("About",command=lambda:self.text_alert("About","Program : Stock List\n\nVersion : 1.0\n\nDevelop By August_Tas","info"))
         
         self.frameleft = CTkFrame(self, width=400, height=400, fg_color="#3afa80")
         self.frameleft.pack(side=LEFT, fill=BOTH, expand=YES)
 
-        self.img_icon = self.appdir / "icon" / "icon.png"
-        self.open_img = Image.open(self.img_icon)
+        img_icon = self.appdir / "icon" / "icon.png"
+        open_img = Image.open(img_icon)
 
-        self.ctk_img_icon = CTkImage(self.open_img, size=(160,160))
+        ctk_img_icon = CTkImage(open_img, size=(160,160))
 
-        self.label_icon = CTkLabel(self.frameleft, image=self.ctk_img_icon, text="")
-        self.label_icon.pack(fill=Y, expand=YES)
+        label_icon = CTkLabel(self.frameleft, image=ctk_img_icon, text="")
+        label_icon.pack(fill=Y, expand=YES)
 
-        self.frameright = CTkFrame(self, width=340, height=400, fg_color="#FFFFFF")
-        self.frameright.pack(side=RIGHT, fill=BOTH, expand=YES)
+        frameright = CTkFrame(self, width=340, height=400, fg_color="#FFFFFF")
+        frameright.pack(side=RIGHT, fill=BOTH, expand=YES)
 
-        self.label_title = CTkLabel(self.frameright, text="Stock List", font=("Bold Arial",45))
-        self.label_title.place(relx=0.15, rely=0.1, anchor="nw")
+        label_title = CTkLabel(frameright, text="Stock List", font=("Bold Arial",45))
+        label_title.place(relx=0.15, rely=0.1, anchor="nw")
 
-        self.inp_user = CTkEntry(self.frameright, width=300, height=40, placeholder_text="Username",fg_color="transparent",border_width=0,font=("Arial",16) , textvariable=self.user)
+        self.inp_user = CTkEntry(frameright, width=300, height=40, placeholder_text="Username",fg_color="transparent",border_width=0,font=("Arial",16) , textvariable=self.user_str)
         self.inp_user.place(relx=0.5, rely=0.3, anchor=CENTER)
 
-        self.inp_pwd = CTkEntry(self.frameright, width=300, height=40, placeholder_text="Password", show="●",fg_color="transparent",border_width=0,font=("Arial",16) , textvariable=self.pwd)
+        line_user = CTkFrame(frameright, width=300, height=2, fg_color="black")
+        line_user.place(relx=0.5, rely=0.34, anchor=CENTER)
+
+        self.inp_pwd = CTkEntry(frameright, width=300, height=40, placeholder_text="Password", show="●",fg_color="transparent",border_width=0,font=("Arial",16) , textvariable=self.pwd_str)
         self.inp_pwd.place(relx=0.5, rely=0.45, anchor=CENTER)
 
-        self.remember = CTkCheckBox(self.frameright, text="Remember", variable=self.remember_var)
+        line_pwd = CTkFrame(frameright, width=300, height=2, fg_color="black")
+        line_pwd.place(relx=0.5, rely=0.49, anchor=CENTER)
+
+        self.remember = CTkCheckBox(frameright, text="Remember", variable=self.remember_bol)
         self.remember.place(relx=0.15, rely=0.6, anchor="nw")
 
-        self.btn_login = CTkButton(self.frameright, width=200, height=40, text="Login",command=self.login)
+        self.btn_login = CTkButton(frameright, width=200, height=40, text="Login",command=self.login)
         self.btn_login.place(relx=0.9, rely=0.59, anchor="ne")
 
         self.btn_login.bind("<Enter>", lambda event: self.hover_enter())
         self.btn_login.bind("<Leave>", lambda event: self.hover_leave())
-
-        self.update()
-
-        self.border_bottom(self.inp_user,self.frameright)
-        self.border_bottom(self.inp_pwd,self.frameright)
 
         self.inp_pwd.focus()
 
@@ -102,19 +115,10 @@ class LoginApp(CTk):
         username = self.inp_user.get()
         password = self.inp_pwd.get()
         btn_rem = self.remember.get()
-
-        print(username,password)
         
+    def text_alert(self,title,message,icon):
+        CTkMessagebox(title=f"{title}", message=f"{message}", icon=f"{icon}", option_1="OK")
 
-    def about(self):
-        CTkMessagebox(title="About", message="\tProgram : Stock List\n\n\tVersion : 1.0\n\n\tDevelop By August_Tas", icon="info", option_1="OK")
-
-    def border_bottom(self,obj1,obj2):
-        p_x = obj1.winfo_x()
-        p_y = obj1.winfo_y() + obj1.winfo_height()
-
-        boder = CTkCanvas(obj2,width=300,height=2,bg="black")
-        boder.place(x=p_x,y=p_y,anchor="sw",relwidth=.75)
 
     def hover_enter(self):
         self.config(cursor="hand2")

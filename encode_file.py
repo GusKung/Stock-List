@@ -19,7 +19,7 @@ class EncodeDecode:
         self.server = [
             "HOST=localhost",
             "USER=root",
-            "PASSWORD=",
+            "PWD=",
             "DATABASE=stock_list",
             "TIME_ZONE=+07:00"
         ]
