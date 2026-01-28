@@ -7,6 +7,7 @@ from PIL import Image
 import encode_file
 import database
 import top_gui
+import atexit
 class LoginApp(CTk):
     def __init__(self,title,width,height,color,theme):
         super().__init__()
@@ -41,30 +42,40 @@ class LoginApp(CTk):
         self.remember_me = self.load_data.get("REMEMBER")
         self.pos = self.load_data.get("POS")
 
+        self.user_str = StringVar(value="")
+        self.passwords_str = StringVar(value="")
+        self.remember_bol = BooleanVar(value=self.remember_me)
+
+        if (self.remember_bol.get() == True):
+            self.user_str.set(self.username)
+            self.passwords_str.set(self.passwords)
+        else:
+            self.user_str.set("")
+            self.passwords_str.set("")
+
         self.db = database.Database_Mysql(self.host,self.user,self.pwd,self.database,self.time_zone)
-        self.connect = self.db.connect_db()
+        self.sql = self.db.connect_db()
 
         self.top_ui = top_gui.TOPGUI()
-
-        self.login_ui()
-
-        if (self.connect != None):
-            self.text_alert("Success","Database Connected Successfully","check")
-        else:
-            self.text_alert("Connect Failed","Please connect again.","cancel")
-            self.top_ui.connect_ui("Connection",480,360,"#FFFFFF","light")
-
         
+        atexit.register(self.exit_program)
+
+        if (self.sql.is_connected()):
+            mes_box = self.text_alert("Success","Database Connected Successfully","check",1,"OK","")
+            if (mes_box == "OK"):
+                self.login_ui()
+               
+        else:
+            mes_box = self.text_alert("Connect Failed","Please connect again.","cancel",1,"OK","")
+            self.top_ui.connect_ui("Connection",480,360,"#FFFFFF","light")
+     
         print(self.host,self.user,self.pwd,self.database,self.time_zone)
 
-    def login_ui(self):
-        self.user_str = StringVar(value="")
-        self.pwd_str = StringVar(value="")
-        self.remember_bol = BooleanVar(value=self.remember_me)
+    def login_ui(self):  
 
         self.menu = CTkTitleMenu(self)
         self.file_menu = self.menu.add_cascade("Connect")
-        self.file_about = self.menu.add_cascade("About",command=lambda:self.text_alert("About","Program : Stock List\n\nVersion : 1.0\n\nDevelop By August_Tas","info"))
+        self.file_about = self.menu.add_cascade("About",command=lambda:self.text_alert("About","Program : Stock List\n\nVersion : 1.0\n\nDevelop By August_Tas","info",1,"OK",""))
         
         self.frameleft = CTkFrame(self, width=400, height=400, fg_color="#3afa80")
         self.frameleft.pack(side=LEFT, fill=BOTH, expand=YES)
@@ -89,7 +100,7 @@ class LoginApp(CTk):
         line_user = CTkFrame(frameright, width=300, height=2, fg_color="black")
         line_user.place(relx=0.5, rely=0.34, anchor=CENTER)
 
-        self.inp_pwd = CTkEntry(frameright, width=300, height=40, placeholder_text="Password", show="●",fg_color="transparent",border_width=0,font=("Arial",16) , textvariable=self.pwd_str)
+        self.inp_pwd = CTkEntry(frameright, width=300, height=40, placeholder_text="Password", show="●",fg_color="transparent",border_width=0,font=("Arial",16) , textvariable=self.passwords_str)
         self.inp_pwd.place(relx=0.5, rely=0.45, anchor=CENTER)
 
         line_pwd = CTkFrame(frameright, width=300, height=2, fg_color="black")
@@ -106,20 +117,35 @@ class LoginApp(CTk):
 
         self.inp_pwd.focus()
 
-        if (self.remember == True):
-            self.inp_user.insert(0,self.username)
-            self.inp_pwd.insert(0,self.passwords)
-        else:
-            self.inp_user.delete(0,END)
-            self.inp_pwd.delete(0,END)
-
     def login(self):
         username = self.inp_user.get()
-        password = self.inp_pwd.get()
+        passwords = self.inp_pwd.get()
         btn_rem = self.remember.get()
-        
-    def text_alert(self,title,message,icon):
-        CTkMessagebox(title=f"{title}", message=f"{message}", icon=f"{icon}", option_1="OK")
+
+        login_sytem = self.db.Login(username,passwords)
+        if (login_sytem):
+            account = [
+            f"USERNAME={username}",
+            f"PASSWORD={passwords}",
+            f"REMEMBER={btn_rem}",
+            f"POS={self.pos}"
+            ]
+
+            self.data.edit_data(self.file_account,account)
+        else:
+            mes_box = self.text_alert("Login Failed","Please login again.","cancel",1,"OK","")
+    
+    def exit_program(self):
+        self.db.Log_Out(self.username)
+        self.quit()
+
+
+    def text_alert(self,title,message,icon,btn,text_btn1,text_btn2):
+        if (btn == 1):
+            text = CTkMessagebox(title=f"{title}", message=f"{message}", icon=f"{icon}", option_1=f"{text_btn1}")
+        elif (btn == 2):
+            text = CTkMessagebox(title=f"{title}", message=f"{message}", icon=f"{icon}", option_1=f"{text_btn1}",option_2=f"{text_btn2}")
+        return text.get()
 
 
     def hover_enter(self):
@@ -131,4 +157,5 @@ class LoginApp(CTk):
 if __name__ == "__main__":
     Login = LoginApp("Login",640,480,"#FFFFFF","light")
     Login.resizable(False,False)
+
     Login.mainloop()

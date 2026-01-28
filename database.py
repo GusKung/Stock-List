@@ -42,17 +42,21 @@ class Database_Mysql:
                     pass
                 self.connect.database = "stock_list"
             elif (err.errno == 2003 or  err.errno == 1045):
-                self.sql = None
+                pass
   
 
-        return self.sql
+        return self.connect
         
     def Login(self,username,password):
         self.sql.execute("SELECT * FROM `accounts` WHERE `username` = %s AND `passwords` = %s AND `onlines` = 0",(username,password))
         result = self.sql.fetchone()
+
         if (result):
             self.sql.execute("UPDATE `accounts` SET `onlines` = 1 WHERE `username` = %s;",(username,))
             self.connect.commit()
-        else:
-            return False
+
         return result
+    
+    def Log_Out(self,username):
+        self.sql.execute("UPDATE `accounts` SET `onlines` = 0 WHERE `username` = %s;",(username,))
+        self.connect.commit()
