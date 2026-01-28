@@ -60,16 +60,14 @@ class LoginApp(CTk):
         
         atexit.register(self.exit_program)
 
-        if (self.sql.is_connected()):
-            mes_box = self.text_alert("Success","Database Connected Successfully","check",1,"OK","")
-            if (mes_box == "OK"):
-                self.login_ui()
-               
-        else:
-            mes_box = self.text_alert("Connect Failed","Please connect again.","cancel",1,"OK","")
-            self.top_ui.connect_ui("Connection",480,360,"#FFFFFF","light")
-     
-        print(self.host,self.user,self.pwd,self.database,self.time_zone)
+        try:
+            if (self.sql.is_connected()):
+                mes_box = self.text_alert("Success","Database Connected Successfully","check",1,"OK","")
+        except: 
+                mes_box = self.text_alert("Connect Failed","Please connect again.","cancel",1,"OK","")
+                self.top_ui.connect_ui("Connection",480,360,"#FFFFFF","light")
+        
+        self.login_ui()
 
     def login_ui(self):  
 
@@ -136,7 +134,10 @@ class LoginApp(CTk):
             mes_box = self.text_alert("Login Failed","Please login again.","cancel",1,"OK","")
     
     def exit_program(self):
-        self.db.Log_Out(self.username)
+        try:
+            self.db.Log_Out(self.username)
+        except:
+            pass
         self.quit()
 
 

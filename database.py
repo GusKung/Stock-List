@@ -42,7 +42,7 @@ class Database_Mysql:
                     pass
                 self.connect.database = "stock_list"
             elif (err.errno == 2003 or  err.errno == 1045):
-                pass
+                self.connect = None
   
 
         return self.connect
