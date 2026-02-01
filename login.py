@@ -54,16 +54,18 @@ class LoginApp(CTk):
             self.passwords_str.set("")
 
         self.db = database.Database_Mysql(self.host,self.user,self.pwd,self.database,self.time_zone)
-        self.sql = self.db.connect_db()
+        self.sql , self.sql_err = self.db.connect_db()
+        
         
         atexit.register(self.exit_program)
 
         try:
             if (self.sql.is_connected()):
-                mes_box = self.text_alert("Success","Database Connected Successfully","check",1,"OK","")
+                mes_box = self.text_alert("Connect Success","Congratulations, you have successfully connected.","check",1,"OK","")
         except: 
                 mes_box = self.text_alert("Connect Failed","Please connect again.","cancel",1,"OK","")
-                self.top_connect_ui()
+                if (mes_box == "OK"):
+                    self.after(200, self.top_connect_ui)
         
         self.open_top_ui = None
         self.login_ui()

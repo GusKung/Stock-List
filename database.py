@@ -1,6 +1,6 @@
 import mysql.connector
 from pathlib import Path
-
+from CTkMessagebox import *
 class Database_Mysql:
     def __init__(self,host,user,password,database,time):
         super().__init__()
@@ -14,6 +14,7 @@ class Database_Mysql:
         self.sql = self.connect_db()
 
     def connect_db(self):
+        err = None
         try:
             self.connect = mysql.connector.connect(
                 host=self.host,
@@ -24,8 +25,10 @@ class Database_Mysql:
             self.sql = self.connect.cursor()
             self.sql.execute("SET time_zone = %s;",(self.time,))
             self.connect.commit()
-        except mysql.connector.Error as err:
+        except mysql.connector.Error as e:
+            err = e
             if (err.errno == 1049):
+                err = None
                 self.connect = mysql.connector.connect(
                 host=self.host,
                 user=self.user,
@@ -40,12 +43,14 @@ class Database_Mysql:
                     sql_script = f.read()
                 for result in self.sql.execute(sql_script, multi=True):
                     pass
-                self.connect.database = "stock_list"
-            elif (err.errno == 2003 or  err.errno == 1045):
-                self.connect = None
-  
 
-        return self.connect
+                self.connect.database = "stock_list"
+                self.sql.execute("SET time_zone = %s;",(self.time,))
+                self.connect.commit()
+            else:
+                self.connect = None
+
+        return self.connect ,err
         
     def Login(self,username,password):
         self.sql.execute("SELECT * FROM `accounts` WHERE `username` = %s AND `passwords` = %s AND `onlines` = 0",(username,password))

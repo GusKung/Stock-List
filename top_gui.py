@@ -55,10 +55,41 @@ class TOPGUI(CTkToplevel):
         self.inp_password = CTkEntry(master=F_Connect,border_width=2,corner_radius=8,fg_color="#FBFBFB",border_color="#C1C1C1",placeholder_text="Password",show="●",width=300,height=40)
         self.inp_password.place(relx=.12,rely=.6,anchor=NW)
 
-        # inp_password.bind("<Return>",lambda e:connect())
+        self.inp_password.bind("<Return>",lambda e:self.connect_server())
 
-        self.button_connect = CTkButton(master=F_Connect,corner_radius=20,text="Connect",width=300,height=45)
+        self.button_connect = CTkButton(master=F_Connect,corner_radius=20,text="Connect",width=300,height=45,command=self.connect_server)
         self.button_connect.place(relx=.12,rely=.8,anchor=NW)
 
         self.deiconify()
 
+    def connect_server(self):
+        host = self.inp_host.get()
+        user = self.inp_user.get()
+        pwd = self.inp_password.get()
+        db = "stock_list.sql"
+        timezone = "+07:00"
+
+        self.data = encode_file.EncodeDecode()
+        self.file_server = self.data.load_data().get("Server_File")
+
+        self.database = database.Database_Mysql(host,user,pwd,db,timezone)
+        self.sql , self.sql_err = self.database.connect_db()
+
+        if (self.sql_err is  None):
+            if (self.sql.is_connected()):
+                server = [
+                    f"HOST={host}",
+                    f"USER={user}",
+                    f"PWD={pwd}",
+                    f"DATABASE={db}",
+                    f"TIME_ZONE={timezone}"
+                ]
+
+                self.data.edit_data(self.file_server,server)
+
+                mes = CTkMessagebox(title=f"Connect Success",message=f"Congratulations, you have successfully connected.",icon="check",option_1="OK")
+
+                if (mes.get() == "OK"):
+                    self.destroy()
+        else:
+            CTkMessagebox(title=f"Error {self.sql_err.errno}",message=f"Error {self.sql_err}",icon="cancel",option_1="OK")
