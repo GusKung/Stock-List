@@ -55,8 +55,6 @@ class LoginApp(CTk):
 
         self.db = database.Database_Mysql(self.host,self.user,self.pwd,self.database,self.time_zone)
         self.sql = self.db.connect_db()
-
-        self.top_ui = top_gui.TOPGUI()
         
         atexit.register(self.exit_program)
 
@@ -65,14 +63,22 @@ class LoginApp(CTk):
                 mes_box = self.text_alert("Success","Database Connected Successfully","check",1,"OK","")
         except: 
                 mes_box = self.text_alert("Connect Failed","Please connect again.","cancel",1,"OK","")
-                self.top_ui.connect_ui("Connection",480,360,"#FFFFFF","light")
+                self.top_connect_ui()
         
+        self.open_top_ui = None
         self.login_ui()
+    
+    def top_connect_ui(self):
+        if self.open_top_ui is None or not self.open_top_ui.winfo_exists():
+            self.open_top_ui = top_gui.TOPGUI()
+
+        self.open_top_ui.connect_ui("Connection", 480, 360, "#FFFFFF", "light") 
+        self.open_top_ui.transient(self)
 
     def login_ui(self):  
 
         self.menu = CTkTitleMenu(self)
-        self.file_menu = self.menu.add_cascade("Connect")
+        self.file_menu = self.menu.add_cascade("Connect",command=self.top_connect_ui)
         self.file_about = self.menu.add_cascade("About",command=lambda:self.text_alert("About","Program : Stock List\n\nVersion : 1.0\n\nDevelop By August_Tas","info",1,"OK",""))
         
         self.frameleft = CTkFrame(self, width=400, height=400, fg_color="#3afa80")
@@ -110,10 +116,13 @@ class LoginApp(CTk):
         self.btn_login = CTkButton(frameright, corner_radius=20 ,width=200, height=40, text="Login",command=self.login)
         self.btn_login.place(relx=0.9, rely=0.58, anchor="ne")
 
-        self.btn_login.bind("<Enter>", lambda event: self.hover_enter())
-        self.btn_login.bind("<Leave>", lambda event: self.hover_leave())
+        self.btn_login.bind("<Enter>", lambda e: self.hover_enter())
+        self.btn_login.bind("<Leave>", lambda e: self.hover_leave())
 
+        self.inp_pwd.bind("<Return>",lambda e: self.login())
+        self.update()
         self.inp_pwd.focus()
+
 
     def login(self):
         username = self.inp_user.get()
@@ -130,6 +139,7 @@ class LoginApp(CTk):
             ]
 
             self.data.edit_data(self.file_account,account)
+            print(account)
         else:
             mes_box = self.text_alert("Login Failed","Please login again.","cancel",1,"OK","")
     

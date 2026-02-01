@@ -11,7 +11,7 @@ class TOPGUI(CTkToplevel):
     def __init__(self):
         super().__init__()
         self.withdraw()
-    
+        
     def connect_ui(self,title,wide,height,color,theme):
 
         self.title(f"{title}")
@@ -61,10 +61,4 @@ class TOPGUI(CTkToplevel):
         self.button_connect.place(relx=.12,rely=.8,anchor=NW)
 
         self.deiconify()
-    
-    def lock(self):
-        self.grab_set()
-
-    def unlock(self):
-        self.grab_release()
 
