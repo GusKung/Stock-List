@@ -65,3 +65,38 @@ class Database_Mysql:
     def Log_Out(self,username):
         self.sql.execute("UPDATE `accounts` SET `onlines` = 0 WHERE `username` = %s;",(username,))
         self.connect.commit()
+
+    def all_row(self,types):
+        if (types == "ทั้งหมด"):
+            self.sql.execute("SELECT COUNT(*) FROM `products`;")
+            
+        else:
+            self.sql.execute("SELECT COUNT(*) FROM `products` WHERE `p_type` = %s;",(types,))
+
+        all_amount = self.sql.fetchone()
+        all_row = int(all_amount[0] / 40)
+
+        return all_row
+    
+    def all_type(self):
+        self.sql.execute("SELECT DISTINCT p_type FROM `products`;")
+        all_type = self.sql.fetchall()
+
+        type_list = ["ทั้งหมด"] + [i[0] for i in all_type]
+
+        return type_list
+
+    def show_products(self,types,num,reset):
+        if (reset == True):
+            num = 0
+        
+        if (types != "ทั้งหมด"):
+            self.sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `products` WHERE `p_amount` > 0 AND `p_type` = %s ORDER BY `p_type`,`p_id`,`p_name` ASC LIMIT 40 offset %s;" , (types,(num)*40,))
+        else:
+             self.sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_amount` > 0 ORDER BY `p_type`,`p_id`,`p_name` ASC LIMIT 40 offset %s;" , (num*40,))
+        
+        products = self.sql.fetchall()
+        
+        return products
+        
+        

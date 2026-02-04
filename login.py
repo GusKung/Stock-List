@@ -55,9 +55,6 @@ class LoginApp(CTk):
 
         self.db = database.Database_Mysql(self.host,self.user,self.pwd,self.database,self.time_zone)
         self.sql , self.sql_err = self.db.connect_db()
-        
-        
-        atexit.register(self.exit_program)
 
         try:
             if (self.sql.is_connected()):
@@ -69,6 +66,8 @@ class LoginApp(CTk):
         
         self.open_top_ui = None
         self.login_ui()
+
+        atexit.register(self.exit_program)
     
     def top_connect_ui(self):
         if self.open_top_ui is None or not self.open_top_ui.winfo_exists():
@@ -118,8 +117,8 @@ class LoginApp(CTk):
         self.btn_login = CTkButton(frameright, corner_radius=20 ,width=200, height=40, text="Login",command=self.login)
         self.btn_login.place(relx=0.9, rely=0.58, anchor="ne")
 
-        self.btn_login.bind("<Enter>", lambda e: self.hover_enter())
-        self.btn_login.bind("<Leave>", lambda e: self.hover_leave())
+        self.btn_login.bind("<Enter>", lambda e: self.hover_enter(self.btn_login,210,45))
+        self.btn_login.bind("<Leave>", lambda e: self.hover_leave(self.btn_login,200,40))
 
         self.inp_pwd.bind("<Return>",lambda e: self.login())
         self.update()
@@ -140,8 +139,17 @@ class LoginApp(CTk):
             f"POS={self.pos}"
             ]
 
+            self.withdraw()
+            
             self.data.edit_data(self.file_account,account)
-            print(account)
+            if self.open_top_ui is None or not self.open_top_ui.winfo_exists():
+                self.open_top_ui = top_gui.TOPGUI()
+
+            self.open_top_ui.main_ui("Stock List", 1280, 720, "#D4D4D4", "light") 
+
+            self.open_top_ui.protocol("WM_DELETE_WINDOW",self.exit_program)
+            self.menu.destroy()
+
         else:
             mes_box = self.text_alert("Login Failed","Please login again.","cancel",1,"OK","")
     
@@ -160,12 +168,13 @@ class LoginApp(CTk):
             text = CTkMessagebox(title=f"{title}", message=f"{message}", icon=f"{icon}", option_1=f"{text_btn1}",option_2=f"{text_btn2}")
         return text.get()
 
-
-    def hover_enter(self):
+    def hover_enter(self,obj,w,h):
         self.config(cursor="hand2")
+        obj.configure(width=w,height=h)
 
-    def hover_leave(self):
+    def hover_leave(self,obj,w,h):
         self.config(cursor="arrow")
+        obj.configure(width=w,height=h)
 
 if __name__ == "__main__":
     Login = LoginApp("Login",640,480,"#FFFFFF","light")
