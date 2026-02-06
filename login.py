@@ -58,9 +58,9 @@ class LoginApp(CTk):
 
         try:
             if (self.sql.is_connected()):
-                mes_box = self.text_alert("Connect Success","Congratulations, you have successfully connected.","check",1,"OK","")
+                mes_box = self.text_alert("Connect Success","Successfully Connected.","check",1,"OK")
         except: 
-                mes_box = self.text_alert("Connect Failed","Please connect again.","cancel",1,"OK","")
+                mes_box = self.text_alert("Connect Failed","Please connect again.","cancel",1,"OK")
                 if (mes_box == "OK"):
                     self.after(200, self.top_connect_ui)
         
@@ -80,7 +80,7 @@ class LoginApp(CTk):
 
         self.menu = CTkTitleMenu(self)
         self.file_menu = self.menu.add_cascade("Connect",command=self.top_connect_ui)
-        self.file_about = self.menu.add_cascade("About",command=lambda:self.text_alert("About","Program : Stock List\n\nVersion : 1.0\n\nDevelop By August_Tas","info",1,"OK",""))
+        self.file_about = self.menu.add_cascade("About",command=lambda:self.text_alert("About","Program : Stock List\n\nVersion : 1.0\n\nDevelop By August_Tas","info",1,"OK"))
         
         self.frameleft = CTkFrame(self, width=400, height=400, fg_color="#3afa80")
         self.frameleft.pack(side=LEFT, fill=BOTH, expand=YES)
@@ -124,7 +124,6 @@ class LoginApp(CTk):
         self.update()
         self.inp_pwd.focus()
 
-
     def login(self):
         username = self.inp_user.get()
         passwords = self.inp_pwd.get()
@@ -151,7 +150,7 @@ class LoginApp(CTk):
             self.menu.destroy()
 
         else:
-            mes_box = self.text_alert("Login Failed","Please login again.","cancel",1,"OK","")
+            mes_box = self.text_alert("Login Failed","Please login again.","cancel",1,"OK")
     
     def exit_program(self):
         try:
@@ -161,7 +160,7 @@ class LoginApp(CTk):
         self.quit()
 
 
-    def text_alert(self,title,message,icon,btn,text_btn1,text_btn2):
+    def text_alert(self,title,message,icon,btn,text_btn1,text_btn2=""):
         if (btn == 1):
             text = CTkMessagebox(title=f"{title}", message=f"{message}", icon=f"{icon}", option_1=f"{text_btn1}")
         elif (btn == 2):

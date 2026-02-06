@@ -66,12 +66,15 @@ class Database_Mysql:
         self.sql.execute("UPDATE `accounts` SET `onlines` = 0 WHERE `username` = %s;",(username,))
         self.connect.commit()
 
-    def all_row(self,types):
-        if (types == "ทั้งหมด"):
-            self.sql.execute("SELECT COUNT(*) FROM `products`;")
-            
+    def all_row(self,types,search=False,id=None):
+        if (search == False and id == None):
+            if (types == "ทั้งหมด"):
+                self.sql.execute("SELECT COUNT(*) FROM `products`;")
+                
+            else:
+                self.sql.execute("SELECT COUNT(*) FROM `products` WHERE `p_type` = %s;",(types,))
         else:
-            self.sql.execute("SELECT COUNT(*) FROM `products` WHERE `p_type` = %s;",(types,))
+            self.sql.execute("SELECT count(*) FROM `products` WHERE `p_amount` > 0 AND `p_name` LIKE %s;",(f"%{id}%",))
 
         all_amount = self.sql.fetchone()
         all_row = int(all_amount[0] / 40)
@@ -86,17 +89,32 @@ class Database_Mysql:
 
         return type_list
 
-    def show_products(self,types,num,reset):
-        if (reset == True):
-            num = 0
+    def show_products(self,types,num):
         
         if (types != "ทั้งหมด"):
-            self.sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `products` WHERE `p_amount` > 0 AND `p_type` = %s ORDER BY `p_type`,`p_id`,`p_name` ASC LIMIT 40 offset %s;" , (types,(num)*40,))
+            self.sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `products` WHERE `p_amount` > 0 AND `p_type` = %s ORDER BY `p_type`,`p_id`,`p_name` ASC LIMIT 40 OFFSET %s;" , (types,(num)*40,))
         else:
-             self.sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `stock_list`.`products` WHERE `p_amount` > 0 ORDER BY `p_type`,`p_id`,`p_name` ASC LIMIT 40 offset %s;" , (num*40,))
+             self.sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `products` WHERE `p_amount` > 0 ORDER BY `p_type`,`p_id`,`p_name` ASC LIMIT 40 OFFSET %s;" , (num*40,))
         
         products = self.sql.fetchall()
         
         return products
-        
+    
+    def search_products(self,id,num=0):
+        self.sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `products` WHERE `p_amount` > 0 AND `p_id` = %s ",(id,))
+        result = self.sql.fetchone()
+        search = None
+
+        if (result != None):
+            p_id = result[0]
+            p_name = result[1]
+            p_price = result[2]
+        else:
+            self.sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `products` WHERE `p_amount` > 0 AND `p_name` LIKE %s LIMIT 40 OFFSET %s",(f"%{id}%",num*40))
+            search = self.sql.fetchall()
+            p_id = None
+            p_name = None
+            p_price = None
+
+        return p_id, p_name, p_price, search
         
