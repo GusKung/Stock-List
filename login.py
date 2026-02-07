@@ -6,7 +6,7 @@ from CTkMenuBar import *
 from PIL import Image
 import encode_file
 import database
-import top_gui
+import main
 import atexit
 class LoginApp(CTk):
     def __init__(self,title,width,height,color,theme):
@@ -71,7 +71,7 @@ class LoginApp(CTk):
     
     def top_connect_ui(self):
         if self.open_top_ui is None or not self.open_top_ui.winfo_exists():
-            self.open_top_ui = top_gui.TOPGUI()
+            self.open_top_ui = main.TOPGUI()
 
         self.open_top_ui.connect_ui("Connection", 480, 360, "#FFFFFF", "light") 
         self.open_top_ui.transient(self)
@@ -142,7 +142,7 @@ class LoginApp(CTk):
             
             self.data.edit_data(self.file_account,account)
             if self.open_top_ui is None or not self.open_top_ui.winfo_exists():
-                self.open_top_ui = top_gui.TOPGUI()
+                self.open_top_ui = main.TOPGUI()
 
             self.open_top_ui.main_ui("Stock List", 1280, 720, "#D4D4D4", "light") 
 
