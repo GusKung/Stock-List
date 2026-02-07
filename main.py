@@ -30,6 +30,10 @@ class TOPGUI(CTkToplevel):
         self.user_str = StringVar(value="")
         self.passwords_str = StringVar(value="")
 
+        self.amount = 0
+        self.price = 0.0
+        self.total = 0.0
+
         self.amount_page = StringVar(value="0")
         self.types = StringVar(value="ทั้งหมด")
 
@@ -146,9 +150,6 @@ class TOPGUI(CTkToplevel):
         self.after(200, lambda: self.iconbitmap(icon))
         self.deiconify()
 
-        self.amount = 0.0
-        self.total = 0.0
-
         FLeft= CTkFrame(self,fg_color="#D4D4D4",corner_radius=0,border_color="black",border_width=0)
         FLeft.pack(side=LEFT,fill=BOTH,expand=True)
         FLeft.columnconfigure(1,weight=1)
@@ -159,7 +160,8 @@ class TOPGUI(CTkToplevel):
 
         self.obj_products = {}
 
-        self.obj_order = {}
+        self.obj_order = []
+        self.products_order = {}
         self.data_products = {}
 
         def get_value_products(r,c):
@@ -245,7 +247,7 @@ class TOPGUI(CTkToplevel):
         open_clean_icon = Image.open(file_icon/"clean.png")
         clean_image = CTkImage(light_image=open_clean_icon,dark_image=open_clean_icon,size=(20,20))
 
-        btn_clear = CTkButton(self.F_order_Scroll,text="",image=clean_image,width=25,height=25,fg_color="#FF2C2C",hover_color="#F14141",corner_radius=15)
+        btn_clear = CTkButton(self.F_order_Scroll,text="",image=clean_image,width=25,height=25,fg_color="#FF2C2C",hover_color="#F14141",corner_radius=15,command=self.clear)
         btn_clear.pack(anchor="ne",padx=15,pady=10)
 
         FBottom= CTkFrame(FRight,fg_color="#1DF38F",corner_radius=0,border_width=0,border_color="black")
@@ -257,10 +259,10 @@ class TOPGUI(CTkToplevel):
         FBottomPay.columnconfigure(0,weight=1)
         FBottomPay.columnconfigure(1,weight=1)
 
-        FRBLable_name = CTkLabel(FBottom,text="Amount :\n\nTotal :",font=("Arial",24),justify="left")
+        FRBLable_name = CTkLabel(FBottom,text="Amount :\n\nPrice :\n\nTotal :",font=("Arial",24),justify="left")
         FRBLable_name.pack(side=LEFT,anchor="nw",padx=20,pady=20)
 
-        self.FRBLable_price = CTkLabel(FBottom,text=f"{self.amount} \n\n{self.total}",font=("Arial",24),justify="right")
+        self.FRBLable_price = CTkLabel(FBottom,text=f"{self.amount}\n\n{self.price}\n\n{self.total}",font=("Arial",24),justify="right")
         self.FRBLable_price.pack(side=RIGHT,anchor="nw",padx=20,pady=20)
 
         pay_cash = CTkButton(FBottomPay,text="Cash",cursor="hand2",text_color="white",width=200,height=60,corner_radius=0,fg_color="#ffad15",hover_color="#e29e45",font=("Arial Bold",24))
@@ -457,6 +459,42 @@ class TOPGUI(CTkToplevel):
     def reset_scroll(self):
         self.FProducts_Scroll._parent_canvas.yview_moveto(0.0)
 
+    def clear(self):
+        all_order = self.obj_order
+        self.amount = 0
+        self.price = 0.0
+        self.total = 0.0
+
+        for i in all_order:
+            i.destroy()
+
+        self.products_order.clear()
+        self.obj_order.clear()
+
+        self.FRBLable_price.configure(text=f"{self.amount}\n\n{self.price}\n\n{self.total}")
+
+    def remove(self,obj,id,amount,price):
+        self.amount -= int(amount)
+        
+        self.total -= float(price)
+
+        if (id in self.products_order):
+            self.products_order[id]["amount"] = int(self.products_order[id]["amount"]) - int(amount)
+            self.products_order[id]["price"] -= float(price)
+            self.price = float(price)
+            
+            if (self.products_order[id]["amount"] <= 0):
+                del self.products_order[id]
+
+            if (not self.products_order):
+                self.price = 0.0
+
+        self.obj_order.remove(obj)
+
+        self.FRBLable_price.configure(text=f"{self.amount}\n\n{self.price}\n\n{self.total}")
+
+        obj.destroy()
+
     def inp_products_order(self,id):
         find_star = id.find("*")
         amount = id[0:find_star]
@@ -464,10 +502,10 @@ class TOPGUI(CTkToplevel):
 
         try:
             open_pimg = Image.open(f"{self.appdir/"products"/bar_code}.jpg")
-            pimg = CTkImage(light_image=open_pimg,dark_image=open_pimg,size=(150,200))
+            pimg = CTkImage(light_image=open_pimg,dark_image=open_pimg,size=(100,100))
         except FileNotFoundError:
             open_pimg = Image.open(f"{self.appdir/"products"/"Default.jpg"}")
-            pimg = CTkImage(light_image=open_pimg,dark_image=open_pimg,size=(150,200))
+            pimg = CTkImage(light_image=open_pimg,dark_image=open_pimg,size=(100,100))
         
         if (id == "" or id == None):
             self.show_products(self.types.get())
@@ -483,10 +521,54 @@ class TOPGUI(CTkToplevel):
             if (id_search == None):
 
                 if (find_star <= -1):
-                    print(p_id, p_name, amount, p_price)
+                    amount = 1
+                    self.price = p_price
+                    self.amount = self.amount + amount
+                    self.total = self.total + p_price
                 else:
-                    print(find_star,p_id,p_name,amount,p_price)
+                    amount = amount
+                    self.price = p_price
+                    p_price = float(p_price) * float(amount)
+                    
+                    self.amount = self.amount + int(amount)
+                    self.total = self.total + p_price
 
+                
+                frame = CTkFrame(self.F_order_Scroll,fg_color="white")
+                frame.pack(side=TOP,fill=X,expand=True,pady=10)
+
+                frame.columnconfigure(1,weight=1)
+
+                l_img = CTkLabel(frame,image=pimg,text="")
+                l_img.grid(row=0,column=0,padx=20,sticky="w")
+
+                l_name = CTkLabel(frame,text=f"{p_name[0:20]}...")
+                l_name.grid(row=0,column=1,sticky="news")
+
+                l_amount = CTkLabel(frame,text=f"X{amount}",justify=LEFT)
+                l_amount.grid(row=0,column=2,sticky="w",padx=100)
+
+                open_remove= Image.open(f"{self.appdir/"icon"/"bin.png"}")
+                remove = CTkImage(light_image=open_remove,dark_image=open_remove,size=(30,30))
+
+                btn_remove = CTkButton(frame,image=remove,text="",width=30,height=30,fg_color="red",hover_color="#FF6A6A",command=lambda e_amount = amount,e_price=p_price: self.remove(frame,bar_code,e_amount,e_price))
+                btn_remove.grid(row=0,column=3,padx=20,sticky="e")
+
+                self.FRBLable_price.configure(text=f"{self.amount}\n\n{self.price}\n\n{self.total}")
+                
+                self.inp_product.delete(0,END)
+
+                if (bar_code in self.products_order):
+                    self.products_order[bar_code]["amount"] += amount
+                    self.products_order[bar_code]["price"] += p_price
+                else:
+                    self.products_order[bar_code] = {
+                        "name":p_name,
+                        "amount":amount,
+                        "price":p_price
+                    }
+
+                self.obj_order.append(frame)
             else:
                 all_row = self.my_sql.all_row(self.types.get(),True,bar_code)
                 self.rows = [f"{i}" for i in range(all_row+1)]
@@ -499,10 +581,6 @@ class TOPGUI(CTkToplevel):
                 self.reset_scroll()
 
                 self.show_products(self.types.get(),0,True,self.on_search.get())
-
-        # frame = CTkFrame(self.F_order_Scroll,width=200,height=100,fg_color="white")
-        # frame.pack(side=TOP,fill=X,expand=True,pady=10)
+                self.inp_product.delete(0,END)
 
         
-
-        self.inp_product.delete(0,END)
