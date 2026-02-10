@@ -53,8 +53,8 @@ class LoginApp(CTk):
             self.user_str.set("")
             self.passwords_str.set("")
 
-        self.db = database.Database_Mysql(self.host,self.user,self.pwd,self.database,self.time_zone)
-        self.sql , self.sql_err = self.db.connect_db()
+        self.my_sql = database.Database_Mysql(self.host,self.user,self.pwd,self.database,self.time_zone)
+        self.sql , self.sql_err = self.my_sql.connect_db()
 
         try:
             if (self.sql.is_connected()):
@@ -64,17 +64,17 @@ class LoginApp(CTk):
                 if (mes_box == "OK"):
                     self.after(200, self.top_connect_ui)
         
-        self.open_top_ui = None
+        self.open_main_ui = None
         self.login_ui()
 
         atexit.register(self.exit_program)
     
     def top_connect_ui(self):
-        if self.open_top_ui is None or not self.open_top_ui.winfo_exists():
-            self.open_top_ui = main.TOPGUI()
+        if self.open_main_ui == None or not self.open_main_ui.winfo_exists():
+            self.open_main_ui = main.main_gui(self.my_sql)
 
-        self.open_top_ui.connect_ui("Connection", 480, 360, "#FFFFFF", "light") 
-        self.open_top_ui.transient(self)
+        self.open_main_ui.connect_ui("Connection", 480, 360, "#FFFFFF") 
+        self.open_main_ui.transient(self)
 
     def login_ui(self):  
 
@@ -117,9 +117,6 @@ class LoginApp(CTk):
         self.btn_login = CTkButton(frameright, corner_radius=20 ,width=200, height=40, text="Login",command=self.login)
         self.btn_login.place(relx=0.9, rely=0.58, anchor="ne")
 
-        self.btn_login.bind("<Enter>", lambda e: self.hover_enter(self.btn_login,210,45))
-        self.btn_login.bind("<Leave>", lambda e: self.hover_leave(self.btn_login,200,40))
-
         self.inp_pwd.bind("<Return>",lambda e: self.login())
         self.update()
         self.inp_pwd.focus()
@@ -129,7 +126,7 @@ class LoginApp(CTk):
         passwords = self.inp_pwd.get()
         btn_rem = self.remember.get()
 
-        login_sytem = self.db.Login(username,passwords)
+        login_sytem = self.my_sql.Login(username,passwords)
         if (login_sytem):
             account = [
             f"USERNAME={username}",
@@ -141,12 +138,12 @@ class LoginApp(CTk):
             self.withdraw()
             
             self.data.edit_data(self.file_account,account)
-            if self.open_top_ui is None or not self.open_top_ui.winfo_exists():
-                self.open_top_ui = main.TOPGUI()
+            if self.open_main_ui is None or not self.open_main_ui.winfo_exists():
+                self.open_main_ui = main.main_gui(self.my_sql)
 
-            self.open_top_ui.main_ui("Stock List", 1280, 720, "#D4D4D4", "light") 
+            self.open_main_ui.main_ui("Stock List", 1280, 720, "#D4D4D4") 
 
-            self.open_top_ui.protocol("WM_DELETE_WINDOW",self.exit_program)
+            self.open_main_ui.protocol("WM_DELETE_WINDOW",self.exit_program)
             self.menu.destroy()
 
         else:
@@ -154,7 +151,7 @@ class LoginApp(CTk):
     
     def exit_program(self):
         try:
-            self.db.Log_Out(self.username)
+            self.my_sql.Log_Out(self.username)
         except:
             pass
         self.quit()
@@ -166,14 +163,6 @@ class LoginApp(CTk):
         elif (btn == 2):
             text = CTkMessagebox(title=f"{title}", message=f"{message}", icon=f"{icon}", option_1=f"{text_btn1}",option_2=f"{text_btn2}")
         return text.get()
-
-    def hover_enter(self,obj,w,h):
-        self.config(cursor="hand2")
-        obj.configure(width=w,height=h)
-
-    def hover_leave(self,obj,w,h):
-        self.config(cursor="arrow")
-        obj.configure(width=w,height=h)
 
 if __name__ == "__main__":
     Login = LoginApp("Login",640,480,"#FFFFFF","light")

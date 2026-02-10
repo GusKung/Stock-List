@@ -7,28 +7,15 @@ from CTkScrollableDropdown import CTkScrollableDropdown
 from PIL import Image
 import encode_file
 import database
+import top_ui
 
-class TOPGUI(CTkToplevel):
-    def __init__(self):
+class main_gui(CTkToplevel):
+    def __init__(self, db=None):
         super().__init__()
         self.withdraw()
 
         self.data = encode_file.EncodeDecode()
         self.load_data = encode_file.EncodeDecode().load_data()
-
-        self.host = self.load_data.get("HOST")
-        self.user = self.load_data.get("USER")
-        self.pwd = self.load_data.get("PWD")
-        self.database = self.load_data.get("DATABASE")
-        self.time_zone = self.load_data.get("TIME_ZONE")
-
-        self.username = self.load_data.get("USERNAME")
-        self.passwords = self.load_data.get("PASSWORD")
-        self.remember_me = self.load_data.get("REMEMBER")
-        self.pos = self.load_data.get("POS")
-
-        self.user_str = StringVar(value="")
-        self.passwords_str = StringVar(value="")
 
         self.amount = 0
         self.price = 0.0
@@ -43,15 +30,10 @@ class TOPGUI(CTkToplevel):
 
         self.appdir = Path(__file__).parent
 
-        self.my_sql = database.Database_Mysql(self.host,self.user,self.pwd,self.database,self.time_zone)
-
-        try:
-            self.sql , self.sql_err = self.my_sql.connect_db()
-        except:
-            self.connect_ui("Connection", 480, 360, "#FFFFFF", "light") 
+        self.my_sql = db
+        self.open_top_ui = None
     
-        
-    def connect_ui(self,title,wide,height,color,theme):
+    def connect_ui(self,title,wide,height,color):
 
         self.title(f"{title}")
         screen_x = self.winfo_screenwidth()
@@ -61,7 +43,6 @@ class TOPGUI(CTkToplevel):
         self.geometry(f"{wide}x{height}+{x}+{y-20}")
 
         self.config(bg=f"{color}")
-        customtkinter.set_appearance_mode(theme)
 
         icon = self.appdir / "icon" / "icon.ico"
         self.iconbitmap(icon)
@@ -110,8 +91,8 @@ class TOPGUI(CTkToplevel):
         self.data = encode_file.EncodeDecode()
         self.file_server = self.data.load_data().get("Server_File")
 
-        database = database.Database_Mysql(host,user,pwd,db,timezone)
-        sql , sql_err = database.connect_db()
+        my_sql = database.Database_Mysql(host,user,pwd,db,timezone)
+        sql , sql_err = my_sql.connect_db()
 
         if (sql_err is  None):
             if (sql.is_connected()):
@@ -132,7 +113,7 @@ class TOPGUI(CTkToplevel):
         else:
             CTkMessagebox(title=f"Error {sql_err.errno}",message=f"Error {sql_err}",icon="cancel",option_1="OK")
 
-    def main_ui(self,title,wide,height,color,theme):
+    def main_ui(self,title,wide,height,color):
         self.title(f"{title}")
         screen_x = self.winfo_screenwidth()
         screen_y = self.winfo_screenheight()
@@ -142,7 +123,6 @@ class TOPGUI(CTkToplevel):
         self.geometry(f"{wide}x{height}+{x}+{y-25}")
         
         self.config(bg=f"{color}")
-        customtkinter.set_appearance_mode(theme)
 
         icon = self.appdir / "icon" / "icon.ico"
         
@@ -214,24 +194,24 @@ class TOPGUI(CTkToplevel):
         file_icon = self.appdir / "icon"
 
         open_search_icon = Image.open(file_icon/"search.png")
-        search_icon = CTkImage(light_image=open_search_icon,dark_image=open_search_icon,size=(20,20))
+        search_icon = CTkImage(open_search_icon,size=(20,20))
 
         open_re_icon = Image.open(file_icon/"restart.png")
-        re_icon = CTkImage(light_image=open_re_icon,dark_image=open_re_icon,size=(20,20))
+        re_icon = CTkImage(open_re_icon,size=(20,20))
 
-        btn_product = CTkButton(FLeft,font=("Arial Bold",16),width=60,height=30,corner_radius=20,image=search_icon,text="",text_color="white",fg_color="#38f388",hover_color="#6be59e")
+        btn_product = CTkButton(FLeft,font=("Arial Bold",16),width=60,height=30,corner_radius=20,image=search_icon,text="",text_color="white",fg_color="#38f388",hover_color="#6be59e",command=lambda:self.inp_products_order(self.inp_product.get()))
         btn_product.grid(row=0,column=1,padx=5,sticky="W")
 
         btn_product.bind("<Enter>", lambda e: self.hover_enter(btn_product,65,35)) 
         btn_product.bind("<Leave>", lambda e: self.hover_leave(btn_product,60,30)) 
 
-        btn_re = CTkButton(FLeft,font=("Arial Bold",16),width=60,height=30,corner_radius=20,text="",image=re_icon,text_color="white",fg_color="#38f388",hover_color="#6be59e")
+        btn_re = CTkButton(FLeft,font=("Arial Bold",16),width=60,height=30,corner_radius=20,text="",image=re_icon,text_color="white",fg_color="#38f388",hover_color="#6be59e",command=self.re_face)
         btn_re.grid(row=0,column=1,padx=80,sticky="W")
 
         btn_re.bind("<Enter>", lambda e: self.hover_enter(btn_re,65,35)) 
         btn_re.bind("<Leave>", lambda e: self.hover_leave(btn_re,60,30)) 
 
-        btn_add = CTkButton(FLeft,font=("Arial Bold",16),width=60,height=30,corner_radius=20,text="+",text_color="black",fg_color="#38f388",hover_color="#6be59e")
+        btn_add = CTkButton(FLeft,font=("Arial Bold",16),width=60,height=30,corner_radius=20,text="+",text_color="black",fg_color="#38f388",hover_color="#6be59e",command=self.add_products)
         btn_add.grid(row=0,column=1,padx=(0,20),sticky="E")
 
         btn_add.bind("<Enter>", lambda e: self.hover_enter(btn_add,65,35)) 
@@ -245,7 +225,7 @@ class TOPGUI(CTkToplevel):
         self.F_order_Scroll.pack(fill=BOTH,expand=True)
 
         open_clean_icon = Image.open(file_icon/"clean.png")
-        clean_image = CTkImage(light_image=open_clean_icon,dark_image=open_clean_icon,size=(20,20))
+        clean_image = CTkImage(open_clean_icon,size=(20,20))
 
         btn_clear = CTkButton(self.F_order_Scroll,text="",image=clean_image,width=25,height=25,fg_color="#FF2C2C",hover_color="#F14141",corner_radius=15,command=self.clear)
         btn_clear.pack(anchor="ne",padx=15,pady=10)
@@ -347,10 +327,10 @@ class TOPGUI(CTkToplevel):
 
                 try:
                     open_pimg = Image.open(f"{self.appdir/"products"/p_id}.jpg")
-                    pimg = CTkImage(light_image=open_pimg,dark_image=open_pimg,size=(150,200))
+                    pimg = CTkImage(open_pimg,size=(150,200))
                 except FileNotFoundError:
                     open_pimg = Image.open(f"{self.appdir/"products"/"Default.jpg"}")
-                    pimg = CTkImage(light_image=open_pimg,dark_image=open_pimg,size=(150,200))
+                    pimg = CTkImage(open_pimg,size=(150,200))
                 
                 obj["frame"].grid()
                 obj["label"].configure(image=pimg)
@@ -494,6 +474,15 @@ class TOPGUI(CTkToplevel):
         self.FRBLable_price.configure(text=f"{self.amount}\n\n{self.price}\n\n{self.total}")
 
         obj.destroy()
+    
+    def re_face(self):
+        self.show_products(self.types.get())
+        self.key_search.set("")
+        self.on_search.set(False)
+
+        all_row = self.my_sql.all_row(self.types.get())
+        self.rows = [f"{i}" for i in range(all_row+1)]
+        self.page_scroll.configure(values=self.rows)
 
     def inp_products_order(self,id):
         find_star = id.find("*")
@@ -502,20 +491,13 @@ class TOPGUI(CTkToplevel):
 
         try:
             open_pimg = Image.open(f"{self.appdir/"products"/bar_code}.jpg")
-            pimg = CTkImage(light_image=open_pimg,dark_image=open_pimg,size=(100,100))
+            pimg = CTkImage(open_pimg,size=(100,100))
         except FileNotFoundError:
             open_pimg = Image.open(f"{self.appdir/"products"/"Default.jpg"}")
-            pimg = CTkImage(light_image=open_pimg,dark_image=open_pimg,size=(100,100))
+            pimg = CTkImage(open_pimg,size=(100,100))
         
         if (id == "" or id == None):
-            self.show_products(self.types.get())
-            self.key_search.set("")
-            self.on_search.set(False)
-
-            all_row = self.my_sql.all_row(self.types.get())
-            self.rows = [f"{i}" for i in range(all_row+1)]
-            self.page_scroll.configure(values=self.rows)
-            
+            self.re_face()
         else:  
             p_id , p_name, p_price, id_search = self.my_sql.search_products(bar_code)  
             if (id_search == None):
@@ -549,7 +531,7 @@ class TOPGUI(CTkToplevel):
                 l_amount.grid(row=0,column=2,sticky="w",padx=100)
 
                 open_remove= Image.open(f"{self.appdir/"icon"/"bin.png"}")
-                remove = CTkImage(light_image=open_remove,dark_image=open_remove,size=(30,30))
+                remove = CTkImage(open_remove,size=(30,30))
 
                 btn_remove = CTkButton(frame,image=remove,text="",width=30,height=30,fg_color="red",hover_color="#FF6A6A",command=lambda e_amount = amount,e_price=p_price: self.remove(frame,bar_code,e_amount,e_price))
                 btn_remove.grid(row=0,column=3,padx=20,sticky="e")
@@ -582,5 +564,12 @@ class TOPGUI(CTkToplevel):
 
                 self.show_products(self.types.get(),0,True,self.on_search.get())
                 self.inp_product.delete(0,END)
+    
+    def add_products(self):
+        if (self.open_top_ui == None or not self.open_top_ui.winfo_exists()):
+            self.open_top_ui = top_ui.top_gui(self.my_sql)
+
+        self.open_top_ui.check_level()
+        self.open_top_ui.transient(self)
 
         

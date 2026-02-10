@@ -117,4 +117,11 @@ class Database_Mysql:
             p_price = None
 
         return p_id, p_name, p_price, search
+    
+    def check_level(self,username,level):
+        self.sql.execute("SELECT `username` FROM `accounts` WHERE `username` = %s  AND `level` >= %s" ,(username,level))
+        result = self.sql.fetchone()
+
+        return result
+        
         
