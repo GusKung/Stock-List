@@ -118,8 +118,8 @@ class Database_Mysql:
 
         return p_id, p_name, p_price, search
     
-    def check_level(self,username,level):
-        self.sql.execute("SELECT `username` FROM `accounts` WHERE `username` = %s  AND `level` >= %s" ,(username,level))
+    def check_level(self,username,passwords,level):
+        self.sql.execute("SELECT `username` FROM `accounts` WHERE `username` = %s AND `passwords` = %s  AND `level` >= %s" ,(username,passwords,level))
         result = self.sql.fetchone()
 
         return result

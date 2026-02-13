@@ -17,6 +17,11 @@ class main_gui(CTkToplevel):
         self.data = encode_file.EncodeDecode()
         self.load_data = encode_file.EncodeDecode().load_data()
 
+        self.username = self.load_data.get("USERNAME")
+        self.passwords = self.load_data.get("PASSWORD")
+        self.remember_me = self.load_data.get("REMEMBER")
+        self.pos = self.load_data.get("POS")
+
         self.amount = 0
         self.price = 0.0
         self.total = 0.0
@@ -569,7 +574,7 @@ class main_gui(CTkToplevel):
         if (self.open_top_ui == None or not self.open_top_ui.winfo_exists()):
             self.open_top_ui = top_ui.top_gui(self.my_sql)
 
-        self.open_top_ui.check_level()
+        self.open_top_ui.check_level(self.open_top_ui.add_products_ui,self.username,self.passwords,2)
         self.open_top_ui.transient(self)
 
         
