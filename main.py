@@ -275,7 +275,8 @@ class main_gui(CTkToplevel):
 
         self.page_scroll = CTkScrollableDropdown(page,justify="left", button_color="transparent",values=self.rows,command=lambda e_num:change_pag(e_num))
 
-        self.all_type = self.my_sql.all_type()
+        all_type_list = self.my_sql.all_type()
+        self.all_type = ["ทั้งหมด"] + all_type_list
 
         def change_type(type_list):
             self.types.set(type_list)

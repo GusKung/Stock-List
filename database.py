@@ -11,7 +11,7 @@ class Database_Mysql:
         self.time = time
         
 
-        self.sql = self.connect_db()
+        self.connect_db()
 
     def connect_db(self):
         err = None
@@ -85,7 +85,7 @@ class Database_Mysql:
         self.sql.execute("SELECT DISTINCT p_type FROM `products`;")
         all_type = self.sql.fetchall()
 
-        type_list = ["ทั้งหมด"] + [i[0] for i in all_type]
+        type_list = [i[0] for i in all_type]
 
         return type_list
 
@@ -123,5 +123,17 @@ class Database_Mysql:
         result = self.sql.fetchone()
 
         return result
+
+    def insert_products(self,id,name,types,cost_price,price,amount,sell=0):
+        err = None
+        try:
+            self.sql.execute("INSERT IGNORE  `products` VALUES (%s,%s,%s,%s,%s,%s,%s)",(id,name,types,cost_price,price,amount,sell))
+            self.connect.commit()
+            result = True
+        except mysql.connector.Error as e:
+            result = False
+            err = e
+           
+        return result , err
         
         

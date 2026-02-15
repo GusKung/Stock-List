@@ -33,6 +33,9 @@ class top_gui(CTkToplevel):
 
         self.my_sql = db
 
+        self.obj_list = []
+        
+
     def add_products_ui(self):
         self.title(f"Add Products")
         screen_x = self.winfo_screenwidth()
@@ -50,114 +53,98 @@ class top_gui(CTkToplevel):
         self.resizable(False,False)
 
         Frame_Scroll = CTkScrollableFrame(self)
-        Frame_Scroll.pack(fill=BOTH,expand=True) 
+        Frame_Scroll.pack(fill=BOTH,expand=True)
 
-        self.upload_products = {}
-
-        Frame_Center = CTkFrame(Frame_Scroll,width=400,height=400,corner_radius=0,fg_color="#FFFFFF")
-        Frame_Center.pack(fill=X,pady=(10,0))
-
-        Frame_Center.grid_columnconfigure(1, weight=1)  
-        Frame_Center.grid_columnconfigure(2, weight=1)  
-
-        add_dir = Path(__file__).parent
-        img_path = add_dir / "icon" / "upload.png"
-        img_open = Image.open(img_path)
-        img = CTkImage(light_image=img_open,dark_image=img_open,size=(200,200))
-
-        btn_img = CTkButton(Frame_Center,width=200,height=200,text="",image=img,fg_color="#FFFFFF",hover_color="#F7F7F7",corner_radius=0)
-        btn_img.grid(rowspan=3,column=0,padx=(10,20),pady=10)
-
-        inp_barcode = CTkEntry(Frame_Center,width=200,height=30,corner_radius=10,placeholder_text="Code",font=("Arial",16))
-        inp_barcode.grid(row=0,column=1,sticky="ew")
-
-        inp_name = CTkEntry(Frame_Center,width=200,height=30,corner_radius=10,placeholder_text="Name",font=("Arial",16))
-        inp_name.grid(row=0,column=2,padx=(25,10),sticky="ew")
-
-        inp_cost_price = CTkEntry(Frame_Center,width=150,height=30,corner_radius=10,placeholder_text="Cost Price",font=("Arial",16))
-        inp_cost_price.grid(row=1,column=1,sticky="ew")
-
-        inp_price = CTkEntry(Frame_Center,width=150,height=30,corner_radius=10,placeholder_text="Price",font=("Arial",16))
-        inp_price.grid(row=1,column=2,padx=(25,10),sticky="ew")
-
-        inp_amount = CTkEntry(Frame_Center,width=150,height=30,corner_radius=10,placeholder_text="Amount",font=("Arial",16))
-        inp_amount.grid(row=2,column=1,sticky="ew")
-
-        all_type = self.my_sql.all_type()
-
-        inp_type = CTkComboBox(Frame_Center,width=80,values=all_type)
-        inp_type.grid(row=2,column=2,padx=(25,10),sticky="ew")
-
-        self.upload_products[Frame_Center] = {
-            "img":btn_img,
-            "barcode":inp_barcode.get(),
-            "name":inp_name.get(),
-            "cost_price":inp_cost_price.get(),
-            "price":inp_price.get(),
-            "amount":inp_amount.get(),
-            "type":inp_type.get()
-        }
-
-        btn_remove = CTkButton(Frame_Center,width=60,height=30,corner_radius=0,text="Remove",text_color="white",fg_color="#f33838",hover_color="#f66b6b",command=lambda e_obj=Frame_Center:remove(e_obj))
-        btn_remove.grid(row=3,column=1,columnspan=2,padx=(0,0),pady=(0,20),sticky="nesw")
-
-        def remove(frame):
+        def remove(frame,obj):
             frame.destroy()
-            if frame in self.upload_products:
-                del self.upload_products[frame]
+            self.obj_list.remove(obj)
 
         def add_track():
+            obj = {}
+
+            def change_img():
+                file_path = customtkinter.filedialog.askopenfilename(title="Select Image",filetypes=(("JPG files","*.jpg"),("JPEG files","*.jpeg"),("PNG files","*.png")))
+
+                if (file_path):
+                        obj["img_open"] = Image.open(file_path)
+
+                        img = CTkImage(obj["img_open"],size=(200,200))
+                        btn_img.configure(image=img)
+
             Frame_Center = CTkFrame(Frame_Scroll,width=400,height=400,corner_radius=0,fg_color="#FFFFFF")
             Frame_Center.pack(fill=X,pady=(10,0))
 
             Frame_Center.grid_columnconfigure(1, weight=1)  
             Frame_Center.grid_columnconfigure(2, weight=1)  
 
-            add_dir = Path(__file__).parent
-            img_path = add_dir / "icon" / "upload.png"
+            img_path = self.appdir / "icon" / "upload.png"
             img_open = Image.open(img_path)
             img = CTkImage(light_image=img_open,dark_image=img_open,size=(200,200))
 
-            btn_img = CTkButton(Frame_Center,width=200,height=200,text="",image=img,fg_color="#FFFFFF",hover_color="#F7F7F7",corner_radius=0)
+            btn_img = CTkButton(Frame_Center,width=200,height=200,text="",image=img,fg_color="#FFFFFF",hover_color="#F7F7F7",corner_radius=0,command=change_img)
             btn_img.grid(rowspan=3,column=0,padx=(10,20),pady=10)
 
-            inp_barcode = CTkEntry(Frame_Center,width=200,height=30,corner_radius=10,placeholder_text="Code",font=("Arial",16))
-            inp_barcode.grid(row=0,column=1,sticky="ew")
+            obj["inp_barcode"] = CTkEntry(Frame_Center,width=200,height=30,corner_radius=10,placeholder_text="Code",font=("Arial",16))
+            obj["inp_barcode"].grid(row=0,column=1,sticky="ew")
 
-            inp_name = CTkEntry(Frame_Center,width=200,height=30,corner_radius=10,placeholder_text="Name",font=("Arial",16))
-            inp_name.grid(row=0,column=2,padx=(25,10),sticky="ew")
+            obj["inp_name"] = CTkEntry(Frame_Center,width=200,height=30,corner_radius=10,placeholder_text="Name",font=("Arial",16))
+            obj["inp_name"].grid(row=0,column=2,padx=(25,10),sticky="ew")
 
-            inp_cost_price = CTkEntry(Frame_Center,width=150,height=30,corner_radius=10,placeholder_text="Cost Price",font=("Arial",16))
-            inp_cost_price.grid(row=1,column=1,sticky="ew")
+            obj["inp_cost_price"] = CTkEntry(Frame_Center,width=150,height=30,corner_radius=10,placeholder_text="Cost Price",font=("Arial",16))
+            obj["inp_cost_price"].grid(row=1,column=1,sticky="ew")
 
-            inp_price = CTkEntry(Frame_Center,width=150,height=30,corner_radius=10,placeholder_text="Price",font=("Arial",16))
-            inp_price.grid(row=1,column=2,padx=(25,10),sticky="ew")
+            obj["inp_price"] = CTkEntry(Frame_Center,width=150,height=30,corner_radius=10,placeholder_text="Price",font=("Arial",16))
+            obj["inp_price"].grid(row=1,column=2,padx=(25,10),sticky="ew")
 
-            inp_amount = CTkEntry(Frame_Center,width=150,height=30,corner_radius=10,placeholder_text="Amount",font=("Arial",16))
-            inp_amount.grid(row=2,column=1,sticky="ew")
+            obj["inp_amount"] = CTkEntry(Frame_Center,width=150,height=30,corner_radius=10,placeholder_text="Amount",font=("Arial",16))
+            obj["inp_amount"].grid(row=2,column=1,sticky="ew")
 
             all_type = self.my_sql.all_type()
 
-            inp_type = CTkComboBox(Frame_Center,width=80,values=all_type)
-            inp_type.grid(row=2,column=2,padx=(25,10),sticky="ew")
+            obj["inp_type"] = CTkComboBox(Frame_Center,width=80,values=all_type)
+            obj["inp_type"].grid(row=2,column=2,padx=(25,10),sticky="ew")
 
-            self.upload_products[Frame_Center] = {
-                "img":btn_img,
-                "barcode":inp_barcode.get(),
-                "name":inp_name.get(),
-                "cost_price":inp_cost_price.get(),
-                "price":inp_price.get(),
-                "amount":inp_amount.get(),
-                "type":inp_type.get()
-            }
-            btn_remove = CTkButton(Frame_Center,width=60,height=30,corner_radius=0,text="Remove",text_color="white",fg_color="#f33838",hover_color="#f66b6b",command=lambda e_obj=Frame_Center:remove(e_obj))
+            btn_remove = CTkButton(Frame_Center,width=60,height=30,corner_radius=0,text="Remove",text_color="white",fg_color="#f33838",hover_color="#f66b6b",command=lambda:remove(Frame_Center,obj))
             btn_remove.grid(row=3,column=1,columnspan=2,padx=(0,0),pady=(0,20),sticky="nesw")
+
+            self.obj_list.append(obj)
+
+        def upload():
+            for i in self.obj_list[:]:
+                barcode = i["inp_barcode"].get()
+                name = i["inp_name"].get()
+                types = i["inp_type"].get()
+                cost_price  = i["inp_cost_price"].get()
+                price = i["inp_price"].get()
+                amount = i["inp_amount"].get()
+                
+
+                try:
+                    img = i["img_open"]
+                    rgb_img = img.convert('RGB')
+                    paths = self.appdir / "products" / f"{barcode}.jpg"
+
+                    rgb_img.save(paths,optimize=True,format='JPEG',quality=10)
+                except:
+                    img = None
+
+                insert , err = self.my_sql.insert_products(barcode,name,types,cost_price,price,amount)
+            
+            if (insert == True):
+                boxmes = CTkMessagebox(title="Success",message="Upload Products Success",icon="check",option_1="OK")
+                if (boxmes.get() == "OK"):
+                    self.destroy()
+            else:
+                boxmes = CTkMessagebox(title="Failed",message=f"Upload Products Faile: {err}",icon="cancel",option_1="OK")
+                if (boxmes.get() == "OK"):
+                    self.destroy()
 
         btn_add = CTkButton(self,font=("Arial",16),width=60,height=30,corner_radius=20,text="Add",text_color="white",fg_color="#38f388",hover_color="#6be59e",command=add_track)
         btn_add.pack(side=LEFT,anchor="sw",padx=10,pady=10)
 
-        btn_upload = CTkButton(self,font=("Arial",16),width=60,height=30,corner_radius=20,text="Upload",text_color="white",fg_color="#38f388",hover_color="#6be59e")
+        btn_upload = CTkButton(self,font=("Arial",16),width=60,height=30,corner_radius=20,text="Upload",text_color="white",fg_color="#38f388",hover_color="#6be59e",command=upload)
         btn_upload.pack(side=RIGHT,anchor="se",padx=10,pady=10)
+            
 
     def check_level(self,func,username,passwords,level=2):
         check = self.my_sql.check_level(username,passwords,level)
