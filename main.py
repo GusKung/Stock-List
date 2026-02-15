@@ -510,16 +510,16 @@ class main_gui(CTkToplevel):
 
                 if (find_star <= -1):
                     amount = 1
-                    self.price = p_price
-                    self.amount = self.amount + amount
-                    self.total = self.total + p_price
+                    self.price = float(p_price)
+                    self.amount = self.amount + int(amount)
+                    self.total = self.total + float(p_price)
                 else:
-                    amount = amount
-                    self.price = p_price
+                    amount = int(amount)
+                    self.price = float(p_price)
                     p_price = float(p_price) * float(amount)
                     
                     self.amount = self.amount + int(amount)
-                    self.total = self.total + p_price
+                    self.total = self.total + float(p_price)
 
                 
                 frame = CTkFrame(self.F_order_Scroll,fg_color="white")
@@ -547,13 +547,13 @@ class main_gui(CTkToplevel):
                 self.inp_product.delete(0,END)
 
                 if (bar_code in self.products_order):
-                    self.products_order[bar_code]["amount"] += amount
+                    self.products_order[bar_code]["amount"] += int(amount)
                     self.products_order[bar_code]["price"] += p_price
                 else:
                     self.products_order[bar_code] = {
                         "name":p_name,
-                        "amount":amount,
-                        "price":p_price
+                        "amount":int(amount),
+                        "price":float(p_price)
                     }
 
                 self.obj_order.append(frame)
