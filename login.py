@@ -7,7 +7,7 @@ from PIL import Image
 import encode_file
 import database
 import main
-import atexit
+
 class LoginApp(CTk):
     def __init__(self,title,width,height,color,theme):
         super().__init__()
@@ -67,7 +67,7 @@ class LoginApp(CTk):
         self.open_main_ui = None
         self.login_ui()
 
-        atexit.register(self.exit_program)
+        self.protocol("WM_DELETE_WINDOW",self.exit_program)
     
     def top_connect_ui(self):
         if self.open_main_ui == None or not self.open_main_ui.winfo_exists():
@@ -128,6 +128,9 @@ class LoginApp(CTk):
 
         login_sytem = self.my_sql.Login(username,passwords)
         if (login_sytem):
+            self.username = username
+            self.passwords = passwords
+
             account = [
             f"USERNAME={username}",
             f"PASSWORD={passwords}",

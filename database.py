@@ -9,9 +9,6 @@ class Database_Mysql:
         self.password = password
         self.database = database
         self.time = time
-        
-
-        self.connect_db()
 
     def connect_db(self):
         err = None
@@ -25,14 +22,16 @@ class Database_Mysql:
             self.sql = self.connect.cursor()
             self.sql.execute("SET time_zone = %s;",(self.time,))
             self.connect.commit()
+
         except mysql.connector.Error as e:
             err = e
             if (err.errno == 1049):
                 err = None
+
                 self.connect = mysql.connector.connect(
                 host=self.host,
                 user=self.user,
-                password=self.password,
+                password=self.password
                 )
                 self.sql = self.connect.cursor()
 

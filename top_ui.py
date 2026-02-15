@@ -8,7 +8,7 @@ from PIL import Image
 import encode_file
 
 class top_gui(CTkToplevel):
-    def __init__(self,db):
+    def __init__(self,db=None):
         super().__init__()
         self.withdraw()
 
