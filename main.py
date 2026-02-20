@@ -63,7 +63,6 @@ class main_gui(CTkToplevel):
         background  = CTkLabel(master=self,text="",image=background_photo)
         background.place(x=0,y=0)
 
-
         F_Connect = CTkFrame(master=self,width=400,height=300,fg_color="white",bg_color="#3E3E3E")
         F_Connect.pack(anchor=CENTER,pady=30,expand=NO)
 
@@ -134,6 +133,17 @@ class main_gui(CTkToplevel):
         self.iconbitmap(icon)
         self.after(200, lambda: self.iconbitmap(icon))
         self.deiconify()
+
+        def open_menu(func):
+            if (self.open_top_ui == None or not self.open_top_ui.winfo_exists()):
+                self.open_top_ui = top_ui.top_gui(self.my_sql)
+
+            func()
+
+        menu = CTkMenuBar(master=self)
+        stock_menu = menu.add_cascade("Stock")
+        user_menu = menu.add_cascade("User",command=lambda:open_menu(lambda:self.open_top_ui.check_level(self.open_top_ui.user_ui,self.username,self.passwords,3)))
+        account_menu = menu.add_cascade("Account")
 
         FLeft= CTkFrame(self,fg_color="#D4D4D4",corner_radius=0,border_color="black",border_width=0)
         FLeft.pack(side=LEFT,fill=BOTH,expand=True)

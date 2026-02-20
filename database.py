@@ -79,6 +79,15 @@ class Database_Mysql:
         all_row = int(all_amount[0] / 40)
 
         return all_row
+
+    def all_row_user(self):
+        self.sql.execute("SELECT COUNT(*) FROM `accounts`")
+        result = self.sql.fetchone()
+
+        all_amount = result
+        all_row = int(all_amount[0] / 50)
+
+        return all_row
     
     def all_type(self):
         self.sql.execute("SELECT DISTINCT p_type FROM `products`;")
@@ -135,4 +144,32 @@ class Database_Mysql:
            
         return result , err
         
+    def load_user(self,num=0):
+        self.sql.execute("SELECT * FROM `employee` join `accounts` on `employee`.`account_id` = `accounts`.`id` order by `accounts`.`id` asc limit 50 offset %s;" ,(num*50,))
+        result = self.sql.fetchall()
+
+        return result
+
+    def insert_user(self,id,user,level,passwords,emp_id,f_name,l_name,contact,address):
+        self.sql.execute("SELECT `id` FROM `accounts` WHERE `id` = %s;", (id,))
+        resulte = self.sql.fetchall()
+
+        if (not resulte):
+            self.sql.execute("INSERT INTO `accounts` (`id`, `username`, `passwords`, `level` , `onlines`) VALUES (%s, %s, %s, %s,%s);", (id, user, passwords, level, 0))
+
+            self.sql.execute("INSERT INTO `employee` (`emp_id` ,`account_id`, `first_name`, `last_name` , `address` , `contact`) VALUES (%s,%s, %s, %s, %s, %s);", (emp_id,id, f_name, l_name , address , contact))
+        else:
+            self.sql.execute("UPDATE `employee` join `accounts` on `employee`.`account_id` = `accounts`.`id` set `accounts`.`username` = %s, `accounts`.`passwords` = %s, `accounts`.`level` = %s, `employee`.`emp_id` = %s ,`employee`.`first_name` = %s, `employee`.`last_name` = %s, `employee`.`contact` = %s, `employee`.`address` = %s where `accounts`.`id` = %s;" , (user,passwords,level,emp_id,f_name,l_name,contact,address,id))
+
+        self.connect.commit()
         
+    def count_user(self):
+        self.sql.execute("SELECT id FROM `accounts`;")
+        resulte = self.sql.fetchall()
+
+        return resulte
+
+    def del_user(self,id,emp_id):
+        self.sql.execute("DELETE FROM `accounts` WHERE `id` = %s;", (id,))
+        self.sql.execute("DELETE FROM `employee` WHERE `emp_id` = %s;", (emp_id,))
+        self.connect.commit()
