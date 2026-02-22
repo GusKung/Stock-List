@@ -196,7 +196,7 @@ class top_gui(CTkToplevel):
         inp_password.bind("<Return>",lambda e:self.check_level(func,inp_user.get(),inp_password.get(),level))
 
     def user_ui(self):
-        self.title(f"Add Products")
+        self.title("Add Products")
         screen_x = self.winfo_screenwidth()
         screen_y = self.winfo_screenheight()
 
@@ -209,7 +209,6 @@ class top_gui(CTkToplevel):
         self.iconbitmap(icon)
         self.after(200, lambda: self.iconbitmap(icon))
         self.deiconify()
-        self.resizable(False,False)
 
         FLeft = CTkFrame(self,width=400,fg_color="#7cffac", corner_radius=0)
         FLeft.pack(side=LEFT, fill=BOTH)
@@ -471,3 +470,354 @@ class top_gui(CTkToplevel):
         table_user.bind("<Double-1>", select_data)
 
         load_data_user(0)
+    
+    def stock_ui(self):
+        self.title("Add Products")
+        screen_x = self.winfo_screenwidth()
+        screen_y = self.winfo_screenheight()
+
+        x = int((screen_x / 2) - (1280/2))
+        y = int((screen_y / 2) - (720 / 2))
+        self.geometry(f"{1280}x{720}+{x}+{y-25}")
+
+        icon = self.appdir / "icon" / "icon.ico"
+        
+        self.iconbitmap(icon)
+        self.after(200, lambda: self.iconbitmap(icon))
+        self.deiconify()
+
+        data_stock= {}
+
+        ID = StringVar(value="Barcode")
+        NAME = StringVar(value="Name Product")
+        TYPE = StringVar(value="Type")
+        COST_PRICE = StringVar(value="Cost Price")
+        PRICE = StringVar(value="Price")
+        AMOUNT = StringVar(value="Amount")
+        num_page = StringVar(value="0")
+        on_search = BooleanVar(value=False)
+        key_search = StringVar(value="")
+
+        FLeft = CTkFrame(self,width=400,fg_color="#7cffac", corner_radius=0)
+        FLeft.pack(side=LEFT, fill=BOTH)
+
+        FLeft.columnconfigure(0,weight=1)
+        FLeft.rowconfigure(4,weight=1)
+
+        FRight = CTkFrame(self,fg_color="#FFFFFF", corner_radius=0)
+        FRight.pack(side=RIGHT, fill=BOTH,expand=True)
+
+        FRight.columnconfigure(0,weight=1)
+        FRight.rowconfigure(1,weight=1)
+
+        all_row_list = self.my_sql.all_row("ทั้งหมด")
+        rows = [f"{i}" for i in range(all_row_list+1)]
+
+        all_type_list = self.my_sql.all_type()
+        all_type = ["ทั้งหมด"] + all_type_list
+
+        amount_page = CTkComboBox(FRight,width=80,variable=num_page)
+        amount_page_scroll = CTkScrollableDropdown(amount_page,values=rows,justify="left", button_color="transparent")
+        amount_page.grid(row=2,column=0,columnspan=2,sticky="S",pady=25)
+
+        inp_id = CTkEntry(FLeft,placeholder_text="ID",text_color="#818181",textvariable=ID,width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16),state="disabled")
+        inp_id.grid(row=0,column=0,pady=(40,10),padx=20)
+
+        inp_name = CTkEntry(FLeft,placeholder_text="NAME",text_color="#818181",textvariable=NAME,width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16),state="disabled")
+        inp_name.grid(row=0,column=1,pady=(40,10),padx=20)
+
+        box_type = CTkComboBox(FLeft,values=all_type,variable=TYPE,state="disabled",width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16))
+        box_type.grid(row=1,column=0,pady=10,padx=20)
+
+        btn_amount = CTkEntry(FLeft,placeholder_text="AMOUNT",text_color="#818181",textvariable=AMOUNT,width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16),state="disabled")
+        btn_amount.grid(row=1,column=1,pady=10,padx=20)
+
+        btn_cost_price = CTkEntry(FLeft,placeholder_text="COST PRICE",text_color="#818181",textvariable=COST_PRICE,width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16),state="disabled")
+        btn_cost_price.grid(row=2,column=0,pady=10,padx=20)
+
+        btn_price = CTkEntry(FLeft,placeholder_text="PRICE",text_color="#818181",textvariable=PRICE,width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16),state="disabled")
+        btn_price.grid(row=2,column=1,pady=10,padx=20)
+
+        # //---------------------------Image Upload----------------------------------------
+
+        img_path = self.appdir / "icon" / "upload.png"
+        img_open = Image.open(img_path)
+        img = CTkImage(img_open,size=(200,200))
+
+        images = {}
+
+        def upload_img():
+
+            file_path = customtkinter.filedialog.askopenfilename(title="Select Image",filetypes=(("JPG files","*.jpg"),("JPEG files","*.jpeg"),("PNG files","*.png")))
+            if (file_path):
+                img_open = Image.open(file_path)
+
+                img = CTkImage(img_open,size=(200,200))
+                btn_image.configure(image=img)
+
+                barcode = ID.get()
+                images[barcode] = img_open
+                
+
+        btn_image = CTkButton(FLeft,state="disabled",command=upload_img,width=200,height=200,text="",image=img,fg_color="#FFFFFF",hover_color="#F7F7F7",corner_radius=0)
+        btn_image.grid(row=4,column=0,columnspan=2,sticky="news",pady=10,padx=20)
+
+        # //-----------------------Button Edit------------------------------
+
+        def edit():
+            if (inp_name.cget("state") == "disabled"):
+                inp_id.configure(state="normal",text_color="#000000",border_color="#000000",fg_color="#FFFFFF")
+                inp_name.configure(state="normal",text_color="#000000",border_color="#000000",fg_color="#FFFFFF")
+                box_type.configure(state="normal",border_color="#000000",fg_color="#FFFFFF")
+                btn_amount.configure(state="normal",text_color="#000000",border_color="#000000",fg_color="#FFFFFF")
+                btn_cost_price.configure(state="normal",text_color="#000000",border_color="#000000",fg_color="#FFFFFF")
+                btn_price.configure(state="normal",text_color="#000000",border_color="#000000",fg_color="#FFFFFF")
+                btn_image.configure(state="normal")
+
+                btn_edit.configure(text="Save")
+
+            else:
+                inp_id.configure(state="disabled",text_color="#818181",border_color="#8D8D8D",fg_color="#FCFCFC")
+                inp_name.configure(state="disabled",text_color="#818181",border_color="#8D8D8D",fg_color="#FCFCFC")
+                box_type.configure(state="disabled",border_color="#8D8D8D",fg_color="#FCFCFC")
+                btn_edit.configure(text="Edit")
+                btn_amount.configure(state="disabled",text_color="#818181",border_color="#8D8D8D",fg_color="#FCFCFC")
+                btn_cost_price.configure(state="disabled",text_color="#818181",border_color="#8D8D8D",fg_color="#FCFCFC")
+                btn_price.configure(state="disabled",text_color="#818181",border_color="#8D8D8D",fg_color="#FCFCFC")
+                btn_image.configure(state="disabled")
+
+                barcode = ID.get()
+                name_product = NAME.get()
+                type_product = TYPE.get()
+                cost_price = COST_PRICE.get()
+                price = PRICE.get()
+                amount = AMOUNT.get()
+
+                data_stock[barcode] = (name_product,type_product,cost_price,price,amount)
+
+        btn_edit = CTkButton(FLeft,text="Edit",command=edit,width=200,corner_radius=14,height=30,font=("Arial", 16))
+        btn_edit.grid(row=3,column=0,columnspan=2,sticky="ew",pady=10,padx=20)
+
+        def add_track():
+            table_stock.insert("",END,values=("New","New Product","Type",float("0.0"),float("0.0"),int("0"),int("0")))
+            table_stock.yview_moveto(1)
+
+        def del_track():
+            sure = CTkMessagebox(title="Delete Products",message="Are you sure to delete this products?",icon="warning",option_1="No",option_2="Yes")
+            if (sure.get() == "No"):
+                return
+            else:
+                selected_item = table_stock.selection()
+                if selected_item:
+                    for item in selected_item:
+                        values = table_stock.item(item, "values")
+                    id_products= values[0]  
+                    
+                    self.my_sql.del_products(id_products)
+
+                    ID.set("Barcode")
+                    NAME.set("Name")
+                    TYPE.set("Type")
+                    AMOUNT.set("0")
+                    COST_PRICE.set("0.0")
+                    PRICE.set("0.0")
+                    btn_image.configure(image=img)
+                    
+                    show_products_table(on_search.get())
+        
+        btn_add = CTkButton(FLeft,width=100,height=40,text="Add",corner_radius=20,cursor="hand2",command=add_track)
+        btn_add.grid(row=5,column=0,sticky="sw",padx=20,pady=20)
+
+        btn_del = CTkButton(FLeft,width=100,height=40,text="Remove",corner_radius=20,fg_color="#FF3939",hover_color="#DF4949",cursor="hand2",command=del_track)
+        btn_del.grid(row=5,column=0,columnspan=2 ,sticky="s",padx=20,pady=20)
+
+        btn_apply = CTkButton(FLeft,width=100,height=40,text="Apply",corner_radius=20,cursor="hand2")
+        btn_apply.grid(row=5,column=1,sticky="se",padx=20,pady=20)
+
+        # //----------------------Search-------------------------------
+        def search(barcode):
+            key_search.set(barcode)
+            if (key_search.get() == ""):
+                on_search.set(False)
+            else:
+                on_search.set(True)
+
+            inp_search.delete(0,END)
+            show_products_table(on_search.get())
+            
+    # //----------------------Table-------------------------------
+        style = ttk.Style(self)
+        style.configure("Treeview", font=("Arial", 12), rowheight=40,borderwidth=0, highlightthickness=0)       
+        style.configure("Treeview.Heading", font=("Arial Bold", 12))  
+
+        bar_type = CTkComboBox(FRight,width=200,values=all_type) 
+        bar_type.grid(row=0,column=0,padx=20,sticky="w")
+
+        inp_search = CTkEntry(FRight,placeholder_text="Search",text_color="black",width=300,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16))
+        inp_search.grid(row=0,column=0,pady=10,padx=140,sticky="e")
+
+        appdir = Path(__file__).parent
+        icon = appdir / "icon" 
+
+        open_search_icon = Image.open(icon/"search.png")
+        search_icon = CTkImage(light_image=open_search_icon,dark_image=open_search_icon,size=(20,20))
+
+        btn_search = CTkButton(FRight,width=100,height=30,text="",corner_radius=20,image=search_icon,fg_color="#38f388",hover_color="#6be59e",cursor="hand2",command=lambda: search(inp_search.get()))
+        btn_search.grid(row=0,column=0,pady=10,padx=20,sticky="e") 
+
+        inp_search.bind("<Return>", lambda e: search(inp_search.get()))
+
+
+        table_stock = ttk.Treeview(FRight,columns=("ID","NAME","TYPE","COST_PRICE","PRICE","AMOUNT","SELL"),show="headings")
+
+        scrollbar = ttk.Scrollbar(FRight, orient="vertical", command=table_stock.yview)
+        table_stock.configure(yscrollcommand=scrollbar.set)
+        scrollbar.grid(row=1, column=1, sticky="ns")
+
+        table_stock.heading("ID",text="ID")
+        table_stock.heading("NAME",text="NAME")
+        table_stock.heading("AMOUNT",text="AMOUNT")
+        table_stock.heading("COST_PRICE",text="COST PRICE")
+        table_stock.heading("PRICE",text="PRICE")
+        table_stock.heading("SELL",text="SELL")
+
+        table_stock.column("ID",width=70,anchor=CENTER)
+        table_stock.column("NAME",width=200,anchor="w")
+        table_stock.column("AMOUNT",width=30,anchor=CENTER)
+        table_stock.column("COST_PRICE",width=45,anchor=CENTER)
+        table_stock.column("PRICE",width=30,anchor=CENTER)
+        table_stock.column("SELL",width=30,anchor=CENTER)
+
+        table_stock.column("TYPE",width=0,stretch=False)
+
+        table_stock.grid(row=1, column=0, sticky="nsew")
+
+        # ------------------------Show Products--------------------------------
+
+        def show_products_table(searchs,types="ทั้งหมด",num=0):
+            table_stock.delete(*table_stock.get_children())
+            num_page.set(num)
+            if (searchs == False):
+                result = self.my_sql.show_products(types,num)
+
+                amount_page_scroll.configure(values=rows)
+
+                for i in result:
+                    id = i[0]
+                    name = i[1]
+                    p_type = i[2]
+                    cost_price = i[3]
+                    price = i[4]
+                    amount = i[5]
+                    sell = i[6]
+                    table_stock.insert("",END,values=(id,name,p_type,cost_price,price,amount,sell))
+            else:
+                p_id , p_name, p_type, p_price, p_cost_price, p_amount, p_sell ,id_search = self.my_sql.search_products(key_search.get(),num)  
+
+                if (id_search != None):
+                    table_stock.delete(*table_stock.get_children())
+                    row_search_list = self.my_sql.all_row(types,on_search.get(),key_search.get())
+                    row_search = [f"{i}" for i in range(row_search_list+1)]
+
+                    amount_page_scroll.configure(values=row_search)
+
+                    for i in id_search:
+                        id = i[0]
+                        name = i[1]
+                        ty = i[2]
+                        cost_price = i[3]
+                        price = i[4]
+                        amount = i[5]
+                        sell = i[6]
+                        table_stock.insert("",END,values=(id,name,ty,cost_price,price,amount,sell))
+                else:
+                    table_stock.delete(*table_stock.get_children())
+                    table_stock.insert("",END,values=(p_id,p_name,p_type,p_cost_price,p_price,p_amount,p_sell))
+                    amount_page_scroll.configure(values=["0"])
+                
+
+        def select_product(event):
+            select = table_stock.focus()
+            values = table_stock.item(select,"values")
+
+            barcode = values[0]
+            name_product = values[1]
+            type_product = values[2]
+            cost_price = values[3]
+            price = values[4]
+            amount = values[5]
+
+            ID.set(barcode)
+            NAME.set(name_product)
+            TYPE.set(type_product)
+            COST_PRICE.set(cost_price)
+            PRICE.set(price)
+            AMOUNT.set(amount)
+
+            img = self.appdir / "products"
+
+            try:
+                open_pimg = Image.open(f"{img/barcode}.jpg")
+                pimg = CTkImage(open_pimg,size=(200,250))
+            except FileNotFoundError:
+                open_pimg = Image.open(f"{img/"Default.jpg"}")
+                pimg = CTkImage(open_pimg,size=(200,250))
+
+            btn_image.configure(image=pimg)
+
+
+        table_stock.bind("<Double-1>", select_product)
+    # //-----------------------------------------------------
+
+    # //----------------------Button Next Page-------------------------------
+
+        def next_page():
+            if (TYPE.get() == "Type"):
+                TYPE.set("ทั้งหมด")
+
+            types = TYPE.get()
+            
+            if (on_search.get() == False):
+                num = int(num_page.get())
+                all_row = self.my_sql.all_row(types)
+
+                if (num < all_row):
+                    new = num + 1
+                    show_products_table(on_search.get(),types,new)
+            else:
+                num = int(num_page.get())
+                all_row = self.my_sql.all_row(types,True,key_search.get())
+
+                if (num < all_row):
+                    new = num +1
+                    show_products_table(on_search.get(),types,new)
+
+
+        def back_page():
+            if (TYPE.get() == "Type"):
+                TYPE.set("ทั้งหมด")
+
+            types = TYPE.get()
+            
+            if (on_search.get() == False):
+                num = int(num_page.get())
+                all_row = self.my_sql.all_row(types)
+                if (num <= all_row and num != 0):
+                    new = num - 1
+                    show_products_table(on_search.get(),types,new)
+            else:
+                num = int(num_page.get())
+                all_row = self.my_sql.all_row(types,True,key_search.get())
+                
+                if (num <= all_row and num != 0):
+                    new = num - 1
+                    show_products_table(on_search.get(),types,new)
+
+        btn_next = CTkButton(FRight,width=100,height=40,font=("Arial Bold",16),text=">",corner_radius=20,fg_color="#38f388",hover_color="#6be59e",text_color="black",cursor="hand2",command=next_page)
+        btn_next.grid(row=2,column=0,sticky="se",padx=(0,20),pady=20)
+
+        btn_back = CTkButton(FRight,width=100,height=40,font=("Arial Bold",16),text="<",corner_radius=20,fg_color="#38f388",hover_color="#6be59e",text_color="black",cursor="hand2",command=back_page)
+        btn_back.grid(row=2,column=0,sticky="sw",padx=(20,0),pady=20)
+
+        show_products_table(on_search.get())
+

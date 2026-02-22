@@ -141,7 +141,7 @@ class main_gui(CTkToplevel):
             func()
 
         menu = CTkMenuBar(master=self)
-        stock_menu = menu.add_cascade("Stock")
+        stock_menu = menu.add_cascade("Stock",command=lambda:open_menu(lambda:self.open_top_ui.check_level(self.open_top_ui.stock_ui,self.username,self.passwords,2)))
         user_menu = menu.add_cascade("User",command=lambda:open_menu(lambda:self.open_top_ui.check_level(self.open_top_ui.user_ui,self.username,self.passwords,3)))
         account_menu = menu.add_cascade("Account")
 
@@ -315,7 +315,7 @@ class main_gui(CTkToplevel):
         self.data_products.clear()
 
         if (search == True):
-            p_id , p_name, p_price, id_search = self.my_sql.search_products(self.key_search.get(),num)  
+            p_id , p_name, p_type, p_price, p_cost_price, p_amount, p_sell ,id_search = self.my_sql.search_products(self.key_search.get(),num)  
             products = id_search
             self.amount_page.set(num)
 
@@ -339,7 +339,7 @@ class main_gui(CTkToplevel):
                 p_data = products[i]
                 p_id = p_data[0]    
                 p_name = p_data[1]  
-                p_price = p_data[2] 
+                p_price = p_data[3] 
 
                 try:
                     open_pimg = Image.open(f"{self.appdir/"products"/p_id}.jpg")
@@ -515,7 +515,7 @@ class main_gui(CTkToplevel):
         if (id == "" or id == None):
             self.re_face()
         else:  
-            p_id , p_name, p_price, id_search = self.my_sql.search_products(bar_code)  
+            p_id , p_name, p_type, p_price, p_cost_price, p_amount, p_sell ,id_search = self.my_sql.search_products(bar_code)  
             if (id_search == None):
 
                 if (find_star <= -1):
@@ -587,5 +587,3 @@ class main_gui(CTkToplevel):
 
         self.open_top_ui.check_level(self.open_top_ui.add_products_ui,self.username,self.passwords,2)
         self.open_top_ui.transient(self)
-
-        

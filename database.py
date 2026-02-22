@@ -97,34 +97,43 @@ class Database_Mysql:
 
         return type_list
 
-    def show_products(self,types,num):
+    def show_products(self,types,num=0):
         
         if (types != "ทั้งหมด"):
-            self.sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `products` WHERE `p_amount` > 0 AND `p_type` = %s ORDER BY `p_type`,`p_id`,`p_name` ASC LIMIT 40 OFFSET %s;" , (types,(num)*40,))
+            self.sql.execute("SELECT  `p_id` , `p_name` , `p_type` , `p_price` , `p_cost_price` , `p_amount`, `p_sell` FROM `products` WHERE `p_amount` > 0 AND `p_type` = %s ORDER BY `p_type`,`p_id`,`p_name` ASC LIMIT 40 OFFSET %s;" , (types,(num)*40,))
         else:
-             self.sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `products` WHERE `p_amount` > 0 ORDER BY `p_type`,`p_id`,`p_name` ASC LIMIT 40 OFFSET %s;" , (num*40,))
+             self.sql.execute("SELECT  `p_id` , `p_name` , `p_type` , `p_price` , `p_cost_price` , `p_amount`, `p_sell` FROM `products` WHERE `p_amount` > 0 ORDER BY `p_type`,`p_id`,`p_name` ASC LIMIT 40 OFFSET %s;" , (num*40,))
         
         products = self.sql.fetchall()
         
         return products
     
     def search_products(self,id,num=0):
-        self.sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `products` WHERE `p_amount` > 0 AND `p_id` = %s ",(id,))
+        self.sql.execute("SELECT `p_id` , `p_name` , `p_type` , `p_price` , `p_cost_price` , `p_amount`, `p_sell` FROM `products` WHERE `p_amount` > 0 AND `p_id` = %s ",(id,))
         result = self.sql.fetchone()
         search = None
 
         if (result != None):
             p_id = result[0]
             p_name = result[1]
-            p_price = result[2]
+            p_type = result[2]
+            p_price = result[3]
+            p_cost_price = result[4]
+            p_amount = result[5]
+            p_sell = result[6]
+
         else:
-            self.sql.execute("SELECT `p_id` , `p_name` , `p_price` FROM `products` WHERE `p_amount` > 0 AND `p_name` LIKE %s LIMIT 40 OFFSET %s",(f"%{id}%",num*40))
+            self.sql.execute("SELECT `p_id` , `p_name` , `p_type` , `p_price` , `p_cost_price` , `p_amount`, `p_sell` FROM `products` WHERE `p_amount` > 0 AND `p_name` LIKE %s LIMIT 40 OFFSET %s",(f"%{id}%",num*40))
             search = self.sql.fetchall()
             p_id = None
             p_name = None
+            p_type = None
             p_price = None
+            p_cost_price = None
+            p_amount = None
+            p_sell = None
 
-        return p_id, p_name, p_price, search
+        return p_id, p_name,p_type, p_price,p_cost_price,p_amount,p_sell, search
     
     def check_level(self,username,passwords,level):
         self.sql.execute("SELECT `username` FROM `accounts` WHERE `username` = %s AND `passwords` = %s  AND `level` >= %s" ,(username,passwords,level))
@@ -172,4 +181,8 @@ class Database_Mysql:
     def del_user(self,id,emp_id):
         self.sql.execute("DELETE FROM `accounts` WHERE `id` = %s;", (id,))
         self.sql.execute("DELETE FROM `employee` WHERE `emp_id` = %s;", (emp_id,))
+        self.connect.commit()
+
+    def del_products(self,id):
+        self.sql.execute("DELETE FROM `stock_list`.`products` WHERE `p_id` = %s;", (id,))
         self.connect.commit()
