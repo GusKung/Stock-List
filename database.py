@@ -143,13 +143,25 @@ class Database_Mysql:
 
     def insert_products(self,id,name,types,cost_price,price,amount,sell=0):
         err = None
-        try:
-            self.sql.execute("INSERT IGNORE  `products` VALUES (%s,%s,%s,%s,%s,%s,%s)",(id,name,types,cost_price,price,amount,sell))
-            self.connect.commit()
-            result = True
-        except mysql.connector.Error as e:
-            result = False
-            err = e
+        self.sql.execute("SELECT `p_id` FROM `products` WHERE `p_id` = %s;", (id,))
+        find = self.sql.fetchall()
+
+        if (not find):
+            try:
+                self.sql.execute("INSERT IGNORE  `products` VALUES (%s,%s,%s,%s,%s,%s,%s)",(id,name,types,cost_price,price,amount,sell))
+                self.connect.commit()
+                result = True
+            except mysql.connector.Error as e:
+                result = False
+                err = e
+        else:
+                try:
+                    self.sql.execute("UPDATE `products` SET `p_name` = %s, `p_type` = %s, `p_cost_price` = %s, `p_price` = %s, `p_amount` = %s WHERE `p_id` = %s;", (name, types, cost_price, price, amount, id))
+                    self.connect.commit()
+                    result = True
+                except mysql.connector.Error as e:
+                    result = False
+                    err = e
            
         return result , err
         
@@ -160,17 +172,24 @@ class Database_Mysql:
         return result
 
     def insert_user(self,id,user,level,passwords,emp_id,f_name,l_name,contact,address):
+        err = None
         self.sql.execute("SELECT `id` FROM `accounts` WHERE `id` = %s;", (id,))
         resulte = self.sql.fetchall()
 
-        if (not resulte):
-            self.sql.execute("INSERT INTO `accounts` (`id`, `username`, `passwords`, `level` , `onlines`) VALUES (%s, %s, %s, %s,%s);", (id, user, passwords, level, 0))
+        try:
+            if (not resulte):
+                self.sql.execute("INSERT INTO `accounts` (`id`, `username`, `passwords`, `level` , `onlines`) VALUES (%s, %s, %s, %s,%s);", (id, user, passwords, level, 0))
 
-            self.sql.execute("INSERT INTO `employee` (`emp_id` ,`account_id`, `first_name`, `last_name` , `address` , `contact`) VALUES (%s,%s, %s, %s, %s, %s);", (emp_id,id, f_name, l_name , address , contact))
-        else:
-            self.sql.execute("UPDATE `employee` join `accounts` on `employee`.`account_id` = `accounts`.`id` set `accounts`.`username` = %s, `accounts`.`passwords` = %s, `accounts`.`level` = %s, `employee`.`emp_id` = %s ,`employee`.`first_name` = %s, `employee`.`last_name` = %s, `employee`.`contact` = %s, `employee`.`address` = %s where `accounts`.`id` = %s;" , (user,passwords,level,emp_id,f_name,l_name,contact,address,id))
-
-        self.connect.commit()
+                self.sql.execute("INSERT INTO `employee` (`emp_id` ,`account_id`, `first_name`, `last_name` , `address` , `contact`) VALUES (%s,%s, %s, %s, %s, %s);", (emp_id,id, f_name, l_name , address , contact))
+            else:
+                self.sql.execute("UPDATE `employee` join `accounts` on `employee`.`account_id` = `accounts`.`id` set `accounts`.`username` = %s, `accounts`.`passwords` = %s, `accounts`.`level` = %s, `employee`.`emp_id` = %s ,`employee`.`first_name` = %s, `employee`.`last_name` = %s, `employee`.`contact` = %s, `employee`.`address` = %s where `accounts`.`id` = %s;" , (user,passwords,level,emp_id,f_name,l_name,contact,address,id))
+    
+            self.connect.commit()
+            result = True
+        except mysql.connector.Error as e:
+            result = False
+            err = e
+        return result , err
         
     def count_user(self):
         self.sql.execute("SELECT id FROM `accounts`;")

@@ -118,8 +118,8 @@ class LoginApp(CTk):
         self.btn_login.place(relx=0.9, rely=0.58, anchor="ne")
 
         self.inp_pwd.bind("<Return>",lambda e: self.login())
-        self.update()
-        self.inp_pwd.focus()
+        
+        self.after(500, lambda: self.inp_pwd.focus_force())
 
     def login(self):
         username = self.inp_user.get()

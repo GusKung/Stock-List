@@ -300,16 +300,15 @@ class main_gui(CTkToplevel):
 
             self.reset_scroll()
 
-        box_type = CTkComboBox(FLeft,width=100,values=self.all_type,command=lambda e:change_type(e)) 
-        box_type.grid(row=0,column=1,padx=(0,115),sticky="E")
+        self.box_type = CTkComboBox(FLeft,width=100,values=self.all_type,command=lambda e:change_type(e)) 
+        self.box_type.grid(row=0,column=1,padx=(0,115),sticky="E")
 
         self.show_products(self.types.get())
 
         self.inp_product.bind("<Return>",lambda e:self.inp_products_order(self.inp_product.get()))
 
-        self.update()
-
-        self.inp_product.focus()
+        self.after(500, lambda: self.inp_product.focus_force())
+   
 
     def show_products(self,types,num=0,reset=False,search=False):
         self.data_products.clear()
@@ -492,6 +491,8 @@ class main_gui(CTkToplevel):
         obj.destroy()
     
     def re_face(self):
+        self.types.set("ทั้งหมด")
+        self.box_type.set("ทั้งหมด")
         self.show_products(self.types.get())
         self.key_search.set("")
         self.on_search.set(False)

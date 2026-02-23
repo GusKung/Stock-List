@@ -128,9 +128,9 @@ class top_gui(CTkToplevel):
                 except:
                     img = None
 
-                insert , err = self.my_sql.insert_products(barcode,name,types,cost_price,price,amount)
+                result, err = self.my_sql.insert_products(barcode,name,types,cost_price,price,amount)
             
-            if (insert == True):
+            if (result == True):
                 boxmes = CTkMessagebox(title="Success",message="Upload Products Success",icon="check",option_1="OK")
                 if (boxmes.get() == "OK"):
                     self.destroy()
@@ -250,7 +250,7 @@ class top_gui(CTkToplevel):
             len_id_user = len(count) + id_user
             len_id_em = len(count) + id_em
 
-            table_user.insert("",END,values=(len_id_em,len_id_user,"New","","","","","","",""))
+            table_user.insert("",END,values=(len_id_em,len_id_user,"New","1","","","","","",""))
             id_user += 1
             id_em += 1
         
@@ -266,8 +266,7 @@ class top_gui(CTkToplevel):
                     id_user = values[1]  
                     id_emp = values[0]  
                     self.my_sql.del_user(id_user,id_emp)
-                    
-                    load_data_user(0)
+                    table_user.delete(item)
 
         def change_page(page):
             page = int(page)
@@ -279,12 +278,14 @@ class top_gui(CTkToplevel):
             if (num < all_row):
                 PAGE.set(num+1)
                 load_data_user(PAGE.get())
+            table_user.yview_moveto(0)
         
         def back_page():
             num = int(PAGE.get())
             if (num <= all_row and num != 0):
                 PAGE.set(num-1)
                 load_data_user(PAGE.get())
+            table_user.yview_moveto(0)
 
         # //-----------------------Button Edit------------------------------
         def edit():
@@ -342,11 +343,16 @@ class top_gui(CTkToplevel):
         def apply():
             for id_user , values in data_user.items():
                 user , level , password , emp_id , f_name , l_name , contact , address = values
-                self.my_sql.insert_user(id_user,user , level , password , emp_id , f_name , l_name , contact , address)
-
-            succ = CTkMessagebox(title="Success",message="Apply Changes Successfully!",icon="check",option_1="OK")
-            if (succ.get() == "OK"):
-                load_data_user(0)
+                result, err = self.my_sql.insert_user(id_user,user , level , password , emp_id , f_name , l_name , contact , address)
+    
+            if (result == True):
+                succ = CTkMessagebox(title="Success",message="Apply Changes Successfully!",icon="check",option_1="OK")
+                if (succ.get() == "OK"):
+                    load_data_user(0)
+            else:
+                boxmes = CTkMessagebox(title=f"Failed {err.errno}",message=f"Apply Changes Faile: {err}",icon="cancel",option_1="OK")
+                if (boxmes.get() == "OK"):
+                    load_data_user(0)
 
         btn_add = CTkButton(FLeft,width=100,height=40,text="Add",corner_radius=20,command=add_track)
         btn_add.grid(row=3,column=0,sticky="sw",padx=20,pady=20)
@@ -517,7 +523,7 @@ class top_gui(CTkToplevel):
         all_type = ["ทั้งหมด"] + all_type_list
 
         amount_page = CTkComboBox(FRight,width=80,variable=num_page)
-        amount_page_scroll = CTkScrollableDropdown(amount_page,values=rows,justify="left", button_color="transparent")
+        amount_page_scroll = CTkScrollableDropdown(amount_page,values=rows,justify="left", button_color="transparent",command=lambda e_num:change_page(e_num))
         amount_page.grid(row=2,column=0,columnspan=2,sticky="S",pady=25)
 
         inp_id = CTkEntry(FLeft,placeholder_text="ID",text_color="#818181",textvariable=ID,width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16),state="disabled")
@@ -526,7 +532,7 @@ class top_gui(CTkToplevel):
         inp_name = CTkEntry(FLeft,placeholder_text="NAME",text_color="#818181",textvariable=NAME,width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16),state="disabled")
         inp_name.grid(row=0,column=1,pady=(40,10),padx=20)
 
-        box_type = CTkComboBox(FLeft,values=all_type,variable=TYPE,state="disabled",width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16))
+        box_type = CTkComboBox(FLeft,values=all_type_list,variable=TYPE,state="disabled",width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16))
         box_type.grid(row=1,column=0,pady=10,padx=20)
 
         btn_amount = CTkEntry(FLeft,placeholder_text="AMOUNT",text_color="#818181",textvariable=AMOUNT,width=200,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16),state="disabled")
@@ -622,16 +628,45 @@ class top_gui(CTkToplevel):
                     COST_PRICE.set("0.0")
                     PRICE.set("0.0")
                     btn_image.configure(image=img)
+                    table_stock.delete(item)
+
+        def apply():
+            for barcode , values in data_stock.items():
+
+                name_product , type_product , cost_price , price , amount = values
+
+                result , err = self.my_sql.insert_products(barcode,name_product,type_product,cost_price,price,amount)
+            
+            data_stock.clear()
+            
+            for barcode, img in images.items():
+                try:
+                    rgb_img = img.convert('RGB')
+                    save_path = self.appdir / "products" / f"{barcode}.jpg"
                     
+                    rgb_img.save(save_path, optimize=True, format='JPEG', quality=10)
+                
+                except Exception as e:
+                    pass
+
+            images.clear()        
+
+            if (result == True):
+                succ = CTkMessagebox(title="Success",message="Apply Changes Successfully!",icon="check",option_1="OK")
+                if (succ.get() == "OK"):
                     show_products_table(on_search.get())
-        
+            else:
+                boxmes = CTkMessagebox(title=f"Failed {err.errno}",message=f"Apply Changes Failed: {err}",icon="cancel",option_1="OK")
+                if (boxmes.get() == "OK"):
+                    show_products_table(on_search.get())
+            
         btn_add = CTkButton(FLeft,width=100,height=40,text="Add",corner_radius=20,cursor="hand2",command=add_track)
         btn_add.grid(row=5,column=0,sticky="sw",padx=20,pady=20)
 
         btn_del = CTkButton(FLeft,width=100,height=40,text="Remove",corner_radius=20,fg_color="#FF3939",hover_color="#DF4949",cursor="hand2",command=del_track)
         btn_del.grid(row=5,column=0,columnspan=2 ,sticky="s",padx=20,pady=20)
 
-        btn_apply = CTkButton(FLeft,width=100,height=40,text="Apply",corner_radius=20,cursor="hand2")
+        btn_apply = CTkButton(FLeft,width=100,height=40,text="Apply",corner_radius=20,cursor="hand2",command=apply)
         btn_apply.grid(row=5,column=1,sticky="se",padx=20,pady=20)
 
         # //----------------------Search-------------------------------
@@ -642,6 +677,7 @@ class top_gui(CTkToplevel):
             else:
                 on_search.set(True)
 
+            bar_type.set("ทั้งหมด")
             inp_search.delete(0,END)
             show_products_table(on_search.get())
             
@@ -650,7 +686,7 @@ class top_gui(CTkToplevel):
         style.configure("Treeview", font=("Arial", 12), rowheight=40,borderwidth=0, highlightthickness=0)       
         style.configure("Treeview.Heading", font=("Arial Bold", 12))  
 
-        bar_type = CTkComboBox(FRight,width=200,values=all_type) 
+        bar_type = CTkComboBox(FRight,width=200,values=all_type,command=lambda e_num:change_type(e_num)) 
         bar_type.grid(row=0,column=0,padx=20,sticky="w")
 
         inp_search = CTkEntry(FRight,placeholder_text="Search",text_color="black",width=300,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16))
@@ -700,7 +736,10 @@ class top_gui(CTkToplevel):
             if (searchs == False):
                 result = self.my_sql.show_products(types,num)
 
-                amount_page_scroll.configure(values=rows)
+                row_list = self.my_sql.all_row(types)
+                show_row = [f"{i}" for i in range(row_list+1)]
+
+                amount_page_scroll.configure(values=show_row)
 
                 for i in result:
                     id = i[0]
@@ -767,9 +806,22 @@ class top_gui(CTkToplevel):
 
 
         table_stock.bind("<Double-1>", select_product)
-    # //-----------------------------------------------------
+    # //-----------------------------Change Type-----------------------------
+        def change_type(types):
+            if (types == "Type"):
+                types = "ทั้งหมด"
+            TYPE.set(types)
+            show_products_table(on_search.get(),TYPE.get())
 
     # //----------------------Button Next Page-------------------------------
+
+        def change_page(page):
+            if (TYPE.get() == "Type"):
+                TYPE.set("ทั้งหมด")
+
+            num_page.set(page)
+            num = int(num_page.get())
+            show_products_table(on_search.get(),TYPE.get(),num)
 
         def next_page():
             if (TYPE.get() == "Type"):
@@ -791,6 +843,7 @@ class top_gui(CTkToplevel):
                 if (num < all_row):
                     new = num +1
                     show_products_table(on_search.get(),types,new)
+            table_stock.yview_moveto(0)
 
 
         def back_page():
@@ -812,6 +865,7 @@ class top_gui(CTkToplevel):
                 if (num <= all_row and num != 0):
                     new = num - 1
                     show_products_table(on_search.get(),types,new)
+            table_stock.yview_moveto(0)
 
         btn_next = CTkButton(FRight,width=100,height=40,font=("Arial Bold",16),text=">",corner_radius=20,fg_color="#38f388",hover_color="#6be59e",text_color="black",cursor="hand2",command=next_page)
         btn_next.grid(row=2,column=0,sticky="se",padx=(0,20),pady=20)
