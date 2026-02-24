@@ -27,7 +27,9 @@ class EncodeDecode:
             "USERNAME=admin",
             "PASSWORD=1234",
             "REMEMBER=False",
-            "POS=1"
+            "POS=1",
+            "PROMPAR=",
+            "PINTER="
         ]
 
     def load_data(self):

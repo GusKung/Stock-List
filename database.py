@@ -42,7 +42,7 @@ class Database_Mysql:
                     sql_script = f.read()
                 for result in self.sql.execute(sql_script, multi=True):
                     pass
-
+                
                 self.connect.database = "stock_list"
                 self.sql.execute("SET time_zone = %s;",(self.time,))
                 self.connect.commit()

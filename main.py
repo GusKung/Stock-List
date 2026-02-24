@@ -37,6 +37,7 @@ class main_gui(CTkToplevel):
 
         self.my_sql = db
         self.open_top_ui = None
+        
     
     def connect_ui(self,title,wide,height,color):
 
@@ -127,12 +128,12 @@ class main_gui(CTkToplevel):
         self.geometry(f"{wide}x{height}+{x}+{y-25}")
         
         self.config(bg=f"{color}")
-
-        icon = self.appdir / "icon" / "icon.ico"
         
-        self.iconbitmap(icon)
-        self.after(200, lambda: self.iconbitmap(icon))
+        self.iconbitmap(self.appdir / "icon" / "icon.ico")
+        self.after(200, lambda: self.iconbitmap(self.appdir / "icon" / "icon.ico"))
         self.deiconify()
+
+        self.guest_ui = guest_gui()
 
         def open_menu(func):
             if (self.open_top_ui == None or not self.open_top_ui.winfo_exists()):
@@ -456,19 +457,25 @@ class main_gui(CTkToplevel):
 
     def clear(self):
         all_order = self.obj_order
+        all_order_guest = self.guest_ui.obj
         self.amount = 0
         self.price = 0.0
         self.total = 0.0
 
         for i in all_order:
             i.destroy()
+        
+        for i in all_order_guest:
+            i.destroy()
 
         self.products_order.clear()
         self.obj_order.clear()
+        self.guest_ui.obj.clear()
 
         self.FRBLable_price.configure(text=f"{self.amount}\n\n{self.price}\n\n{self.total}")
+        self.guest_ui.l_price.configure(text=f"{self.amount}\n\n{self.total}")
 
-    def remove(self,obj,id,amount,price):
+    def remove(self,obj,obj_guest,id,amount,price):
         self.amount -= int(amount)
         
         self.total -= float(price)
@@ -485,10 +492,14 @@ class main_gui(CTkToplevel):
                 self.price = 0.0
 
         self.obj_order.remove(obj)
+        self.guest_ui.obj.remove(obj_guest)
 
         self.FRBLable_price.configure(text=f"{self.amount}\n\n{self.price}\n\n{self.total}")
+        self.guest_ui.l_price.configure(text=f"{self.amount}\n\n{self.total}")
 
         obj.destroy()
+        obj_guest.destroy()
+        
     
     def re_face(self):
         self.types.set("ทั้งหมด")
@@ -524,6 +535,8 @@ class main_gui(CTkToplevel):
                     self.price = float(p_price)
                     self.amount = self.amount + int(amount)
                     self.total = self.total + float(p_price)
+
+                    on = False                
                 else:
                     amount = int(amount)
                     self.price = float(p_price)
@@ -532,7 +545,8 @@ class main_gui(CTkToplevel):
                     self.amount = self.amount + int(amount)
                     self.total = self.total + float(p_price)
 
-                
+                    on = True
+                   
                 frame = CTkFrame(self.F_order_Scroll,fg_color="white")
                 frame.pack(side=TOP,fill=X,expand=True,pady=10)
 
@@ -550,7 +564,7 @@ class main_gui(CTkToplevel):
                 open_remove= Image.open(f"{self.appdir/"icon"/"bin.png"}")
                 remove = CTkImage(open_remove,size=(30,30))
 
-                btn_remove = CTkButton(frame,image=remove,text="",width=30,height=30,fg_color="red",hover_color="#FF6A6A",command=lambda e_amount = amount,e_price=p_price: self.remove(frame,bar_code,e_amount,e_price))
+                btn_remove = CTkButton(frame,image=remove,text="",width=30,height=30,fg_color="red",hover_color="#FF6A6A",command=lambda e_amount = amount,e_price=p_price: self.remove(frame,guest_frame,bar_code,e_amount,e_price))
                 btn_remove.grid(row=0,column=3,padx=20,sticky="e")
 
                 self.FRBLable_price.configure(text=f"{self.amount}\n\n{self.price}\n\n{self.total}")
@@ -568,6 +582,25 @@ class main_gui(CTkToplevel):
                     }
 
                 self.obj_order.append(frame)
+
+                guest_frame = CTkFrame(self.guest_ui.F_order_Scroll,fg_color="white")
+                guest_frame.pack(side=TOP,fill=X,expand=True,pady=10)
+
+                guest_frame.columnconfigure(1,weight=1)
+
+                guest_l_img = CTkLabel(guest_frame,image=pimg,text="")
+                guest_l_img.grid(row=0,column=0,padx=20,sticky="w")
+
+                guest_l_name = CTkLabel(guest_frame,text=f"{p_name[0:20]}...")
+                guest_l_name.grid(row=0,column=1,sticky="news")
+
+                guest_l_amount = CTkLabel(guest_frame,text=f"X{amount}",justify=RIGHT)
+                guest_l_amount.grid(row=0,column=2,sticky="w",padx=100)
+
+                self.guest_ui.l_price.configure(text=f"{self.amount}\n\n{self.total}")
+
+                self.guest_ui.obj.append(guest_frame)
+
             else:
                 all_row = self.my_sql.all_row(self.types.get(),True,bar_code)
                 self.rows = [f"{i}" for i in range(all_row+1)]
@@ -587,4 +620,63 @@ class main_gui(CTkToplevel):
             self.open_top_ui = top_ui.top_gui(self.my_sql)
 
         self.open_top_ui.check_level(self.open_top_ui.add_products_ui,self.username,self.passwords,2)
-        self.open_top_ui.transient(self)
+        self.open_top_ui.attributes('-topmost', True)
+
+class guest_gui(CTkToplevel):
+    def __init__(self):
+        super().__init__()
+        self.withdraw()
+
+        self.amount = 0
+        self.price = 0.0
+        self.total = 0.0
+
+        self.appdir = Path(__file__).parent
+
+        self.obj = []
+
+        self.guest_ui()
+
+    def guest_ui(self):
+        self.title("Stock List")
+        screen_x = self.winfo_screenwidth()
+        screen_y = self.winfo_screenheight()
+
+        x = int((screen_x / 2) - (1280/2))
+        y = int((screen_y / 2) - (720 / 2))
+        self.geometry(f"1280x720+{x}+{y-25}")
+        
+        self.config(bg="#3E3E3E")
+        
+        self.iconbitmap(self.appdir / "icon" / "icon.ico")
+        self.after(200, lambda: self.iconbitmap(self.appdir / "icon" / "icon.ico"))
+        self.deiconify()
+
+        FLeft = CTkFrame(self,fg_color="#dfdfdf",width=600,corner_radius=0,border_color="black",border_width=0)
+        FLeft.pack(side=LEFT,fill=BOTH,expand=True)
+        FLeft.pack_propagate(False)
+
+        self.F_order_Scroll = CTkScrollableFrame(FLeft,fg_color="#dfdfdf",border_width=0,border_color="black",width=600)
+        self.F_order_Scroll.pack(fill=BOTH,expand=True)
+
+        FRight = CTkFrame(self,fg_color="#3afa80",corner_radius=0,border_width=0,border_color="black",width=200)
+        FRight.pack(side=RIGHT,fill=BOTH,expand=True)
+        FRight.pack_propagate(False)
+
+        FPrice = CTkFrame(FRight,fg_color="#ffffff",width=50,height=250,corner_radius=20,border_width=1,border_color="black")
+        FPrice.pack(side=TOP,fill=BOTH,padx=60,pady=60)
+
+        self.l_text = CTkLabel(FPrice,text="Amount :\n\nTotal :",font=("Arial",24),justify="left")
+        self.l_text.pack(side=LEFT,anchor="nw",padx=20,pady=20)
+
+        self.l_price = CTkLabel(FPrice,text=f"{self.amount}\n\n{self.total}",font=("Arial",24),justify="right")
+        self.l_price.pack(side=RIGHT,anchor="nw",padx=20,pady=20)
+
+        FBottom = CTkFrame(FRight,fg_color="#3afa80",corner_radius=0,border_width=0,border_color="black")
+        FBottom.pack(side=BOTTOM,fill=BOTH)
+
+        open_icon = Image.open(self.appdir / "icon" / "icon.png")
+        icon = CTkImage(open_icon,size=(150,150))
+
+        label_logo = CTkLabel(FBottom,text="",image=icon)
+        label_logo.pack(pady=100)

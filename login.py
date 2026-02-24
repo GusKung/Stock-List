@@ -46,6 +46,9 @@ class LoginApp(CTk):
         self.passwords_str = StringVar(value="")
         self.remember_bol = BooleanVar(value=self.remember_me)
 
+        self.open_main_ui = None
+        self.guest_ui = None
+
         if (self.remember_bol.get() == True):
             self.user_str.set(self.username)
             self.passwords_str.set(self.passwords)
@@ -56,15 +59,15 @@ class LoginApp(CTk):
         self.my_sql = database.Database_Mysql(self.host,self.user,self.pwd,self.database,self.time_zone)
         self.sql , self.sql_err = self.my_sql.connect_db()
 
-        try:
-            if (self.sql.is_connected()):
-                mes_box = self.text_alert("Connect Success","Successfully Connected.","check",1,"OK")
-        except: 
-                mes_box = self.text_alert("Connect Failed","Please connect again.","cancel",1,"OK")
-                if (mes_box == "OK"):
-                    self.after(200, self.top_connect_ui)
+
+        if (self.sql != None and self.sql.is_connected()):
+            mes_box = self.text_alert("Connect Success","Successfully Connected.","check",1,"OK")
+            
+        else:
+            mes_box = self.text_alert("Connect Failed","Please connect again.","cancel",1,"OK")
+            if (mes_box == "OK"):
+                self.top_connect_ui()
         
-        self.open_main_ui = None
         self.login_ui()
 
         self.protocol("WM_DELETE_WINDOW",self.exit_program)
@@ -74,7 +77,7 @@ class LoginApp(CTk):
             self.open_main_ui = main.main_gui(self.my_sql)
 
         self.open_main_ui.connect_ui("Connection", 480, 360, "#FFFFFF") 
-        self.open_main_ui.transient(self)
+        self.open_main_ui.attributes('-topmost', True)
 
     def login_ui(self):  
 
@@ -141,7 +144,7 @@ class LoginApp(CTk):
             self.withdraw()
             
             self.data.edit_data(self.file_account,account)
-            if self.open_main_ui is None or not self.open_main_ui.winfo_exists():
+            if (self.open_main_ui is None or not self.open_main_ui.winfo_exists() or self.guest_ui is None or not self.guest_ui.winfo_exists()):
                 self.open_main_ui = main.main_gui(self.my_sql)
 
             self.open_main_ui.main_ui("Stock List", 1280, 720, "#D4D4D4") 
