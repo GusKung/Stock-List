@@ -1,3 +1,4 @@
+import json
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv, dotenv_values 
 import io
@@ -11,10 +12,12 @@ class EncodeDecode:
         self.stocklist_dir = self.doc / "Stock List"
         self.account_file = self.stocklist_dir / "account.env"
         self.server_file = self.stocklist_dir / "server.env"
+        self.settings_file = self.stocklist_dir / "settings.json"
         self.key = self.appdir / "mykey.key"
 
         self.data_server = {}
         self.data_account = {}
+        self.data_settings = {}
 
         self.server = [
             "HOST=localhost",
@@ -28,9 +31,13 @@ class EncodeDecode:
             "PASSWORD=1234",
             "REMEMBER=False",
             "POS=1",
-            "PROMPAR=",
-            "PINTER="
+            "PROMPAY="
         ]
+        self.settings = {
+                "PRINTER_VID":"",
+                "PRINTER_PID":"",
+                "PRINTER_WIDTH":""
+        }
 
     def load_data(self):
     
@@ -56,8 +63,16 @@ class EncodeDecode:
         else:
             account = self.decode(self.account_file)
             self.data_account.update(account)
+        
+        if (not self.settings_file.exists()):
+            with open(self.settings_file, "w", encoding="utf-8") as ds:
+               json.dump(self.settings, ds, indent=4)
+            self.data_settings.update(self.settings)
+        else:
+            with open(self.settings_file, "r", encoding="utf-8") as ds:
+                self.data_settings = json.load(ds)
 
-        return {**self.data_server, **self.data_account,"Server_File":self.server_file,"Account_File":self.account_file}
+        return {**self.data_server, **self.data_account,**self.data_settings,"Server_File":self.server_file,"Account_File":self.account_file,"Settings_File":self.settings_file}
            
     
     def encode(self, filepath):
@@ -111,6 +126,17 @@ class EncodeDecode:
             self.data_account.update(config)
 
         self.encode(filepath)
+    
+    def edit_settings(self, filepath, new_data):
+        with open(filepath, "r", encoding="utf-8") as f:
+            settings = json.load(f)
+
+        settings.update(new_data)
+
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(settings, f, indent=4)
+
+        self.data_settings.update(settings)
 
 
     def check_doc(self):

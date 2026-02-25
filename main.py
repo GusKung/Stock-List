@@ -21,6 +21,7 @@ class main_gui(CTkToplevel):
         self.passwords = self.load_data.get("PASSWORD")
         self.remember_me = self.load_data.get("REMEMBER")
         self.pos = self.load_data.get("POS")
+        self.printer = self.load_data.get("PRINTER_VID"),self.load_data.get("PRINTER_PID"),self.load_data.get("PRINTER_WIDTH")
 
         self.amount = 0
         self.price = 0.0
@@ -133,6 +134,16 @@ class main_gui(CTkToplevel):
         self.after(200, lambda: self.iconbitmap(self.appdir / "icon" / "icon.ico"))
         self.deiconify()
 
+        printer_vid =self.printer[0]
+        printer_pid = self.printer[1]
+        printer_width = self.printer[2]
+
+        if (printer_vid == "" or printer_pid == ""):
+            if (self.open_top_ui == None or not self.open_top_ui.winfo_exists()):
+                self.open_top_ui = top_ui.top_gui(self.my_sql)
+
+            self.open_top_ui.printer_ui()
+
         self.guest_ui = guest_gui()
 
         def open_menu(func):
@@ -143,8 +154,9 @@ class main_gui(CTkToplevel):
 
         menu = CTkMenuBar(master=self)
         stock_menu = menu.add_cascade("Stock",command=lambda:open_menu(lambda:self.open_top_ui.check_level(self.open_top_ui.stock_ui,self.username,self.passwords,2)))
-        user_menu = menu.add_cascade("User",command=lambda:open_menu(lambda:self.open_top_ui.check_level(self.open_top_ui.user_ui,self.username,self.passwords,3)))
-        account_menu = menu.add_cascade("Account")
+        account_menu = menu.add_cascade("Account",command=lambda:open_menu(lambda:self.open_top_ui.check_level(self.open_top_ui.user_ui,self.username,self.passwords,3)))
+        audit_menu = menu.add_cascade("Audit")
+        printer_menu = menu.add_cascade("Printer",command=lambda:open_menu(lambda:self.open_top_ui.printer_ui()))
 
         FLeft= CTkFrame(self,fg_color="#D4D4D4",corner_radius=0,border_color="black",border_width=0)
         FLeft.pack(side=LEFT,fill=BOTH,expand=True)
@@ -636,6 +648,7 @@ class guest_gui(CTkToplevel):
         self.obj = []
 
         self.guest_ui()
+        self.protocol("WM_DELETE_WINDOW",self.quit)
 
     def guest_ui(self):
         self.title("Stock List")

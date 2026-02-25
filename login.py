@@ -7,6 +7,7 @@ from PIL import Image
 import encode_file
 import database
 import main
+import atexit
 
 class LoginApp(CTk):
     def __init__(self,title,width,height,color,theme):
@@ -41,13 +42,13 @@ class LoginApp(CTk):
         self.passwords = self.load_data.get("PASSWORD")
         self.remember_me = self.load_data.get("REMEMBER")
         self.pos = self.load_data.get("POS")
+        self.prompay = self.load_data.get("PROMPAR")
 
         self.user_str = StringVar(value="")
         self.passwords_str = StringVar(value="")
         self.remember_bol = BooleanVar(value=self.remember_me)
 
         self.open_main_ui = None
-        self.guest_ui = None
 
         if (self.remember_bol.get() == True):
             self.user_str.set(self.username)
@@ -71,6 +72,7 @@ class LoginApp(CTk):
         self.login_ui()
 
         self.protocol("WM_DELETE_WINDOW",self.exit_program)
+        atexit.register(self.exit_program)
     
     def top_connect_ui(self):
         if self.open_main_ui == None or not self.open_main_ui.winfo_exists():
@@ -102,7 +104,8 @@ class LoginApp(CTk):
         label_title = CTkLabel(frameright, text="Stock List", font=("Bold Arial",45))
         label_title.place(relx=0.15, rely=0.1, anchor="nw")
 
-        self.inp_user = CTkEntry(frameright, width=300, height=40, placeholder_text="Username",fg_color="transparent",border_width=0,font=("Arial",16) , textvariable=self.user_str)
+        self.inp_user = CTkEntry(frameright, width=300, height=40, placeholder_text="Username",
+        fg_color="transparent",border_width=0,font=("Arial",16) , textvariable=self.user_str)
         self.inp_user.place(relx=0.5, rely=0.3, anchor=CENTER)
 
         line_user = CTkFrame(frameright, width=300, height=2, fg_color="black")
@@ -138,13 +141,14 @@ class LoginApp(CTk):
             f"USERNAME={username}",
             f"PASSWORD={passwords}",
             f"REMEMBER={btn_rem}",
-            f"POS={self.pos}"
+            f"POS={self.pos}",
+            f"PROMPAR={self.prompay}"
             ]
 
             self.withdraw()
             
             self.data.edit_data(self.file_account,account)
-            if (self.open_main_ui is None or not self.open_main_ui.winfo_exists() or self.guest_ui is None or not self.guest_ui.winfo_exists()):
+            if (self.open_main_ui is None or not self.open_main_ui.winfo_exists()):
                 self.open_main_ui = main.main_gui(self.my_sql)
 
             self.open_main_ui.main_ui("Stock List", 1280, 720, "#D4D4D4") 
