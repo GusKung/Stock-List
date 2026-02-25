@@ -10,6 +10,7 @@ class EncodeDecode:
         self.appdir = Path(__file__).parent
         self.doc = self.check_doc()
         self.stocklist_dir = self.doc / "Stock List"
+        self.bill_file = self.stocklist_dir / "Bill"
         self.account_file = self.stocklist_dir / "account.env"
         self.server_file = self.stocklist_dir / "server.env"
         self.settings_file = self.stocklist_dir / "settings.json"
@@ -30,7 +31,8 @@ class EncodeDecode:
             "USERNAME=admin",
             "PASSWORD=1234",
             "REMEMBER=False",
-            "POS=1",
+            "POS=POS1",
+            "SHIFT=1",
             "PROMPAY="
         ]
         self.settings = {
@@ -43,6 +45,9 @@ class EncodeDecode:
     
         if (not self.stocklist_dir.exists()):
             os.makedirs(self.stocklist_dir)
+
+        if (not self.bill_file.exists()):
+            os.makedirs(self.bill_file)
 
         if (not self.server_file.exists()):
             with open(self.server_file, "wb") as ds:
@@ -72,7 +77,7 @@ class EncodeDecode:
             with open(self.settings_file, "r", encoding="utf-8") as ds:
                 self.data_settings = json.load(ds)
 
-        return {**self.data_server, **self.data_account,**self.data_settings,"Server_File":self.server_file,"Account_File":self.account_file,"Settings_File":self.settings_file}
+        return {**self.data_server, **self.data_account,**self.data_settings,"Server_File":self.server_file,"Account_File":self.account_file,"Settings_File":self.settings_file,"Bill File":self.bill_file }
            
     
     def encode(self, filepath):

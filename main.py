@@ -273,7 +273,7 @@ class main_gui(CTkToplevel):
         self.FRBLable_price = CTkLabel(FBottom,text=f"{self.amount}\n\n{self.price}\n\n{self.total}",font=("Arial",24),justify="right")
         self.FRBLable_price.pack(side=RIGHT,anchor="nw",padx=20,pady=20)
 
-        pay_cash = CTkButton(FBottomPay,text="Cash",cursor="hand2",text_color="white",width=200,height=60,corner_radius=0,fg_color="#ffad15",hover_color="#e29e45",font=("Arial Bold",24))
+        pay_cash = CTkButton(FBottomPay,text="Cash",cursor="hand2",text_color="white",width=200,height=60,corner_radius=0,fg_color="#ffad15",hover_color="#e29e45",font=("Arial Bold",24),command=lambda:open_menu(lambda:self.open_top_ui.cash_ui(self.products_order,self.clear)))
         pay_cash.grid(row=0,column=0,sticky="nsew")
 
         pay_prom = CTkButton(FBottomPay,text="Prompay",cursor="hand2",text_color="white",width=200,height=60,corner_radius=0,fg_color="#264eff",hover_color="#2e5fe6",font=("Arial Bold",24))
@@ -487,7 +487,7 @@ class main_gui(CTkToplevel):
         self.FRBLable_price.configure(text=f"{self.amount}\n\n{self.price}\n\n{self.total}")
         self.guest_ui.l_price.configure(text=f"{self.amount}\n\n{self.total}")
 
-    def remove(self,obj,obj_guest,id,amount,price):
+    def remove(self,obj,obj_guest,id,amount,cost_price,price):
         self.amount -= int(amount)
         
         self.total -= float(price)
@@ -495,6 +495,7 @@ class main_gui(CTkToplevel):
         if (id in self.products_order):
             self.products_order[id]["amount"] = int(self.products_order[id]["amount"]) - int(amount)
             self.products_order[id]["price"] -= float(price)
+            self.products_order[id]["cost_price"] -= float(cost_price)
             self.price = float(price)
             
             if (self.products_order[id]["amount"] <= 0):
@@ -576,7 +577,7 @@ class main_gui(CTkToplevel):
                 open_remove= Image.open(f"{self.appdir/"icon"/"bin.png"}")
                 remove = CTkImage(open_remove,size=(30,30))
 
-                btn_remove = CTkButton(frame,image=remove,text="",width=30,height=30,fg_color="red",hover_color="#FF6A6A",command=lambda e_amount = amount,e_price=p_price: self.remove(frame,guest_frame,bar_code,e_amount,e_price))
+                btn_remove = CTkButton(frame,image=remove,text="",width=30,height=30,fg_color="red",hover_color="#FF6A6A",command=lambda e_amount = amount,e_cost_price=p_cost_price,e_price=p_price: self.remove(frame,guest_frame,bar_code,e_amount,e_cost_price,e_price))
                 btn_remove.grid(row=0,column=3,padx=20,sticky="e")
 
                 self.FRBLable_price.configure(text=f"{self.amount}\n\n{self.price}\n\n{self.total}")
@@ -586,10 +587,12 @@ class main_gui(CTkToplevel):
                 if (bar_code in self.products_order):
                     self.products_order[bar_code]["amount"] += int(amount)
                     self.products_order[bar_code]["price"] += p_price
+                    self.products_order[bar_code]["cost_price"] += p_cost_price
                 else:
                     self.products_order[bar_code] = {
                         "name":p_name,
                         "amount":int(amount),
+                        "cost_price":float(p_cost_price),
                         "price":float(p_price)
                     }
 

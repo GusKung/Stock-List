@@ -1,6 +1,8 @@
 import mysql.connector
 from pathlib import Path
 from CTkMessagebox import *
+import json
+
 class Database_Mysql:
     def __init__(self,host,user,password,database,time):
         super().__init__()
@@ -40,8 +42,10 @@ class Database_Mysql:
                 
                 with open(file, 'r', encoding='utf-8') as f:
                     sql_script = f.read()
-                for result in self.sql.execute(sql_script, multi=True):
-                    pass
+                commands = sql_script.split(';')
+                for cmd in self.sql.execute(commands):
+                    if (cmd.strip()): 
+                        self.sql.execute(cmd)
                 
                 self.connect.database = "stock_list"
                 self.sql.execute("SET time_zone = %s;",(self.time,))
@@ -204,4 +208,23 @@ class Database_Mysql:
 
     def del_products(self,id):
         self.sql.execute("DELETE FROM `stock_list`.`products` WHERE `p_id` = %s;", (id,))
+        self.connect.commit()
+
+    def date_day_time(self):
+        self.sql.execute("SELECT NOW()")
+        dates = self.sql.fetchone()
+        return dates
+    
+    def count_bill_id(self):
+        self.sql.execute("SELECT COUNT(*) FROM  `bills`;")
+        count = self.sql.fetchone()
+        return count
+    
+    def insert_bill(self,pos_id,bill_id,day_time,cost_price,price,pay,log):
+        log_json = json.dumps(log,ensure_ascii=False)
+
+        self.sql.execute("INSERT INTO `bills` VALUES (%s,%s,%s,%s,%s)",(bill_id,day_time,price,pay,log_json))
+        profit = price - cost_price
+
+        self.sql.execute("UPDATE `pos` SET `sell` = %s, `profit` = %s  WHERE `pos_id` = %s",(price,profit,pos_id))
         self.connect.commit()

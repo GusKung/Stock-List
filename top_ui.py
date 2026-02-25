@@ -8,6 +8,7 @@ from PIL import Image
 import encode_file
 from tkinter import ttk
 import printer
+import json
 
 class top_gui(CTkToplevel):
     def __init__(self,db=None):
@@ -957,7 +958,7 @@ class top_gui(CTkToplevel):
             if (mes.get() == "OK"):
                 self.destroy()
         
-    def cash_ui(self):
+    def cash_ui(self,data_order,func):
         self.title("Cash")
         screen_x = self.winfo_screenwidth()
         screen_y = self.winfo_screenheight()
@@ -973,3 +974,63 @@ class top_gui(CTkToplevel):
         self.after(200, lambda: self.iconbitmap(icon))
         self.deiconify()
         self.attributes('-topmost', True)
+        self.register(False,False)
+        
+        Frame_main = CTkFrame(self,width=400,height=300,fg_color="white")
+        Frame_main.pack(fill=BOTH,expand=True)
+
+        inp_cash = CTkEntry(Frame_main,width=200,height=40,placeholder_text="Cash",font=("Arial",18))
+        inp_cash.pack(pady=(50,0))
+
+        inp_cash.bind("<Return>",lambda e:pay_cash(float(inp_cash.get())))
+
+        def pay_cash(cash):
+            cost_total = 0
+            total = 0
+            bill_order = {}
+            list_order = []
+
+            for id,value in data_order.items():
+                name = value["name"]
+                amount = value["amount"]
+                cost_price = value["cost_price"]
+                price = value["price"]
+
+                cost_total += float(cost_price)
+                total += float(price)
+
+                bill_order[id] = {
+                    "name":name,
+                    "amount":amount,
+                    "cost_price":cost_price,
+                    "price":price
+                }
+
+                list_order.append([id,name,amount,cost_price,price])
+            
+            if (cash - total >=0):
+                change = cash - total
+                mes = CTkMessagebox(title="Pay Succeed",message=f"ทอนตัง : {change}",option_1="OK")
+                if (mes.get() == "OK"):
+                    func()
+                    if (self.open_printer == None or not self.open_printer.winfo_exists()):
+                        self.open_printer = printer.Printer(self.printer[0],self.printer[1],self.printer[2])
+
+                    dates = self.my_sql.date_day_time()
+                    count = self.my_sql.count_bill_id()
+                    day_time = dates[0].strftime("%d/%m/%Y %H:%M:%S")
+
+                    count_num = count[0]+1
+                    bill_id = dates[0].strftime("%y%m%d") + str(f"{count_num:06d}")
+  
+                    self.my_sql.insert_bill(self.pos,bill_id,dates[0],cost_total,total,int(inp_cash.get()),list_order)
+                    self.open_printer.html_bill(bill_id,day_time,bill_order,cash)
+
+                    self.destroy()
+
+
+
+        btn_pay = CTkButton(Frame_main,text="Pay",width=200,height=40,command=lambda:pay_cash(float(inp_cash.get())))
+        btn_pay.pack(pady=15)
+
+        self.after(500,lambda:inp_cash.focus_force())

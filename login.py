@@ -41,6 +41,7 @@ class LoginApp(CTk):
         self.username = self.load_data.get("USERNAME")
         self.passwords = self.load_data.get("PASSWORD")
         self.remember_me = self.load_data.get("REMEMBER")
+        self.shift = self.load_data.get("SHIFT")
         self.pos = self.load_data.get("POS")
         self.prompay = self.load_data.get("PROMPAR")
 
@@ -142,6 +143,7 @@ class LoginApp(CTk):
             f"PASSWORD={passwords}",
             f"REMEMBER={btn_rem}",
             f"POS={self.pos}",
+            f"SHIFT={self.shift}",
             f"PROMPAR={self.prompay}"
             ]
 

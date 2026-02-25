@@ -1,12 +1,15 @@
 from html2image import Html2Image
 from escpos.printer import Usb
+import shutil
+import encode_file
 
 class Printer:
     def __init__(self,vid,pid,width):
         self.vid = vid
         self.pid = pid
         self.width = width
-        
+        self.load_data = encode_file.EncodeDecode().load_data()
+        self.bill_file = self.load_data.get("Bill File")
 
     def connect(self):
         result = None
@@ -34,122 +37,147 @@ class Printer:
             result = False
         return result, err
 
-    def print_bill(self,html):
-        hti = Html2Image()
-        hti.screenshot(html_str=html, save_as="bill.png")
+    def print_bill(self,html,height):
+        edge_path = shutil.which("msedge")
+
+        if (edge_path):
+            hti = Html2Image(browser_executable=edge_path,output_path=self.bill_file)
+        else:
+            edge_path = "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
+            hti = Html2Image(browser_executable=edge_path,output_path=self.bill_file)
+
+        hti.screenshot(html_str=html, save_as=f"bill.png",size=(self.width,height))
+        
         result = None
         err = None
         try:
             vid = int(self.vid, 16)
             pid = int(self.pid, 16)
             p = Usb(vid, pid)
-            p.image("bill.png")
+            p.image(f"{self.bill_file}\\bill.png")
             p.cut()
+           
             result = True
         except Exception as e:
             result = False
             err = e
         return result, err
     
-    def html_bill(self,width,date,data_products,cash):
-        products_html = ""
+    def html_bill(self,bill_id,dates,data_products,cash):
+        html_order = ""
+        total = 0
 
-        total = sum([product['price'] * product['amount'] for product in data_products])
+        calculated_height = (len(data_products) * 40) + 450
 
-        cash -= total
-        for product in data_products:
-            products_html += f"""
-                    <div class="item-row">
-                        <span>{product['barcode']}</span>
-                        <span>{product['name']}</span>
-                        <span> X{product['amount']}</span>
-                        <span>{product['price']}</span>
-                    </div>"""
+        for id,value in data_products.items():
+            total += float(value['price'])
+            html_order += f"""
+            <tr>
+                <td>{id}<br>{value['name'][0:30]}...</td>
+                <td style="text-align: center; font-size: 16px;">X{value['amount']}</td>
+                <td style="text-align: right; font-size: 16px;">{float(value['price']):,.2f}</td>
+            </tr>
+            """
+
+        change = cash - total
         html = f"""
+        <!DOCTYPE html>
+        <html>
         <head>
-                <style>
-                    body {{
-                        font-family: 'Tahoma', sans-serif; 
-                        font-size: 14px;
-                        width: {width}px; 
-                        margin: 0;
-                        padding: 10px;
-                        background-color: white;
-                    }}
-                    .header {{
-                        text-align: center;
-                        font-weight: bold;
-                        font-size: 18px;
-                        margin-bottom: 5px;
-                    }}
-                    .info {{
-                        text-align: center;
-                        font-size: 12px;
-                        margin-bottom: 10px;
-                    }}
-                    .line {{
-                        border-top: 1px dashed #000; 
-                        margin: 5px 0;
-                    }}
-                    .item-row {{
-                        display: flex;
-                        justify-content: space-between; 
-                        margin: 3px 0;
-                    }}
-                    .item-detail {{
-                        font-size: 12px;
-                        color: #333;
-                    }}
-                    .total-section {{
-                        margin-top: 10px;
-                        font-weight: bold;
-                    }}
-                    .footer {{
-                        text-align: center;
-                        margin-top: 20px;
-                        font-size: 12px;
-                    }}
-                </style>
-            </head>
+            <style>
+                body {{ font-family: 'Tahoma', 
+                    sans-serif; 
+                    margin: 0; 
+                    padding: 0px; 
+                    width: {self.width}px;
+                    background-color: white;
+                }}
 
-            <body>
-                <div class="header">STOCK LIST</div>
-                <div class="info">เลขที่ใบเสร็จ: #001 | วันที่: {date}</div>
-                
-                <div class="line"></div>
+                #bill-canvas {{
+                    width: 100%;
+                    box-sizing: border-box;
+                }}
 
-                <div class="item-row">
-                    <span>รหัสสินค้า</span>
-                    <span>ชื่อสินค้า</span>
-                    <span> จำนวน</span>
-                    <span>ราคา</span>
+                .bill-container {{ border: 1px solid #eee; 
+                    padding: 10px; 
+                }}
+
+                .header {{ text-align: center; 
+                    margin-bottom: 10px; 
+                }}
+
+                table {{ width: 100%; 
+                    border-collapse: collapse; 
+                    font-size: 16px; 
+                }}
+
+                th {{ border-bottom: 1px dashed #000; 
+                    padding: 5px 0; 
+                    text-align: left; 
+                }}
+
+                td {{ padding: 5px 0; 
+                    vertical-align: top; 
+                }}
+
+                .line {{ border-top: 1px dashed #000; 
+                    margin: 10px 0; 
+                }}
+
+                .result-row {{ display: flex; 
+                    justify-content: space-between; 
+                    font-weight: bold; 
+                    font-size: 16px;
+                }}
+
+                .footer {{ text-align: center; 
+                    font-size: 16px; 
+                    margin-top: 12px; 
+                }}
+            </style>
+        </head>
+        <body>
+            <div id="bill-canvas" class="bill-container">
+                <div class="header">
+                    <h2 style="margin: 0;">STOCK LIST</h2>
+                    <p style="font-size: 16px;">วันที่: {dates}</p>
+                    <p style="font-size: 16px;">Bill ID: {bill_id}</p>
                 </div>
 
-       
-                {products_html}
-                
-                <div class="line"></div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>สินค้า</th>
+                            <th style="text-align: center; font-size: 16px;">จำนวน</th>
+                            <th style="text-align: right; font-size: 16px;">ราคา</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {html_order}
+                    </tbody>
+                </table>
 
-                <div class="item-row total-section">
+                <div class="line"></div>
+                
+                <div class="result-row">
                     <span>รวมทั้งสิ้น</span>
-                    <span>{total} บาท</span>
+                    <span>{total:,.2f} บาท</span>
                 </div>
-                <div class="item-row">
+                <div class="result-row" style="font-weight: normal;">
                     <span>รับเงิน</span>
-                    <span>{cash} บาท</span>
+                    <span>{cash:,.2f} บาท</span>
                 </div>
-                <div class="item-row">
+                <div class="result-row">
                     <span>เงินทอน</span>
-                    <span>{cash - total} บาท</span>
+                    <span>{change:,.2f} บาท</span>
                 </div>
-
-                <div class="line"></div>
 
                 <div class="footer">
-                    ขอบคุณที่ใช้บริการ<br>
-                    *** สินค้าซื้อแล้วไม่รับเปลี่ยนคืน ***
+                    <p>ขอบคุณที่ใช้บริการ</p>
+                    <p>*** สินค้าซื้อแล้วไม่รับเปลี่ยนคืน ***</p>
                 </div>
-            </body>
-            </html>
+            </div>
+        </body>
+        </html>
         """
-        self.print_bill(html)
+        self.print_bill(html,calculated_height)
