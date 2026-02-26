@@ -53,7 +53,7 @@ class Printer:
             edge_path = "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
             hti = Html2Image(browser_executable=edge_path,output_path=self.bill_file)
 
-        hti.screenshot(url=f"file:///{file_html}",save_as=f"bill.png",size=(self.width,height))
+        hti.screenshot(url=f"file:///{file_html}",save_as=f"{bill_id}",size=(self.width,height))
         
         result = None
         err = None
