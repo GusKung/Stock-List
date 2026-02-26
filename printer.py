@@ -38,11 +38,11 @@ class Printer:
             result = False
         return result, err
 
-    def print_bill(self,html,height):
+    def print_bill(self,bill_id,html,height):
         edge_path = shutil.which("msedge")
 
-        file_html = os.path.abspath(os.path.join(self.bill_file, "bill.html"))
-        save_path = os.path.abspath(os.path.join(self.bill_file, "bill.png"))
+        file_html = os.path.abspath(os.path.join(self.bill_file, f"{bill_id}.html"))
+        save_path = os.path.abspath(os.path.join(self.bill_file, f"{bill_id}.png"))
 
         with open(file_html, "w", encoding="utf-8") as f:
             f.write(html)
@@ -187,4 +187,4 @@ class Printer:
         </body>
         </html>
         """
-        self.print_bill(html,calculated_height)
+        self.print_bill(bill_id,html,calculated_height)
