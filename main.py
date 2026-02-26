@@ -145,6 +145,7 @@ class main_gui(CTkToplevel):
             self.open_top_ui.printer_ui()
 
         self.guest_ui = guest_gui()
+        self.guest_ui.guest_ui()
 
         def open_menu(func):
             if (self.open_top_ui == None or not self.open_top_ui.winfo_exists()):
@@ -273,7 +274,7 @@ class main_gui(CTkToplevel):
         self.FRBLable_price = CTkLabel(FBottom,text=f"{self.amount}\n\n{self.price}\n\n{self.total}",font=("Arial",24),justify="right")
         self.FRBLable_price.pack(side=RIGHT,anchor="nw",padx=20,pady=20)
 
-        pay_cash = CTkButton(FBottomPay,text="Cash",cursor="hand2",text_color="white",width=200,height=60,corner_radius=0,fg_color="#ffad15",hover_color="#e29e45",font=("Arial Bold",24),command=lambda:open_menu(lambda:self.open_top_ui.cash_ui(self.products_order,self.clear)))
+        pay_cash = CTkButton(FBottomPay,text="Cash",cursor="hand2",text_color="white",width=200,height=60,corner_radius=0,fg_color="#ffad15",hover_color="#e29e45",font=("Arial Bold",24),command=lambda:open_menu(lambda:self.open_top_ui.cash_ui(self.products_order,self.clear,self.guest_ui.l_price)))
         pay_cash.grid(row=0,column=0,sticky="nsew")
 
         pay_prom = CTkButton(FBottomPay,text="Prompay",cursor="hand2",text_color="white",width=200,height=60,corner_radius=0,fg_color="#264eff",hover_color="#2e5fe6",font=("Arial Bold",24))
@@ -650,7 +651,6 @@ class guest_gui(CTkToplevel):
 
         self.obj = []
 
-        self.guest_ui()
         self.protocol("WM_DELETE_WINDOW",self.quit)
 
     def guest_ui(self):
@@ -682,8 +682,8 @@ class guest_gui(CTkToplevel):
         FPrice = CTkFrame(FRight,fg_color="#ffffff",width=50,height=250,corner_radius=20,border_width=1,border_color="black")
         FPrice.pack(side=TOP,fill=BOTH,padx=60,pady=60)
 
-        self.l_text = CTkLabel(FPrice,text="Amount :\n\nTotal :",font=("Arial",24),justify="left")
-        self.l_text.pack(side=LEFT,anchor="nw",padx=20,pady=20)
+        l_text = CTkLabel(FPrice,text="Amount :\n\nTotal :\n\nรับเงิน :\n\nทอนเงิน :",font=("Arial",24),justify="left")
+        l_text.pack(side=LEFT,anchor="nw",padx=20,pady=20)
 
         self.l_price = CTkLabel(FPrice,text=f"{self.amount}\n\n{self.total}",font=("Arial",24),justify="right")
         self.l_price.pack(side=RIGHT,anchor="nw",padx=20,pady=20)

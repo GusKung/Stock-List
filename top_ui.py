@@ -8,7 +8,7 @@ from PIL import Image
 import encode_file
 from tkinter import ttk
 import printer
-import json
+import main
 
 class top_gui(CTkToplevel):
     def __init__(self,db=None):
@@ -40,6 +40,7 @@ class top_gui(CTkToplevel):
 
         self.obj_list = []
         self.open_printer = None
+        self.open_main = None
 
     def add_products_ui(self):
         self.title(f"Add Products")
@@ -958,7 +959,7 @@ class top_gui(CTkToplevel):
             if (mes.get() == "OK"):
                 self.destroy()
         
-    def cash_ui(self,data_order,func):
+    def cash_ui(self,data_order,func,obj):
         self.title("Cash")
         screen_x = self.winfo_screenwidth()
         screen_y = self.winfo_screenheight()
@@ -989,6 +990,7 @@ class top_gui(CTkToplevel):
             total = 0
             bill_order = {}
             list_order = []
+            on = True
 
             for id,value in data_order.items():
                 name = value["name"]
@@ -1008,25 +1010,32 @@ class top_gui(CTkToplevel):
 
                 list_order.append([id,name,amount,cost_price,price])
             
-            if (cash - total >=0):
+            if (self.open_printer == None):
+                self.open_printer = printer.Printer(self.printer[0],self.printer[1],self.printer[2])
+            
+            self.open_main = main.main_gui(self.my_sql)
+            if (cash - total >=0 and on == True):
+                on = False
                 change = cash - total
-                mes = CTkMessagebox(title="Pay Succeed",message=f"ทอนตัง : {change}",option_1="OK")
+
+                
+                obj.configure(text=f"0\n\n0\n\n{cash}\n\n{change}")
+
+                mes = CTkMessagebox(title="Pay Succeed",message=f"ทอนเงิน : {change}",font=("Arial Bold",16),option_1="OK")
                 if (mes.get() == "OK"):
                     func()
-                    if (self.open_printer == None or not self.open_printer.winfo_exists()):
-                        self.open_printer = printer.Printer(self.printer[0],self.printer[1],self.printer[2])
-
                     dates = self.my_sql.date_day_time()
                     count = self.my_sql.count_bill_id()
                     day_time = dates[0].strftime("%d/%m/%Y %H:%M:%S")
 
                     count_num = count[0]+1
                     bill_id = dates[0].strftime("%y%m%d") + str(f"{count_num:06d}")
-  
+
                     self.my_sql.insert_bill(self.pos,bill_id,dates[0],cost_total,total,int(inp_cash.get()),list_order)
                     self.open_printer.html_bill(bill_id,day_time,bill_order,cash)
 
                     self.destroy()
+
 
 
 
