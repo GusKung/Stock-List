@@ -2,6 +2,7 @@ from html2image import Html2Image
 from escpos.printer import Usb
 import shutil
 import encode_file
+import os
 
 class Printer:
     def __init__(self,vid,pid,width):
@@ -39,6 +40,12 @@ class Printer:
 
     def print_bill(self,html,height):
         edge_path = shutil.which("msedge")
+
+        temp_html = os.path.abspath("bill.html")
+        save_path = os.path.abspath(os.path.join(self.bill_file, "bill.png"))
+
+        with open(temp_html, "w", encoding="utf-8") as f:
+            f.write(html)
 
         if (edge_path):
             hti = Html2Image(browser_executable=edge_path,output_path=self.bill_file)
