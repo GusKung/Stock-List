@@ -41,10 +41,10 @@ class Printer:
     def print_bill(self,html,height):
         edge_path = shutil.which("msedge")
 
-        temp_html = os.path.abspath("bill.html")
+        file_html = os.path.abspath(os.path.join(self.bill_file, "bill.html"))
         save_path = os.path.abspath(os.path.join(self.bill_file, "bill.png"))
 
-        with open(temp_html, "w", encoding="utf-8") as f:
+        with open(file_html, "w", encoding="utf-8") as f:
             f.write(html)
 
         if (edge_path):
@@ -61,7 +61,7 @@ class Printer:
             vid = int(self.vid, 16)
             pid = int(self.pid, 16)
             p = Usb(vid, pid)
-            p.image(f"{self.bill_file}\\bill.png")
+            p.image(f"{save_path}")
             p.cut()
            
             result = True
