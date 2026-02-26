@@ -42,10 +42,16 @@ class Database_Mysql:
                 
                 with open(file, 'r', encoding='utf-8') as f:
                     sql_script = f.read()
+
                 commands = sql_script.split(';')
-                for cmd in self.sql.execute(commands):
-                    if (cmd.strip()): 
-                        self.sql.execute(cmd)
+
+                for cmd in commands:
+                    clean_cmd = cmd.strip()
+                    if clean_cmd: 
+                        try:
+                            self.sql.execute(clean_cmd)
+                        except mysql.connector.Error as sql_err:
+                            err = sql_err
                 
                 self.connect.database = "stock_list"
                 self.sql.execute("SET time_zone = %s;",(self.time,))

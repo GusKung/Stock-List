@@ -1,8 +1,8 @@
 CREATE DATABASE  IF NOT EXISTS `stock_list` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `stock_list`;
--- MySQL dump 10.13  Distrib 8.0.43, for Win64 (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.44, for Win64 (x86_64)
 --
--- Host: 127.0.0.1    Database: stock_list
+-- Host: localhost    Database: stock_list
 -- ------------------------------------------------------
 -- Server version	8.4.3
 
@@ -40,7 +40,7 @@ CREATE TABLE `accounts` (
 
 LOCK TABLES `accounts` WRITE;
 /*!40000 ALTER TABLE `accounts` DISABLE KEYS */;
-INSERT INTO `accounts` VALUES (8000,'admin','1234',3,0),(8001,'kitisak','k1234',1,0),(8002,'pai','p1234',2,0);
+INSERT INTO `accounts` VALUES (8000,'admin','1234',3,1),(8001,'kitisak','k1234',1,0),(8002,'pai','p1234',2,0);
 /*!40000 ALTER TABLE `accounts` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -52,13 +52,13 @@ DROP TABLE IF EXISTS `bills`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `bills` (
-  `b_id` int NOT NULL AUTO_INCREMENT,
+  `b_id` varchar(60) COLLATE utf8mb4_general_ci NOT NULL,
   `day_times` datetime NOT NULL,
   `b_price` float NOT NULL,
   `b_pay` float NOT NULL,
   `log` json DEFAULT NULL,
   PRIMARY KEY (`b_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1000000000 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -108,7 +108,7 @@ DROP TABLE IF EXISTS `pos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `pos` (
-  `pos_id` int NOT NULL AUTO_INCREMENT,
+  `pos_id` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
   `shift` int NOT NULL,
   `sell` float NOT NULL,
   `profit` float NOT NULL,
@@ -123,6 +123,7 @@ CREATE TABLE `pos` (
 
 LOCK TABLES `pos` WRITE;
 /*!40000 ALTER TABLE `pos` DISABLE KEYS */;
+INSERT INTO `pos` VALUES ('POS1',1,0,0,NULL);
 /*!40000 ALTER TABLE `pos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -164,4 +165,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-02-24 21:50:50
+-- Dump completed on 2026-02-26  8:39:27
