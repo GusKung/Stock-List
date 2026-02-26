@@ -3,6 +3,7 @@ from escpos.printer import Usb
 import shutil
 import encode_file
 import os
+import time
 
 class Printer:
     def __init__(self,vid,pid,width):
@@ -44,6 +45,8 @@ class Printer:
         file_html = os.path.abspath(os.path.join(self.bill_file, f"{bill_id}.html"))
         save_path = os.path.abspath(os.path.join(self.bill_file, f"{bill_id}.png"))
 
+        url_path = file_html.replace('\\', '/')
+
         with open(file_html, "w", encoding="utf-8") as f:
             f.write(html)
 
@@ -51,12 +54,22 @@ class Printer:
             hti = Html2Image(browser_executable=edge_path,output_path=self.bill_file)
         else:
             edge_path = "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
-            hti = Html2Image(browser_executable=edge_path,output_path=self.bill_file)
 
-        hti.screenshot(url=f"file:///{file_html}",save_as=f"{bill_id}.png",size=(self.width,height))
-        
+        hti = Html2Image(browser_executable=edge_path,output_path=self.bill_file)
+
+        hti.screenshot(url=f"file:///{url_path}",save_as=f"{bill_id}.png",size=(self.width,height))
+
         result = None
         err = None
+
+        timeout = 5 
+        start_time = time.time()
+        while not os.path.exists(save_path):
+            time.sleep(0.2) 
+            if time.time() - start_time > timeout:
+                return result == False
+        
+        
         try:
             vid = int(self.vid, 16)
             pid = int(self.pid, 16)
