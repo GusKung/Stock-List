@@ -40,7 +40,7 @@ class Printer:
         return result, err
 
     def print_bill(self,bill_id,html,height):
-        edge_path = shutil.which("msedge")
+        edge_path = shutil.which("msedge") or "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
 
         file_html = os.path.abspath(os.path.join(self.bill_file, f"{bill_id}.html"))
         save_path = os.path.abspath(os.path.join(self.bill_file, f"{bill_id}.png"))
@@ -90,12 +90,13 @@ class Printer:
         calculated_height = (len(data_products) * 40) + 450
 
         for id,value in data_products.items():
-            total += float(value['price'])
+            total += float(value['total'])
             html_order += f"""
             <tr>
                 <td>{id}<br>{value['name'][0:30]}...</td>
                 <td style="text-align: center; font-size: 16px;">X{value['amount']}</td>
                 <td style="text-align: right; font-size: 16px;">{float(value['price']):,.2f}</td>
+                <td style="text-align: right; font-size: 16px;">{float(value['total']):,.2f}</td>
             </tr>
             """
 
@@ -170,6 +171,7 @@ class Printer:
                             <th>สินค้า</th>
                             <th style="text-align: center; font-size: 16px;">จำนวน</th>
                             <th style="text-align: right; font-size: 16px;">ราคา</th>
+                            <th style="text-align: right; font-size: 16px;">ราคาทั้งหมด</th>
                         </tr>
                     </thead>
                     <tbody>

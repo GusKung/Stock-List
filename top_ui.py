@@ -9,7 +9,7 @@ import encode_file
 from tkinter import ttk
 import printer
 import main
-
+import threading
 class top_gui(CTkToplevel):
     def __init__(self,db=None):
         super().__init__()
@@ -986,8 +986,8 @@ class top_gui(CTkToplevel):
         inp_cash.bind("<Return>",lambda e:pay_cash(float(inp_cash.get())))
 
         def pay_cash(cash):
-            cost_total = 0
-            total = 0
+            price_cost_total = 0
+            price_total = 0
             bill_order = {}
             list_order = []
             on = True
@@ -997,18 +997,20 @@ class top_gui(CTkToplevel):
                 amount = value["amount"]
                 cost_price = value["cost_price"]
                 price = value["price"]
-
-                cost_total += float(cost_price)
-                total += float(price)
+                total = value["total"]
 
                 bill_order[id] = {
                     "name":name,
                     "amount":amount,
                     "cost_price":cost_price,
-                    "price":price
+                    "price":price,
+                    "total":total
                 }
 
-                list_order.append([id,name,amount,cost_price,price])
+                list_order.append([id,name,amount,cost_price,price,total])
+
+                price_cost_total += float(cost_price)
+                price_total += float(price)
             
             if (self.open_printer == None):
                 self.open_printer = printer.Printer(self.printer[0],self.printer[1],self.printer[2])
@@ -1019,7 +1021,7 @@ class top_gui(CTkToplevel):
                 change = cash - total
 
                 
-                obj.configure(text=f"0\n\n0\n\n{cash}\n\n{change}")
+                obj.set("sadfsdfsdf")
 
                 mes = CTkMessagebox(title="Pay Succeed",message=f"ทอนเงิน : {change}",font=("Arial Bold",16),option_1="OK")
                 if (mes.get() == "OK"):
@@ -1030,11 +1032,16 @@ class top_gui(CTkToplevel):
 
                     count_num = count[0]+1
                     bill_id = dates[0].strftime("%y%m%d") + str(f"{count_num:06d}")
+                    
 
-                    self.my_sql.insert_bill(self.pos,bill_id,dates[0],cost_total,total,int(inp_cash.get()),list_order)
-                    self.open_printer.html_bill(bill_id,day_time,bill_order,cash)
+                    self.my_sql.insert_bill(self.pos,bill_id,dates[0],price_cost_total,price_total,int(inp_cash.get()),list_order)
 
+                    t = threading.Thread(target=self.open_printer.html_bill,args=(bill_id,day_time,bill_order,cash))
+                    t.start()
+                    
                     self.destroy()
+
+                    
 
 
 

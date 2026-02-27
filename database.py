@@ -43,15 +43,9 @@ class Database_Mysql:
                 with open(file, 'r', encoding='utf-8') as f:
                     sql_script = f.read()
 
-                commands = sql_script.split(';')
-
-                for cmd in commands:
-                    clean_cmd = cmd.strip()
-                    if clean_cmd: 
-                        try:
-                            self.sql.execute(clean_cmd)
-                        except mysql.connector.Error as sql_err:
-                            err = sql_err
+                for result in sql_script.split(';'):
+                    if (result.strip()):
+                        self.sql.execute(result)
                 
                 self.connect.database = "stock_list"
                 self.sql.execute("SET time_zone = %s;",(self.time,))
@@ -232,5 +226,15 @@ class Database_Mysql:
         self.sql.execute("INSERT INTO `bills` VALUES (%s,%s,%s,%s,%s)",(bill_id,day_time,price,pay,log_json))
         profit = price - cost_price
 
+
         self.sql.execute("UPDATE `pos` SET `sell` = %s, `profit` = %s  WHERE `pos_id` = %s",(price,profit,pos_id))
         self.connect.commit()
+
+        for i in log:
+            id = i[0]
+            amount = i[2]
+
+            self.sql.execute("UPDATE `products` SET `p_amount` = `p_amount` - %s, `p_sell` = `p_sell` + %s WHERE `p_id` = %s;",(amount,amount,id))
+            self.connect.commit()
+
+
