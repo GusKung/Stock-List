@@ -24,7 +24,7 @@ class LoginApp(CTk):
         self.configure(fg_color=f"{color}")
 
         self.appdir = Path(__file__).parent
-        self.icon = self.appdir / "icon" / "icon.ico"
+        self.icon = os.path.join(self.appdir, "icon","icon.ico")
         self.iconbitmap(self.icon)
             
         self.data = encode_file.EncodeDecode()
@@ -91,7 +91,7 @@ class LoginApp(CTk):
         self.frameleft = CTkFrame(self, width=400, height=400, fg_color="#3afa80")
         self.frameleft.pack(side=LEFT, fill=BOTH, expand=YES)
 
-        img_icon = self.appdir / "icon" / "icon.png"
+        img_icon = os.path.join(self.appdir, "icon","icon.png")
         open_img = Image.open(img_icon)
 
         ctk_img_icon = CTkImage(open_img, size=(160,160))
@@ -126,7 +126,7 @@ class LoginApp(CTk):
 
         self.inp_pwd.bind("<Return>",lambda e: self.login())
         
-        self.after(500, lambda: self.inp_pwd.focus_force())
+        self.after(1000, lambda: self.inp_pwd.focus_force())
 
     def login(self):
         username = self.inp_user.get()

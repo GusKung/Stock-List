@@ -30,7 +30,7 @@ class main_gui(CTkToplevel):
         self.amount_page = StringVar(value="0")
         self.types = StringVar(value="ทั้งหมด")
         self.price_order = StringVar(value=f"{self.amount}\n\n{self.price}\n\n{self.total}")
-        self.price_order_guest = StringVar(value=f"{self.amount}\n\n{self.total}\n\n0\n\n0")
+        self.price_order_guest = StringVar(value=f"{self.amount}\n\n{self.total}\n\n0.0\n\n0.0")
 
         self.key_search = StringVar(value="")
         self.on_search = BooleanVar(value=False)
@@ -53,14 +53,14 @@ class main_gui(CTkToplevel):
 
         self.config(bg=f"{color}")
 
-        icon = self.appdir / "icon" / "icon.ico"
+        icon = os.path.join(self.appdir, "icon","icon.ico")
         self.iconbitmap(icon)
         self.after(200, lambda: self.iconbitmap(icon))
     
         self.resizable(False,False)
         self.deiconify()
 
-        photo = self.appdir / "icon" / "sql_connect.png"
+        photo = os.path.join(self.appdir, "icon","sql_connect.png")
         bg_image = Image.open(photo)
         background_photo= CTkImage(bg_image,size=(500,500))
 
@@ -132,8 +132,8 @@ class main_gui(CTkToplevel):
         
         self.config(bg=f"{color}")
         
-        self.iconbitmap(self.appdir / "icon" / "icon.ico")
-        self.after(200, lambda: self.iconbitmap(self.appdir / "icon" / "icon.ico"))
+        self.iconbitmap(os.path.join(self.appdir, "icon","icon.ico"))
+        self.after(200, lambda: self.iconbitmap(os.path.join(self.appdir, "icon","icon.ico")))
         self.deiconify()
 
         printer_vid =self.printer[0]
@@ -158,7 +158,7 @@ class main_gui(CTkToplevel):
         menu = CTkMenuBar(master=self)
         stock_menu = menu.add_cascade("Stock",command=lambda:open_menu(lambda:self.open_top_ui.check_level(self.open_top_ui.stock_ui,self.username,self.passwords,2)))
         account_menu = menu.add_cascade("Account",command=lambda:open_menu(lambda:self.open_top_ui.check_level(self.open_top_ui.user_ui,self.username,self.passwords,3)))
-        audit_menu = menu.add_cascade("Audit")
+        audit_menu = menu.add_cascade("Audit",command=lambda:open_menu(lambda:self.open_top_ui.check_level(self.open_top_ui.audit_ui,self.username,self.passwords,3)))
         printer_menu = menu.add_cascade("Printer",command=lambda:open_menu(lambda:self.open_top_ui.printer_ui()))
 
         FLeft= CTkFrame(self,fg_color="#D4D4D4",corner_radius=0,border_color="black",border_width=0)
@@ -222,12 +222,12 @@ class main_gui(CTkToplevel):
 
         self.inp_product.grid(row=0, column=0,padx=(20,10),pady=20,sticky="WE")
 
-        file_icon = self.appdir / "icon"
+        file_icon = os.path.join(self.appdir, "icon") 
 
-        open_search_icon = Image.open(file_icon/"search.png")
+        open_search_icon = Image.open(os.path.join(file_icon, "search.png"))
         search_icon = CTkImage(open_search_icon,size=(20,20))
 
-        open_re_icon = Image.open(file_icon/"restart.png")
+        open_re_icon = Image.open(os.path.join(file_icon, "restart.png")) 
         re_icon = CTkImage(open_re_icon,size=(20,20))
 
         btn_product = CTkButton(FLeft,font=("Arial Bold",16),width=60,height=30,corner_radius=20,image=search_icon,text="",text_color="white",fg_color="#38f388",hover_color="#6be59e",command=lambda:self.inp_products_order(self.inp_product.get()))
@@ -255,7 +255,7 @@ class main_gui(CTkToplevel):
         self.F_order_Scroll = CTkScrollableFrame(FRight,fg_color="#dfdfdf",border_width=0,border_color="black",width=600)
         self.F_order_Scroll.pack(fill=BOTH,expand=True)
 
-        open_clean_icon = Image.open(file_icon/"clean.png")
+        open_clean_icon = Image.open(os.path.join(file_icon, "clean.png"))  
         clean_image = CTkImage(open_clean_icon,size=(20,20))
 
         btn_clear = CTkButton(self.F_order_Scroll,text="",image=clean_image,width=25,height=25,fg_color="#FF2C2C",hover_color="#F14141",corner_radius=15,command=self.clear)
@@ -354,13 +354,13 @@ class main_gui(CTkToplevel):
                 p_data = products[i]
                 p_id = p_data[0]    
                 p_name = p_data[1]  
-                p_price = p_data[3] 
+                p_price = p_data[3]   
 
                 try:
-                    open_pimg = Image.open(f"{self.appdir/"products"/p_id}.jpg")
+                    open_pimg = Image.open(os.path.join(self.appdir, "products",f"{p_id}.jpg")) 
                     pimg = CTkImage(open_pimg,size=(150,200))
                 except FileNotFoundError:
-                    open_pimg = Image.open(f"{self.appdir/"products"/"Default.jpg"}")
+                    open_pimg = Image.open(os.path.join(self.appdir, "products","Default.jpg")) 
                     pimg = CTkImage(open_pimg,size=(150,200))
                 
                 obj["frame"].grid()
@@ -488,7 +488,7 @@ class main_gui(CTkToplevel):
         self.guest_ui.obj.clear()
 
         self.price_order.set(f"{self.amount}\n\n{self.price}\n\n{self.total}")
-        self.price_order_guest.set(f"{self.amount}\n\n{self.total}")
+        self.price_order_guest.set(f"{self.amount}\n\n{self.total}\n\n0.0\n\n0.0")
 
     def remove(self,obj,obj_guest,id,amount,cost_price,price):
         self.amount -= int(amount)
@@ -508,7 +508,7 @@ class main_gui(CTkToplevel):
         self.guest_ui.obj.remove(obj_guest)
 
         self.price_order.set(f"{self.amount}\n\n{self.price}\n\n{self.total}")
-        self.price_order_guest.set(f"{self.amount}\n\n{self.total}")
+        self.price_order_guest.set(f"{self.amount}\n\n{self.total}\n\n0.0\n\n0.0")
 
         obj.destroy()
         obj_guest.destroy()
@@ -536,10 +536,10 @@ class main_gui(CTkToplevel):
             bar_code = id[find_star+1:]
 
         try:
-            open_pimg = Image.open(f"{self.appdir/"products"/bar_code}.jpg")
+            open_pimg = Image.open(os.path.join(self.appdir, "products",f"{bar_code}.jpg")) 
             pimg = CTkImage(open_pimg,size=(100,100))
         except FileNotFoundError:
-            open_pimg = Image.open(f"{self.appdir/"products"/"Default.jpg"}")
+            open_pimg = Image.open(os.path.join(self.appdir, "products","Default.jpg")) 
             pimg = CTkImage(open_pimg,size=(100,100))
         
         if (id == "" or id == None):
@@ -576,14 +576,14 @@ class main_gui(CTkToplevel):
                     l_amount = CTkLabel(frame,text=f"X{amount}",justify=LEFT)
                     l_amount.grid(row=0,column=2,sticky="w",padx=100)
 
-                    open_remove= Image.open(f"{self.appdir/"icon"/"bin.png"}")
+                    open_remove= Image.open(os.path.join(self.appdir, "icon","bin.png"))  
                     remove = CTkImage(open_remove,size=(30,30))
 
                     btn_remove = CTkButton(frame,image=remove,text="",width=30,height=30,fg_color="red",hover_color="#FF6A6A",command=lambda e_amount = amount,e_cost_price=p_cost_price,e_price=total: self.remove(frame,guest_frame,bar_code,e_amount,e_cost_price,e_price))
                     btn_remove.grid(row=0,column=3,padx=20,sticky="e")
 
                     self.price_order.set(f"{self.amount}\n\n{self.price}\n\n{self.total}")
-                    self.price_order_guest.set(f"{self.amount}\n\n{self.total}")
+                    self.price_order_guest.set(f"{self.amount}\n\n{self.total}\n\n0.0\n\n0.0")
                     
                     self.inp_product.delete(0,END)
 
@@ -617,7 +617,7 @@ class main_gui(CTkToplevel):
                     guest_l_amount = CTkLabel(guest_frame,text=f"X{amount}",justify=RIGHT)
                     guest_l_amount.grid(row=0,column=2,sticky="w",padx=100)
 
-                    guest_l_total = CTkLabel(guest_frame,text=f"{float(total):,.2f}",justify=RIGHT,font=("Arial",18))
+                    guest_l_total = CTkLabel(guest_frame,text=f"{float(total):.2f}",justify=RIGHT,font=("Arial",18))
                     guest_l_total.grid(row=0,column=3,sticky="e",padx=60)
 
                     self.guest_ui.price_order_guest.set(f"{self.amount}\n\n{self.total}")
@@ -676,8 +676,8 @@ class guest_gui(CTkToplevel):
         
         self.config(bg="#3E3E3E")
         
-        self.iconbitmap(self.appdir / "icon" / "icon.ico")
-        self.after(200, lambda: self.iconbitmap(self.appdir / "icon" / "icon.ico"))
+        self.iconbitmap(os.path.join(self.appdir, "icon","icon.ico"))
+        self.after(200, lambda: self.iconbitmap(os.path.join(self.appdir, "icon","icon.ico")))
         self.deiconify()
 
         FLeft = CTkFrame(self,fg_color="#dfdfdf",width=600,corner_radius=0,border_color="black",border_width=0)
@@ -694,7 +694,7 @@ class guest_gui(CTkToplevel):
         FPrice = CTkFrame(FRight,fg_color="#ffffff",width=50,height=250,corner_radius=20,border_width=1,border_color="black")
         FPrice.pack(side=TOP,fill=BOTH,padx=60,pady=60)
 
-        l_text = CTkLabel(FPrice,text="Amount :\n\nTotal :\n\nรับเงิน :\n\nทอนเงิน :",font=("Arial",24),justify="left")
+        l_text = CTkLabel(FPrice,text="จำนวน :\n\nรวม :\n\nรับเงิน :\n\nทอนเงิน :",font=("Arial",24),justify="left")
         l_text.pack(side=LEFT,anchor="nw",padx=20,pady=20)
 
         l_price = CTkLabel(FPrice,textvariable=self.price_order_guest,font=("Arial",24),justify="right")
@@ -703,7 +703,7 @@ class guest_gui(CTkToplevel):
         FBottom = CTkFrame(FRight,fg_color="#3afa80",corner_radius=0,border_width=0,border_color="black")
         FBottom.pack(side=BOTTOM,fill=BOTH)
 
-        open_icon = Image.open(self.appdir / "icon" / "icon.png")
+        open_icon = Image.open(os.path.join(self.appdir, "icon","icon.png"))
         icon = CTkImage(open_icon,size=(150,150))
 
         label_logo = CTkLabel(FBottom,text="",image=icon)

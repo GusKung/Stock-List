@@ -1,9 +1,11 @@
-from html2image import Html2Image
 from escpos.printer import Usb
-import shutil
+from escpos.capabilities import Profile
+from pathlib import Path
 import encode_file
 import os
-import time
+import imgkit
+from io import BytesIO
+from PIL import Image
 
 class Printer:
     def __init__(self,vid,pid,width):
@@ -13,25 +15,29 @@ class Printer:
         self.load_data = encode_file.EncodeDecode().load_data()
         self.bill_file = self.load_data.get("Bill File")
 
+
+        vid = int(self.vid, 16)
+        pid = int(self.pid, 16)
+        self.p = Usb(vid, pid)
+        self.p.set(align="center", width=2, height=2)
+
+        self.appdir = Path(__file__).parent
+
     def connect(self):
         result = None
         err = None
-        try:
-            vid = int(self.vid, 16)
-            pid = int(self.pid, 16)
-            p = Usb(vid, pid)
 
-            p.set(align="center", width=2, height=2)
+        try:
             if (self.width == 384):
                 line = "_" * 32
             else:
                 line = "_" * 42
 
-            p.text(f"{line}\n")
-            p.text("Printer Connected Successfully!\n")
-            p.text("This is a test print to confirm the connection.\n")
-            p.text(f"{line}\n")
-            p.cut()
+            self.p.text(f"{line}\n")
+            self.p.text("Printer Connected Successfully!\n")
+            self.p.text("This is a test print to confirm the connection.\n")
+            self.p.text(f"{line}\n")
+            self.p.cut()
             result = True
 
         except Exception as e:
@@ -39,64 +45,48 @@ class Printer:
             result = False
         return result, err
 
-    def print_bill(self,bill_id,html,height):
-        edge_path = shutil.which("msedge") or "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
+    def create_bill(self,bill_id,html,height):
 
         file_html = os.path.abspath(os.path.join(self.bill_file, f"{bill_id}.html"))
-        save_path = os.path.abspath(os.path.join(self.bill_file, f"{bill_id}.png"))
 
-        url_path = file_html.replace('\\', '/')
+        options = {
+            'quiet': '',
+            'width': self.width,
+            'disable-smart-width': '',
+            'encoding': "UTF-8",
+            'enable-local-file-access': ''
+        }
+
+        config = imgkit.config(wkhtmltoimage=os.path.join(self.appdir, "wkhtmltoimage.exe"))
+        img_bytes = imgkit.from_string(html, False, config=config, options=options)
+
+        img_buffer = BytesIO(img_bytes)
+        img = Image.open(img_buffer).convert("L")
+
+        self.print_bills(img)
 
         with open(file_html, "w", encoding="utf-8") as f:
             f.write(html)
 
-        if (edge_path):
-            hti = Html2Image(browser_executable=edge_path,output_path=self.bill_file)
-        else:
-            edge_path = "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
 
-        hti = Html2Image(browser_executable=edge_path,output_path=self.bill_file)
-
-        hti.screenshot(url=f"file:///{url_path}",save_as=f"{bill_id}.png",size=(self.width,height))
-
-        result = None
-        err = None
-
-        timeout = 5 
-        start_time = time.time()
-        while not os.path.exists(save_path):
-            time.sleep(0.2) 
-            if time.time() - start_time > timeout:
-                return result == False
         
-        
-        try:
-            vid = int(self.vid, 16)
-            pid = int(self.pid, 16)
-            p = Usb(vid, pid)
-            p.image(f"{save_path}")
-            p.cut()
-           
-            result = True
-        except Exception as e:
-            result = False
-            err = e
-        return result, err
     
-    def html_bill(self,bill_id,dates,data_products,cash):
+    def html_bill(self, bill_id, dates, data_products, cash):
         html_order = ""
         total = 0
 
-        calculated_height = (len(data_products) * 40) + 450
+        calculated_height = (len(data_products) * 50) + 500
 
-        for id,value in data_products.items():
-            total += float(value['total'])
+        for p_id, value in data_products.items():
+            p_total = float(value['total'])
+            total += p_total
+
             html_order += f"""
             <tr>
-                <td>{id}<br>{value['name'][0:30]}...</td>
-                <td style="text-align: center; font-size: 16px;">X{value['amount']}</td>
-                <td style="text-align: right; font-size: 16px;">{float(value['price']):,.2f}</td>
-                <td style="text-align: right; font-size: 16px;">{float(value['total']):,.2f}</td>
+                <td style="word-break: break-all; width: 45%;">{p_id}<br>{value['name'][0:25]} . . .</td>
+                <td style="text-align: center; width: 15%;">X{value['amount']}</td>
+                <td style="text-align: right; width: 20%;">{float(value['price']):.2f}</td>
+                <td style="text-align: right; width: 20%;">{p_total:.2f}</td>
             </tr>
             """
 
@@ -106,100 +96,102 @@ class Printer:
         <html>
         <head>
             <style>
-                body {{ font-family: 'Tahoma', 
-                    sans-serif; 
-                    margin: 0; 
-                    padding: 0px; 
+                * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+                body {{ 
+                    font-family: 'Tahoma', sans-serif; 
                     width: {self.width}px;
                     background-color: white;
+                    color: black;
+                    padding: 5px;
                 }}
 
-                #bill-canvas {{
-                    width: 100%;
-                    box-sizing: border-box;
-                }}
-
-                .bill-container {{ border: 1px solid #eee; 
-                    padding: 10px; 
-                }}
-
-                .header {{ text-align: center; 
-                    margin-bottom: 10px; 
-                }}
-
-                table {{ width: 100%; 
+                .header {{ text-align: center; margin-bottom: 10px; }}
+                
+                table {{ 
+                    width: 100%; 
                     border-collapse: collapse; 
                     font-size: 16px; 
                 }}
 
-                th {{ border-bottom: 1px dashed #000; 
+                th {{ 
+                    border-bottom: 1px dashed #000; 
                     padding: 5px 0; 
                     text-align: left; 
                 }}
 
-                td {{ padding: 5px 0; 
-                    vertical-align: top; 
-                }}
+                td {{ padding: 4px 0; vertical-align: top; }}
 
-                .line {{ border-top: 1px dashed #000; 
-                    margin: 10px 0; 
-                }}
+                .line {{ border-top: 1px dashed #000; margin: 8px 0; }}
 
-                .result-row {{ display: flex; 
-                    justify-content: space-between; 
-                    font-weight: bold; 
-                    font-size: 16px;
-                }}
+                .summary-table {{ width: 100%; font-size: 16px; font-weight: bold; }}
+                .summary-table td {{ padding: 2px 0; }}
+                .text-right {{ text-align: right; }}
 
-                .footer {{ text-align: center; 
+                .footer {{ 
+                    text-align: center; 
                     font-size: 16px; 
-                    margin-top: 12px; 
+                    margin-top: 15px; 
+                    line-height: 1.4;
                 }}
             </style>
         </head>
         <body>
-            <div id="bill-canvas" class="bill-container">
-                <div class="header">
-                    <h2 style="margin: 0;">STOCK LIST</h2>
-                    <p style="font-size: 16px;">วันที่: {dates}</p>
-                    <p style="font-size: 16px;">Bill ID: {bill_id}</p>
-                </div>
-
-                <table>
-                    <thead>
-                        <tr>
-                            <th>สินค้า</th>
-                            <th style="text-align: center; font-size: 16px;">จำนวน</th>
-                            <th style="text-align: right; font-size: 16px;">ราคา</th>
-                            <th style="text-align: right; font-size: 16px;">ราคาทั้งหมด</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {html_order}
-                    </tbody>
-                </table>
-
-                <div class="line"></div>
-                
-                <div class="result-row">
-                    <span>รวมทั้งสิ้น</span>
-                    <span>{total:,.2f} บาท</span>
-                </div>
-                <div class="result-row" style="font-weight: normal;">
-                    <span>รับเงิน</span>
-                    <span>{cash:,.2f} บาท</span>
-                </div>
-                <div class="result-row">
-                    <span>เงินทอน</span>
-                    <span>{change:,.2f} บาท</span>
-                </div>
-
-                <div class="footer">
-                    <p>ขอบคุณที่ใช้บริการ</p>
-                    <p>*** สินค้าซื้อแล้วไม่รับเปลี่ยนคืน ***</p>
-                </div>
+            <div class="header">
+                <h2 style="margin: 0;">STOCK LIST</h2> <br>
+                <p>วันที่: {dates}</p>
+                <p>Bill ID: {bill_id}</p>
             </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>สินค้า</th>
+                        <th style="text-align: center;">จำนวน</th>
+                        <th style="text-align: right;">ราคา</th>
+                        <th style="text-align: right;">รวม</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {html_order}
+                </tbody>
+            </table>
+
+            <div class="line"></div>
+            
+            <table class="summary-table">
+                <tr>
+                    <td>รวมทั้งสิ้น</td>
+                    <td class="text-right">{total:.2f} บาท</td>
+                </tr>
+                <tr style="font-weight: normal;">
+                    <td>รับเงิน</td>
+                    <td class="text-right">{cash:.2f} บาท</td>
+                </tr>
+                <tr>
+                    <td>เงินทอน</td>
+                    <td class="text-right">{change:.2f} บาท</td>
+                </tr>
+            </table>
+
+            <div class="footer">
+                <p>ขอบคุณที่ใช้บริการ</p>
+                <p>*** สินค้าซื้อแล้วไม่รับเปลี่ยนคืน ***</p>
+            </div> <br> <br> <br> <br>
         </body>
         </html>
         """
-        self.print_bill(bill_id,html,calculated_height)
+        return html, calculated_height
+
+
+    def print_bills(self,content):
+        result = None
+        err = None
+        try:
+            self.p.image(content,center=False)
+            self.p.cut()
+           
+            result = True
+        except Exception as e:
+            result = False
+            err = e
+        return result, err

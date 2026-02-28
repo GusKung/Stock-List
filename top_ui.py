@@ -51,7 +51,7 @@ class top_gui(CTkToplevel):
         y = int((screen_y / 2) - (400 / 2))
         self.geometry(f"{700}x{400}+{x}+{y-25}")
 
-        icon = self.appdir / "icon" / "icon.ico"
+        icon = os.path.join(self.appdir, "icon","icon.ico")
         
         self.iconbitmap(icon)
         self.after(200, lambda: self.iconbitmap(icon))
@@ -83,7 +83,7 @@ class top_gui(CTkToplevel):
             Frame_Center.grid_columnconfigure(1, weight=1)  
             Frame_Center.grid_columnconfigure(2, weight=1)  
 
-            img_path = self.appdir / "icon" / "upload.png"
+            img_path = os.path.join(self.appdir, "icon","upload.png")
             img_open = Image.open(img_path)
             img = CTkImage(light_image=img_open,dark_image=img_open,size=(200,200))
 
@@ -128,7 +128,7 @@ class top_gui(CTkToplevel):
                 try:
                     img = i["img_open"]
                     rgb_img = img.convert('RGB')
-                    paths = self.appdir / "products" / f"{barcode}.jpg"
+                    paths = os.path.join(self.appdir, "products",f"{barcode}.jpg")
 
                     rgb_img.save(paths,optimize=True,format='JPEG',quality=10)
                 except:
@@ -171,14 +171,14 @@ class top_gui(CTkToplevel):
         y = int((screen_y / 2) - (360 / 2))
         self.geometry(f"{480}x{360}+{x}+{y-25}")
 
-        icon = self.appdir / "icon" / "icon.ico"
+        icon = os.path.join(self.appdir, "icon","icon.ico")
         
         self.iconbitmap(icon)
         self.after(200, lambda: self.iconbitmap(icon))
         self.deiconify()
         self.resizable(False,False)
 
-        open_bg = Image.open(self.appdir /"icon"/"sql_connect.png")
+        open_bg = Image.open(os.path.join(self.appdir, "icon","sql_connect.png"))  
         background_photo = CTkImage(open_bg,size=(500,500))
 
         background  = CTkLabel(master=self,text="",image=background_photo)
@@ -210,7 +210,7 @@ class top_gui(CTkToplevel):
         y = int((screen_y / 2) - (720 / 2))
         self.geometry(f"{1280}x{720}+{x}+{y-25}")
 
-        icon = self.appdir / "icon" / "icon.ico"
+        icon = os.path.join(self.appdir, "icon","icon.ico")
         
         self.iconbitmap(icon)
         self.after(200, lambda: self.iconbitmap(icon))
@@ -493,7 +493,7 @@ class top_gui(CTkToplevel):
         y = int((screen_y / 2) - (720 / 2))
         self.geometry(f"{1280}x{720}+{x}+{y-25}")
 
-        icon = self.appdir / "icon" / "icon.ico"
+        icon = os.path.join(self.appdir, "icon","icon.ico")
         
         self.iconbitmap(icon)
         self.after(200, lambda: self.iconbitmap(icon))
@@ -553,7 +553,7 @@ class top_gui(CTkToplevel):
 
         # //---------------------------Image Upload----------------------------------------
 
-        img_path = self.appdir / "icon" / "upload.png"
+        img_path = os.path.join(self.appdir, "icon","upload.png")
         img_open = Image.open(img_path)
         img = CTkImage(img_open,size=(200,200))
 
@@ -649,7 +649,7 @@ class top_gui(CTkToplevel):
             for barcode, img in images.items():
                 try:
                     rgb_img = img.convert('RGB')
-                    save_path = self.appdir / "products" / f"{barcode}.jpg"
+                    save_path = os.path.join(self.appdir, "products",f"{barcode}.jpg")
                     
                     rgb_img.save(save_path, optimize=True, format='JPEG', quality=10)
                 
@@ -800,13 +800,13 @@ class top_gui(CTkToplevel):
             PRICE.set(price)
             AMOUNT.set(amount)
 
-            img = self.appdir / "products"
-
+            img = os.path.join(self.appdir, "products") 
+ 
             try:
-                open_pimg = Image.open(f"{img/barcode}.jpg")
+                open_pimg = Image.open(os.path.join(img,f"{barcode}.jpg"))
                 pimg = CTkImage(open_pimg,size=(200,250))
             except FileNotFoundError:
-                open_pimg = Image.open(f"{img/"Default.jpg"}")
+                open_pimg = Image.open(os.path.join(img,"Default.jpg")) 
                 pimg = CTkImage(open_pimg,size=(200,250))
 
             btn_image.configure(image=pimg)
@@ -892,7 +892,7 @@ class top_gui(CTkToplevel):
         self.geometry(f"{520}x{240}+{x}+{y-25}")
         self.resizable(False,False)
 
-        icon = self.appdir / "icon" / "icon.ico"
+        icon = os.path.join(self.appdir, "icon","icon.ico")
         
         self.iconbitmap(icon)
         self.after(200, lambda: self.iconbitmap(icon))
@@ -969,7 +969,7 @@ class top_gui(CTkToplevel):
         self.geometry(f"{320}x{240}+{x}+{y-25}")
         self.resizable(False,False)
 
-        icon = self.appdir / "icon" / "icon.ico"
+        icon = os.path.join(self.appdir, "icon","icon.ico")
         
         self.iconbitmap(icon)
         self.after(200, lambda: self.iconbitmap(icon))
@@ -988,6 +988,7 @@ class top_gui(CTkToplevel):
         def pay_cash(cash):
             price_cost_total = 0
             price_total = 0
+            amount_order = 0
             bill_order = {}
             list_order = []
             on = True
@@ -1010,18 +1011,19 @@ class top_gui(CTkToplevel):
                 list_order.append([id,name,amount,cost_price,price,total])
 
                 price_cost_total += float(cost_price)
-                price_total += float(price)
+                price_total += float(total)
+                amount_order += int(amount)
             
             if (self.open_printer == None):
                 self.open_printer = printer.Printer(self.printer[0],self.printer[1],self.printer[2])
             
             self.open_main = main.main_gui(self.my_sql)
-            if (cash - total >=0 and on == True):
+            if (cash - price_total >=0 and on == True):
                 on = False
-                change = cash - total
+                change = cash - price_total
 
                 
-                obj.set("sadfsdfsdf")
+                obj.set(f"{amount_order}\n\n{price_total:.2f}\n\n{cash:.2f}\n\n{change:.2f}")
 
                 mes = CTkMessagebox(title="Pay Succeed",message=f"ทอนเงิน : {change}",font=("Arial Bold",16),option_1="OK")
                 if (mes.get() == "OK"):
@@ -1036,17 +1038,39 @@ class top_gui(CTkToplevel):
 
                     self.my_sql.insert_bill(self.pos,bill_id,dates[0],price_cost_total,price_total,int(inp_cash.get()),list_order)
 
-                    t = threading.Thread(target=self.open_printer.html_bill,args=(bill_id,day_time,bill_order,cash))
-                    t.start()
+                    html , height = self.open_printer.html_bill(bill_id,day_time,bill_order,cash)
+                    threading.Thread(target=self.open_printer.create_bill,args=(bill_id,html,height)).start()
+            
                     
                     self.destroy()
-
-                    
-
-
-
 
         btn_pay = CTkButton(Frame_main,text="Pay",width=200,height=40,command=lambda:pay_cash(float(inp_cash.get())))
         btn_pay.pack(pady=15)
 
         self.after(500,lambda:inp_cash.focus_force())
+
+    def audit_ui(self):
+        self.title("Audit")
+        screen_x = self.winfo_screenwidth()
+        screen_y = self.winfo_screenheight()
+
+        x = int((screen_x / 2) - (1280/2))
+        y = int((screen_y / 2) - (720 / 2))
+        self.geometry(f"{1280}x{720}+{x}+{y-25}")
+
+        icon = os.path.join(self.appdir, "icon","icon.ico")
+        
+        self.iconbitmap(icon)
+        self.after(200, lambda: self.iconbitmap(icon))
+        self.deiconify()
+
+        frame_main = CTkFrame(self,fg_color="#FFFFFF", corner_radius=0)
+        frame_main.pack(fill=BOTH,expand=True)
+
+        FLeft = CTkFrame(frame_main,width=400,fg_color="#7cffac", corner_radius=0)
+        FLeft.pack(side=LEFT, fill=BOTH)
+        FLeft.columnconfigure(0,weight=1)
+
+        FRight = CTkFrame(frame_main,fg_color="#FFFFFF", corner_radius=0)
+        FRight.pack(side=RIGHT, fill=BOTH,expand=True)
+        FRight.columnconfigure(0,weight=1)

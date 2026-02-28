@@ -228,13 +228,11 @@ class Database_Mysql:
 
 
         self.sql.execute("UPDATE `pos` SET `sell` = %s, `profit` = %s  WHERE `pos_id` = %s",(price,profit,pos_id))
-        self.connect.commit()
-
         for i in log:
             id = i[0]
             amount = i[2]
 
             self.sql.execute("UPDATE `products` SET `p_amount` = `p_amount` - %s, `p_sell` = `p_sell` + %s WHERE `p_id` = %s;",(amount,amount,id))
-            self.connect.commit()
+        self.connect.commit()
 
 
