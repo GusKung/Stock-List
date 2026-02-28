@@ -50,10 +50,7 @@ class Database_Mysql:
                 self.connect.database = "stock_list"
                 self.sql.execute("SET time_zone = %s;",(self.time,))
                 self.connect.commit()
-            else:
-                self.connect = None
-
-        return self.connect ,err
+        return err
         
     def Login(self,username,password):
         self.sql.execute("SELECT * FROM `accounts` WHERE `username` = %s AND `passwords` = %s AND `onlines` = 0",(username,password))

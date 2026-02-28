@@ -949,8 +949,8 @@ class top_gui(CTkToplevel):
         if (self.open_printer == None or not self.open_printer.winfo_exists()):
             self.open_printer = printer.Printer(self.printer[0],self.printer[1],self.printer[2])
 
-        result, err = self.open_printer.connect()
-        if (result == True):
+        err = self.open_printer.connect_print()
+        if (err == None):
             mes = CTkMessagebox(title="Printer Connected", message="Printer connected successfully!", icon="check")
             if (mes.get() == "OK"):
                 self.destroy()
@@ -1038,8 +1038,8 @@ class top_gui(CTkToplevel):
 
                     self.my_sql.insert_bill(self.pos,bill_id,dates[0],price_cost_total,price_total,int(inp_cash.get()),list_order)
 
-                    html , height = self.open_printer.html_bill(bill_id,day_time,bill_order,cash)
-                    threading.Thread(target=self.open_printer.create_bill,args=(bill_id,html,height)).start()
+                    html = self.open_printer.html_bill(bill_id,day_time,bill_order,cash)
+                    threading.Thread(target=self.open_printer.print_bills,args=(bill_id,html)).start()
             
                     
                     self.destroy()
@@ -1067,10 +1067,19 @@ class top_gui(CTkToplevel):
         frame_main = CTkFrame(self,fg_color="#FFFFFF", corner_radius=0)
         frame_main.pack(fill=BOTH,expand=True)
 
-        FLeft = CTkFrame(frame_main,width=400,fg_color="#7cffac", corner_radius=0)
+        FLeft = CTkFrame(frame_main,width=600,fg_color="#7cffac", corner_radius=0)
         FLeft.pack(side=LEFT, fill=BOTH)
         FLeft.columnconfigure(0,weight=1)
 
-        FRight = CTkFrame(frame_main,fg_color="#FFFFFF", corner_radius=0)
+        FRight = CTkFrame(frame_main,fg_color="#D4D4D4", corner_radius=0)
         FRight.pack(side=RIGHT, fill=BOTH,expand=True)
         FRight.columnconfigure(0,weight=1)
+
+        btn_day = CTkButton(FLeft,text="รายวัน",height=40,corner_radius=0,fg_color="white",bg_color="black",hover_color="#dfdfdf",font=("Arial Bold",16),text_color="black")
+        btn_day.grid(row=0,column=0,sticky="news")
+
+        btn_month = CTkButton(FLeft,text="รายเดือน",height=40,corner_radius=0,fg_color="white",bg_color="black",hover_color="#dfdfdf",font=("Arial Bold",16),text_color="black")
+        btn_month.grid(row=0,column=1,sticky="news")
+
+        btn_year= CTkButton(FLeft,text="รายปี",height=40,corner_radius=0,fg_color="white",bg_color="black",hover_color="#dfdfdf",font=("Arial Bold",16),text_color="black")
+        btn_year.grid(row=0,column=2,sticky="news")

@@ -8,6 +8,7 @@ from PIL import Image
 import encode_file
 import database
 import top_ui
+import threading
 
 class main_gui(CTkToplevel):
     def __init__(self, db=None):
@@ -40,6 +41,20 @@ class main_gui(CTkToplevel):
 
         self.my_sql = db
         self.open_top_ui = None
+        self.image_cache = {}
+        self.image_cache_order = {}
+        default_path = os.path.join(self.appdir, "products", "Default.jpg")
+
+    
+        img_raw = Image.open(default_path)
+        img_raw.load()
+        self.open_pimg_default = CTkImage(img_raw, size=(150, 200))
+
+        self.open_pimg_default_order = CTkImage(img_raw, size=(100, 100))
+
+        open_remove= Image.open(os.path.join(self.appdir, "icon","bin.png"))  
+        self.remove_icon = CTkImage(open_remove,size=(30,30))
+
         
     
     def connect_ui(self,title,wide,height,color):
@@ -168,6 +183,8 @@ class main_gui(CTkToplevel):
 
         self.FProducts_Scroll = CTkScrollableFrame(FLeft,width=650,height=600,fg_color="#D4D4D4",corner_radius=0)
         self.FProducts_Scroll.grid(row=1,column=0,columnspan=3,sticky="news")
+        
+        
 
         self.obj_products = {}
 
@@ -182,21 +199,22 @@ class main_gui(CTkToplevel):
             self.inp_products_order(self.inp_product.get())
             
 
+        for col in range(4):
+            self.FProducts_Scroll.grid_columnconfigure(col,weight=1)
+
         for rows in range(10):
             self.FProducts_Scroll.grid_rowconfigure(rows,weight=1)
-            for col in range(4):
-                
-                self.FProducts_Scroll.grid_columnconfigure(col,weight=1)
 
+            for col in range(4):
                 FProducts = CTkFrame(self.FProducts_Scroll,fg_color="white",corner_radius=10)
                 FProducts.grid(row=rows,column=col , padx=2, pady=2, sticky="nsew")
 
                 L_img = CTkLabel(FProducts,text="",width=150,height=200)
-                L_img.pack()
+                L_img.pack(expand=True,fill=BOTH)
             
 
-                L_img.bind("<Enter>", lambda e: self.hover_enter(FProducts,0,0)) 
-                L_img.bind("<Leave>", lambda e: self.hover_leave(FProducts,0,0))
+                L_img.bind("<Enter>", lambda e, f=FProducts: self.hover_enter(f, 0, 0)) 
+                L_img.bind("<Leave>", lambda e, f=FProducts: self.hover_leave(f, 0, 0))
 
                 self.obj_products[rows,col] = {
                     "frame":FProducts,
@@ -233,20 +251,11 @@ class main_gui(CTkToplevel):
         btn_product = CTkButton(FLeft,font=("Arial Bold",16),width=60,height=30,corner_radius=20,image=search_icon,text="",text_color="white",fg_color="#38f388",hover_color="#6be59e",command=lambda:self.inp_products_order(self.inp_product.get()))
         btn_product.grid(row=0,column=1,padx=5,sticky="W")
 
-        btn_product.bind("<Enter>", lambda e: self.hover_enter(btn_product,65,35)) 
-        btn_product.bind("<Leave>", lambda e: self.hover_leave(btn_product,60,30)) 
-
         btn_re = CTkButton(FLeft,font=("Arial Bold",16),width=60,height=30,corner_radius=20,text="",image=re_icon,text_color="white",fg_color="#38f388",hover_color="#6be59e",command=self.re_face)
         btn_re.grid(row=0,column=1,padx=80,sticky="W")
 
-        btn_re.bind("<Enter>", lambda e: self.hover_enter(btn_re,65,35)) 
-        btn_re.bind("<Leave>", lambda e: self.hover_leave(btn_re,60,30)) 
-
         btn_add = CTkButton(FLeft,font=("Arial Bold",16),width=60,height=30,corner_radius=20,text="+",text_color="black",fg_color="#38f388",hover_color="#6be59e",command=self.add_products)
         btn_add.grid(row=0,column=1,padx=(0,20),sticky="E")
-
-        btn_add.bind("<Enter>", lambda e: self.hover_enter(btn_add,65,35)) 
-        btn_add.bind("<Leave>", lambda e: self.hover_leave(btn_add,60,30)) 
 
         FRight= CTkFrame(self,corner_radius=0,border_width=0,border_color="black",width=600)
         FRight.pack(side=RIGHT,fill=BOTH)
@@ -270,7 +279,7 @@ class main_gui(CTkToplevel):
         FBottomPay.columnconfigure(0,weight=1)
         FBottomPay.columnconfigure(1,weight=1)
 
-        FRBLable_name = CTkLabel(FBottom,text="Amount :\n\nPrice :\n\nTotal :",font=("Arial",24),justify="left")
+        FRBLable_name = CTkLabel(FBottom,text="จำนวน :\n\nราคา :\n\nรวม :",font=("Arial",24),justify="left")
         FRBLable_name.pack(side=LEFT,anchor="nw",padx=20,pady=20)
 
         FRBLable_price = CTkLabel(FBottom,textvariable=self.price_order,font=("Arial",24),justify="right")
@@ -328,7 +337,7 @@ class main_gui(CTkToplevel):
 
     def show_products(self,types,num=0,reset=False,search=False):
         self.data_products.clear()
-
+        
         if (search == True):
             p_id , p_name, p_type, p_price, p_cost_price, p_amount, p_sell ,id_search = self.my_sql.search_products(self.key_search.get(),num)  
             products = id_search
@@ -356,16 +365,25 @@ class main_gui(CTkToplevel):
                 p_name = p_data[1]  
                 p_price = p_data[3]   
 
-                try:
-                    open_pimg = Image.open(os.path.join(self.appdir, "products",f"{p_id}.jpg")) 
-                    pimg = CTkImage(open_pimg,size=(150,200))
-                except FileNotFoundError:
-                    open_pimg = Image.open(os.path.join(self.appdir, "products","Default.jpg")) 
-                    pimg = CTkImage(open_pimg,size=(150,200))
+                if p_id in self.image_cache:
+                    pimg = self.image_cache[p_id]
+                
+                else:
+
+                    try:
+                        path_img = os.path.join(self.appdir, "products", f"{p_id}.jpg")
+                        open_pimg = Image.open(path_img)
+                        open_pimg.load()
+                        
+                        pimg = CTkImage(open_pimg,size=(150,200))
+                        self.image_cache[p_id] = pimg
+                        self.image_cache_order[p_id] = CTkImage(open_pimg,size=(100,100))
+
+                    except FileNotFoundError:
+                        pimg = self.open_pimg_default
                 
                 obj["frame"].grid()
-                obj["label"].configure(image=pimg)
-                obj["label"].image = pimg
+                obj["label"].configure(image=pimg,text="")
 
                 self.data_products[row,col] = {
                     "id":p_id,
@@ -373,8 +391,6 @@ class main_gui(CTkToplevel):
                     "price":p_price
                 }
             else:
-                obj["label"].configure(text="",image=None) 
-                obj["frame"].unbind("<Button-1>")
                 obj["frame"].grid_remove()
 
     def next_page(self):
@@ -534,13 +550,6 @@ class main_gui(CTkToplevel):
         else:
             amount = id[0:find_star]
             bar_code = id[find_star+1:]
-
-        try:
-            open_pimg = Image.open(os.path.join(self.appdir, "products",f"{bar_code}.jpg")) 
-            pimg = CTkImage(open_pimg,size=(100,100))
-        except FileNotFoundError:
-            open_pimg = Image.open(os.path.join(self.appdir, "products","Default.jpg")) 
-            pimg = CTkImage(open_pimg,size=(100,100))
         
         if (id == "" or id == None):
             self.re_face()
@@ -561,31 +570,13 @@ class main_gui(CTkToplevel):
                         
                         self.amount += int(amount)
                         self.total += total
-                   
-                    frame = CTkFrame(self.F_order_Scroll,fg_color="white")
-                    frame.pack(side=TOP,fill=X,expand=True,pady=10)
-
-                    frame.columnconfigure(1,weight=1)
-
-                    l_img = CTkLabel(frame,image=pimg,text="")
-                    l_img.grid(row=0,column=0,padx=20,sticky="w")
-
-                    l_name = CTkLabel(frame,text=f"{p_name[0:20]}...")
-                    l_name.grid(row=0,column=1,sticky="news")
-
-                    l_amount = CTkLabel(frame,text=f"X{amount}",justify=LEFT)
-                    l_amount.grid(row=0,column=2,sticky="w",padx=100)
-
-                    open_remove= Image.open(os.path.join(self.appdir, "icon","bin.png"))  
-                    remove = CTkImage(open_remove,size=(30,30))
-
-                    btn_remove = CTkButton(frame,image=remove,text="",width=30,height=30,fg_color="red",hover_color="#FF6A6A",command=lambda e_amount = amount,e_cost_price=p_cost_price,e_price=total: self.remove(frame,guest_frame,bar_code,e_amount,e_cost_price,e_price))
-                    btn_remove.grid(row=0,column=3,padx=20,sticky="e")
-
-                    self.price_order.set(f"{self.amount}\n\n{self.price}\n\n{self.total}")
-                    self.price_order_guest.set(f"{self.amount}\n\n{self.total}\n\n0.0\n\n0.0")
                     
-                    self.inp_product.delete(0,END)
+                    if p_id in self.image_cache:
+                        pimg = self.image_cache_order[p_id]
+                
+                    else:
+                        pimg = self.open_pimg_default_order
+                   
 
                     if (bar_code in self.products_order):
                         self.products_order[bar_code]["amount"] += int(amount)
@@ -600,29 +591,8 @@ class main_gui(CTkToplevel):
                             "price":float(p_price),
                             "total":float(total)
                         }
-
-                    self.obj_order.append(frame)
-
-                    guest_frame = CTkFrame(self.guest_ui.F_order_Scroll,fg_color="white")
-                    guest_frame.pack(side=TOP,fill=X,expand=True,pady=10)
-
-                    guest_frame.columnconfigure(1,weight=1)
-
-                    guest_l_img = CTkLabel(guest_frame,image=pimg,text="")
-                    guest_l_img.grid(row=0,column=0,padx=20,sticky="w")
-
-                    guest_l_name = CTkLabel(guest_frame,text=f"{p_name[0:20]}...")
-                    guest_l_name.grid(row=0,column=1,sticky="news")
-
-                    guest_l_amount = CTkLabel(guest_frame,text=f"X{amount}",justify=RIGHT)
-                    guest_l_amount.grid(row=0,column=2,sticky="w",padx=100)
-
-                    guest_l_total = CTkLabel(guest_frame,text=f"{float(total):.2f}",justify=RIGHT,font=("Arial",18))
-                    guest_l_total.grid(row=0,column=3,sticky="e",padx=60)
-
-                    self.guest_ui.price_order_guest.set(f"{self.amount}\n\n{self.total}")
-
-                    self.guest_ui.obj.append(guest_frame)
+                    
+                    self.create_frame_order(bar_code,pimg,p_name,amount,p_cost_price,total)
                 
                 else:
                     all_row = self.my_sql.all_row(self.types.get(),True,bar_code)
@@ -647,7 +617,59 @@ class main_gui(CTkToplevel):
 
         self.open_top_ui.check_level(self.open_top_ui.add_products_ui,self.username,self.passwords,2)
         self.open_top_ui.attributes('-topmost', True)
+    
+    def create_frame_order(self,bar_code,pimg,p_name,amount,p_cost_price,total):
+        frame = CTkFrame(self.F_order_Scroll,fg_color="white")
+        frame.pack(side=TOP,fill=X,expand=True,pady=10)
 
+        frame.columnconfigure(1,weight=1)
+
+        l_img = CTkLabel(frame,image=pimg,text="")
+        l_img.grid(row=0,column=0,padx=20,sticky="w")
+
+        l_name = CTkLabel(frame,text=f"{p_name[0:20]}...")
+        l_name.grid(row=0,column=1,sticky="news")
+
+        l_amount = CTkLabel(frame,text=f"X{amount}",justify=LEFT)
+        l_amount.grid(row=0,column=2,sticky="w",padx=100)
+
+    
+        guest_frame = CTkFrame(self.guest_ui.F_order_Scroll,fg_color="white")
+        
+        btn_remove = CTkButton(frame,image=self.remove_icon ,text="",width=30,height=30,fg_color="red",hover_color="#FF6A6A",command=lambda e_amount = amount,e_cost_price=p_cost_price,e_price=total: self.remove(frame,guest_frame,bar_code,e_amount,e_cost_price,e_price))
+        btn_remove.grid(row=0,column=3,padx=20,sticky="e")
+
+        self.price_order.set(f"{self.amount}\n\n{self.price}\n\n{self.total}")
+        self.obj_order.append(frame)
+
+        self.create_frame_order_guest(guest_frame,pimg,p_name,amount,total)
+
+    def create_frame_order_guest(self,guest_frame,pimg,p_name,amount,total):
+
+        guest_frame.pack(side=TOP,fill=X,expand=True,pady=10)
+        guest_frame.columnconfigure(1,weight=1)
+
+        guest_l_img = CTkLabel(guest_frame,image=pimg,text="")
+        guest_l_img.grid(row=0,column=0,padx=20,sticky="w")
+
+        guest_l_name = CTkLabel(guest_frame,text=f"{p_name[0:20]}...")
+        guest_l_name.grid(row=0,column=1,sticky="news")
+
+        guest_l_amount = CTkLabel(guest_frame,text=f"X{amount}",justify=RIGHT)
+        guest_l_amount.grid(row=0,column=2,sticky="w",padx=100)
+
+        guest_l_total = CTkLabel(guest_frame,text=f"{float(total):.2f}",justify=RIGHT,font=("Arial",18))
+        guest_l_total.grid(row=0,column=3,sticky="e",padx=60)
+
+        self.guest_ui.price_order_guest.set(f"{self.amount}\n\n{self.total}\n\n0.0\n\n0.0")
+
+        self.guest_ui.obj.append(guest_frame)
+
+        self.inp_product.delete(0,END)
+
+        self.after(500,lambda: self.guest_ui.F_order_Scroll._parent_canvas.yview_moveto(1.0)) 
+        self.after(500,lambda: self.F_order_Scroll._parent_canvas.yview_moveto(1.0)) 
+        
 class guest_gui(CTkToplevel):
     def __init__(self,text_var):
         super().__init__()

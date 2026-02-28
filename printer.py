@@ -1,11 +1,12 @@
 from escpos.printer import Usb
-from escpos.capabilities import Profile
+from CTkMessagebox import *
 from pathlib import Path
 import encode_file
 import os
 import imgkit
 from io import BytesIO
 from PIL import Image
+import top_ui
 
 class Printer:
     def __init__(self,vid,pid,width):
@@ -15,37 +16,23 @@ class Printer:
         self.load_data = encode_file.EncodeDecode().load_data()
         self.bill_file = self.load_data.get("Bill File")
 
-
         vid = int(self.vid, 16)
         pid = int(self.pid, 16)
         self.p = Usb(vid, pid)
-        self.p.set(align="center", width=2, height=2)
 
         self.appdir = Path(__file__).parent
 
-    def connect(self):
-        result = None
+
+    def connect_print(self):
         err = None
-
         try:
-            if (self.width == 384):
-                line = "_" * 32
-            else:
-                line = "_" * 42
-
-            self.p.text(f"{line}\n")
-            self.p.text("Printer Connected Successfully!\n")
-            self.p.text("This is a test print to confirm the connection.\n")
-            self.p.text(f"{line}\n")
-            self.p.cut()
-            result = True
+            self.p.set(align="center", width=2, height=2)
 
         except Exception as e:
             err = e
-            result = False
-        return result, err
+        return err
 
-    def create_bill(self,bill_id,html,height):
+    def print_bills(self,bill_id,html):
 
         file_html = os.path.abspath(os.path.join(self.bill_file, f"{bill_id}.html"))
 
@@ -63,13 +50,20 @@ class Printer:
         img_buffer = BytesIO(img_bytes)
         img = Image.open(img_buffer).convert("L")
 
-        self.print_bills(img)
+        try:
+            if (self.p == None):
+                self.connect_print()
+
+            self.p.image(img)
+            self.p.cut()
+           
+        except Exception as e:
+            CTkMessagebox(title=f"Failed Connect Printer",message=f"{e}",icon="cancel",option_1="OK")
 
         with open(file_html, "w", encoding="utf-8") as f:
             f.write(html)
-
-
         
+
     
     def html_bill(self, bill_id, dates, data_products, cash):
         html_order = ""
@@ -133,6 +127,11 @@ class Printer:
                     margin-top: 15px; 
                     line-height: 1.4;
                 }}
+
+                .endln {{ 
+                    height: 100px; 
+                    background: transparent;
+                }}
             </style>
         </head>
         <body>
@@ -176,22 +175,13 @@ class Printer:
             <div class="footer">
                 <p>ขอบคุณที่ใช้บริการ</p>
                 <p>*** สินค้าซื้อแล้วไม่รับเปลี่ยนคืน ***</p>
-            </div> <br> <br> <br> <br>
+            </div> 
+
+            <div class="endln">
+            </div> 
+            
         </body>
         </html>
         """
-        return html, calculated_height
+        return html
 
-
-    def print_bills(self,content):
-        result = None
-        err = None
-        try:
-            self.p.image(content,center=False)
-            self.p.cut()
-           
-            result = True
-        except Exception as e:
-            result = False
-            err = e
-        return result, err

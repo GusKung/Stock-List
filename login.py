@@ -59,10 +59,10 @@ class LoginApp(CTk):
             self.passwords_str.set("")
 
         self.my_sql = database.Database_Mysql(self.host,self.user,self.pwd,self.database,self.time_zone)
-        self.sql , self.sql_err = self.my_sql.connect_db()
+        err = self.my_sql.connect_db()
 
 
-        if (self.sql != None and self.sql.is_connected()):
+        if (err == None):
             mes_box = self.text_alert("Connect Success","Successfully Connected.","check",1,"OK")
             
         else:
@@ -74,6 +74,7 @@ class LoginApp(CTk):
 
         self.protocol("WM_DELETE_WINDOW",self.exit_program)
         atexit.register(self.exit_program)
+        
     
     def top_connect_ui(self):
         if self.open_main_ui == None or not self.open_main_ui.winfo_exists():
@@ -83,7 +84,6 @@ class LoginApp(CTk):
         self.open_main_ui.attributes('-topmost', True)
 
     def login_ui(self):  
-
         self.menu = CTkTitleMenu(self)
         self.file_menu = self.menu.add_cascade("Connect",command=self.top_connect_ui)
         self.file_about = self.menu.add_cascade("About",command=lambda:self.text_alert("About","Program : Stock List\n\nVersion : 1.0\n\nDevelop By August_Tas","info",1,"OK"))
