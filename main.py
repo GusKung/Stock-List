@@ -542,6 +542,7 @@ class main_gui(CTkToplevel):
         all_row = self.my_sql.all_row(self.types.get())
         self.rows = [f"{i}" for i in range(all_row+1)]
         self.page_scroll.configure(values=self.rows)
+        self.reset_scroll()
 
     def inp_products_order(self,id):
         find_star = id.find("*")
@@ -558,60 +559,61 @@ class main_gui(CTkToplevel):
         else:  
             p_id , p_name, p_type, p_price, p_cost_price, p_amount, p_sell ,id_search = self.my_sql.search_products(bar_code)  
 
-            if (int(amount) <= int(p_amount)):
-                if (id_search == None):
-            
-                    if (find_star <= -1):
-                        self.price = float(p_price)
-                        self.amount += int(amount)
-                        self.total += float(p_price)    
-                        total = float(p_price) * float(amount)           
-                    else:
-                        self.price = float(p_price)
-                        total = float(p_price) * float(amount)
+            try:
+                if (int(amount) <= int(p_amount)):
+                    if (id_search == None):
+                
+                        if (find_star <= -1):
+                            self.price = float(p_price)
+                            self.amount += int(amount)
+                            self.total += float(p_price)    
+                            total = float(p_price) * float(amount)           
+                        else:
+                            self.price = float(p_price)
+                            total = float(p_price) * float(amount)
+                            
+                            self.amount += int(amount)
+                            self.total += total
                         
-                        self.amount += int(amount)
-                        self.total += total
+                        if p_id in self.image_cache:
+                            pimg = self.image_cache_order[p_id]
                     
-                    if p_id in self.image_cache:
-                        pimg = self.image_cache_order[p_id]
-                
-                    else:
-                        pimg = self.open_pimg_default_order
-                   
+                        else:
+                            pimg = self.open_pimg_default_order
+                    
 
-                    if (bar_code in self.products_order):
-                        self.products_order[bar_code]["amount"] += int(amount)
-                        self.products_order[bar_code]["cost_price"] += p_cost_price
-                        self.products_order[bar_code]["price"] = p_price
-                        self.products_order[bar_code]["total"] += total
-                    else:
-                        self.products_order[bar_code] = {
-                            "name":p_name,
-                            "amount":int(amount),
-                            "cost_price":float(p_cost_price),
-                            "price":float(p_price),
-                            "total":float(total)
-                        }
-                    
-                    self.create_frame_order(bar_code,pimg,p_name,amount,p_cost_price,total)
-                
+                        if (bar_code in self.products_order):
+                            self.products_order[bar_code]["amount"] += int(amount)
+                            self.products_order[bar_code]["cost_price"] += p_cost_price
+                            self.products_order[bar_code]["price"] = p_price
+                            self.products_order[bar_code]["total"] += total
+                        else:
+                            self.products_order[bar_code] = {
+                                "name":p_name,
+                                "amount":int(amount),
+                                "cost_price":float(p_cost_price),
+                                "price":float(p_price),
+                                "total":float(total)
+                            }
+                        
+                        self.create_frame_order(bar_code,pimg,p_name,amount,p_cost_price,total)
                 else:
-                    all_row = self.my_sql.all_row(self.types.get(),True,bar_code)
-                    self.rows = [f"{i}" for i in range(all_row+1)]
-                    self.page_scroll.configure(values=self.rows)
-
-                    self.on_search.set(True)
-
-                    self.key_search.set(bar_code)
-
-                    self.reset_scroll()
-
-                    self.show_products(self.types.get(),0,True,self.on_search.get())
-                    self.inp_product.delete(0,END)
-            
-            else:
                     CTkMessagebox(title="Error",message=f"สินค้าไม่เพียงพอ จำนวนสินค้าที่มี: {p_amount}",icon="cancel",option_1="OK")
+            except:    
+                all_row = self.my_sql.all_row(self.types.get(),True,bar_code)
+                self.rows = [f"{i}" for i in range(all_row+1)]
+                self.page_scroll.configure(values=self.rows)
+
+                self.on_search.set(True)
+
+                self.key_search.set(bar_code)
+
+                self.reset_scroll()
+
+                self.show_products(self.types.get(),0,True,self.on_search.get())
+                self.inp_product.delete(0,END)
+                
+                
     
     def add_products(self):
         if (self.open_top_ui == None or not self.open_top_ui.winfo_exists()):
