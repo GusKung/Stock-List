@@ -8,7 +8,6 @@ from PIL import Image
 import encode_file
 import database
 import top_ui
-import threading
 
 class main_gui(CTkToplevel):
     def __init__(self, db=None):
@@ -172,7 +171,7 @@ class main_gui(CTkToplevel):
 
         menu = CTkMenuBar(master=self)
         stock_menu = menu.add_cascade("Stock",command=lambda:open_menu(lambda:self.open_top_ui.check_level(self.open_top_ui.stock_ui,self.username,self.passwords,2)))
-        account_menu = menu.add_cascade("Account",command=lambda:open_menu(lambda:self.open_top_ui.check_level(self.open_top_ui.user_ui,self.username,self.passwords,3)))
+        account_menu = menu.add_cascade("Account",command=lambda:open_menu(lambda:self.open_top_ui.check_level(self.open_top_ui.account_ui,self.username,self.passwords,3)))
         audit_menu = menu.add_cascade("Audit",command=lambda:open_menu(lambda:self.open_top_ui.check_level(self.open_top_ui.audit_ui,self.username,self.passwords,3)))
         printer_menu = menu.add_cascade("Printer",command=lambda:open_menu(lambda:self.open_top_ui.printer_ui()))
 
@@ -294,7 +293,7 @@ class main_gui(CTkToplevel):
         all_row = self.my_sql.all_row(self.types.get())
         self.rows = [f"{i}" for i in range(all_row+1)]
 
-        page = CTkComboBox(FLeft,width=80,variable=self.amount_page)
+        page = CTkComboBox(FLeft,width=80,variable=self.amount_page,state="readonly")
         page.grid(row=2,column=0,columnspan=2,sticky="S",pady=25)
 
         def change_pag(num):
@@ -325,7 +324,7 @@ class main_gui(CTkToplevel):
 
             self.reset_scroll()
 
-        self.box_type = CTkComboBox(FLeft,width=100,values=self.all_type,command=lambda e:change_type(e)) 
+        self.box_type = CTkComboBox(FLeft,width=100,values=self.all_type,command=lambda e:change_type(e),state="readonly") 
         self.box_type.grid(row=0,column=1,padx=(0,115),sticky="E")
 
         self.show_products(self.types.get())
@@ -506,6 +505,9 @@ class main_gui(CTkToplevel):
         self.price_order.set(f"{self.amount}\n\n{self.price}\n\n{self.total}")
         self.price_order_guest.set(f"{self.amount}\n\n{self.total}\n\n0.0\n\n0.0")
 
+        self.after(100,lambda: self.guest_ui.F_order_Scroll._parent_canvas.yview_moveto(0.0)) 
+        self.after(100,lambda: self.F_order_Scroll._parent_canvas.yview_moveto(0.0)) 
+
     def remove(self,obj,obj_guest,id,amount,cost_price,price):
         self.amount -= int(amount)
         self.total -= float(price)
@@ -667,8 +669,8 @@ class main_gui(CTkToplevel):
 
         self.inp_product.delete(0,END)
 
-        self.after(500,lambda: self.guest_ui.F_order_Scroll._parent_canvas.yview_moveto(1.0)) 
-        self.after(500,lambda: self.F_order_Scroll._parent_canvas.yview_moveto(1.0)) 
+        self.after(100,lambda: self.guest_ui.F_order_Scroll._parent_canvas.yview_moveto(1.0)) 
+        self.after(100,lambda: self.F_order_Scroll._parent_canvas.yview_moveto(1.0)) 
         
 class guest_gui(CTkToplevel):
     def __init__(self,text_var):

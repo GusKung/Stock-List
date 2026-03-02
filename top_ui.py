@@ -10,6 +10,8 @@ from tkinter import ttk
 import printer
 import main
 import threading
+from CTkDatePicker import CTkDatePicker
+
 class top_gui(CTkToplevel):
     def __init__(self,db=None):
         super().__init__()
@@ -17,16 +19,27 @@ class top_gui(CTkToplevel):
 
         self.data = encode_file.EncodeDecode()
         self.load_data = encode_file.EncodeDecode().load_data()
+        self.account_file = self.load_data.get("Account_File")
         self.setting_file = self.load_data.get("Settings_File")
         self.printer = [self.load_data.get("PRINTER_VID"),self.load_data.get("PRINTER_PID"),self.load_data.get("PRINTER_WIDTH")]
 
+        if (self.printer[2] == 384):
+            width_printer = "58mm"
+        else:
+            width_printer = "80mm"
+
+        self.vid = StringVar(value=f"{self.printer[0]}")
+        self.pid = StringVar(value=f"{self.printer[1]}")
+        self.print_width = StringVar(value=f"{width_printer}")
 
         self.username = self.load_data.get("USERNAME")
         self.passwords = self.load_data.get("PASSWORD")
+        self.remember = self.load_data.get("REMEMBER")
         self.pos = self.load_data.get("POS")
+        self.shift = self.load_data.get("SHIFT")
+        self.prompay = self.load_data.get("PROMPAY")
 
-        self.user_str = StringVar(value="")
-        self.passwords_str = StringVar(value="")
+        self.prom_str = StringVar(value=f"{self.prompay}")
 
         self.types = StringVar(value="ทั้งหมด")
 
@@ -41,6 +54,10 @@ class top_gui(CTkToplevel):
         self.obj_list = []
         self.open_printer = None
         self.open_main = None
+        default_path = os.path.join(self.appdir, "icon", "upload.png")
+        img_raw = Image.open(default_path)
+        img_raw.load()
+        self.open_pimg_default = CTkImage(img_raw, size=(250, 250))
 
     def add_products_ui(self):
         self.title(f"Add Products")
@@ -54,7 +71,7 @@ class top_gui(CTkToplevel):
         icon = os.path.join(self.appdir, "icon","icon.ico")
         
         self.iconbitmap(icon)
-        self.after(200, lambda: self.iconbitmap(icon))
+        self.after(500, lambda: self.iconbitmap(icon))
         self.deiconify()
         self.resizable(False,False)
 
@@ -107,7 +124,7 @@ class top_gui(CTkToplevel):
 
             all_type = self.my_sql.all_type()
 
-            obj["inp_type"] = CTkComboBox(Frame_Center,width=80,values=all_type)
+            obj["inp_type"] = CTkComboBox(Frame_Center,width=80,values=all_type,state="readonly")
             obj["inp_type"].grid(row=2,column=2,padx=(25,10),sticky="ew")
 
             btn_remove = CTkButton(Frame_Center,width=60,height=30,corner_radius=0,text="Remove",text_color="white",fg_color="#f33838",hover_color="#f66b6b",command=lambda:remove(Frame_Center,obj))
@@ -201,8 +218,8 @@ class top_gui(CTkToplevel):
 
         inp_password.bind("<Return>",lambda e:self.check_level(func,inp_user.get(),inp_password.get(),level))
 
-    def user_ui(self):
-        self.title("Add Products")
+    def account_ui(self):
+        self.title("Account")
         screen_x = self.winfo_screenwidth()
         screen_y = self.winfo_screenheight()
 
@@ -298,7 +315,7 @@ class top_gui(CTkToplevel):
         def edit():
             if (inp_user.cget("state") == "disabled"):
                 inp_user.configure(state="normal",text_color="#000000",border_color="#000000",fg_color="#FFFFFF")
-                inp_level.configure(state="normal",border_color="#000000",fg_color="#FFFFFF")
+                inp_level.configure(border_color="#000000",fg_color="#FFFFFF",state="readonly")
                 inp_pass.configure(state="normal",text_color="#000000",border_color="#000000",fg_color="#FFFFFF")
                 data_employee.configure(state="normal",text_color="#000000",border_color="#8D8D8D",fg_color="#FFFFFF")
                 btn_edit.configure(text="Save")
@@ -379,7 +396,7 @@ class top_gui(CTkToplevel):
         all_row = self.my_sql.all_row_user()
         rows = [f"{i}" for i in range(0, all_row+1)]
 
-        amount_page = CTkComboBox(FRight,width=80,variable=PAGE)
+        amount_page = CTkComboBox(FRight,width=80,variable=PAGE,state="readonly")
         amount_page_scroll = CTkScrollableDropdown(amount_page,values=rows,justify="left", button_color="transparent",command=lambda e_num:change_page(e_num))
         amount_page.grid(row=2,column=0,columnspan=2,sticky="S",pady=25)
 
@@ -485,7 +502,7 @@ class top_gui(CTkToplevel):
         load_data_user(0)
     
     def stock_ui(self):
-        self.title("Add Products")
+        self.title("Stock")
         screen_x = self.winfo_screenwidth()
         screen_y = self.winfo_screenheight()
 
@@ -493,10 +510,10 @@ class top_gui(CTkToplevel):
         y = int((screen_y / 2) - (720 / 2))
         self.geometry(f"{1280}x{720}+{x}+{y-25}")
 
-        icon = os.path.join(self.appdir, "icon","icon.ico")
+        icons = os.path.join(self.appdir, "icon","icon.ico")
         
-        self.iconbitmap(icon)
-        self.after(200, lambda: self.iconbitmap(icon))
+        self.iconbitmap(icons)
+        self.after(200, lambda: self.iconbitmap(icons))
         self.deiconify()
 
         data_stock= {}
@@ -529,7 +546,7 @@ class top_gui(CTkToplevel):
         all_type_list = self.my_sql.all_type()
         all_type = ["ทั้งหมด"] + all_type_list
 
-        amount_page = CTkComboBox(FRight,width=80,variable=num_page)
+        amount_page = CTkComboBox(FRight,width=80,variable=num_page,state="readonly")
         amount_page_scroll = CTkScrollableDropdown(amount_page,values=rows,justify="left", button_color="transparent",command=lambda e_num:change_page(e_num))
         amount_page.grid(row=2,column=0,columnspan=2,sticky="S",pady=25)
 
@@ -581,7 +598,7 @@ class top_gui(CTkToplevel):
             if (inp_name.cget("state") == "disabled"):
                 inp_id.configure(state="normal",text_color="#000000",border_color="#000000",fg_color="#FFFFFF")
                 inp_name.configure(state="normal",text_color="#000000",border_color="#000000",fg_color="#FFFFFF")
-                box_type.configure(state="normal",border_color="#000000",fg_color="#FFFFFF")
+                box_type.configure(border_color="#000000",fg_color="#FFFFFF",state="readonly")
                 btn_amount.configure(state="normal",text_color="#000000",border_color="#000000",fg_color="#FFFFFF")
                 btn_cost_price.configure(state="normal",text_color="#000000",border_color="#000000",fg_color="#FFFFFF")
                 btn_price.configure(state="normal",text_color="#000000",border_color="#000000",fg_color="#FFFFFF")
@@ -693,7 +710,7 @@ class top_gui(CTkToplevel):
         style.configure("Treeview", font=("Arial", 12), rowheight=40,borderwidth=0, highlightthickness=0)       
         style.configure("Treeview.Heading", font=("Arial Bold", 12))  
 
-        bar_type = CTkComboBox(FRight,width=200,values=all_type,command=lambda e_num:change_type(e_num)) 
+        bar_type = CTkComboBox(FRight,width=200,values=all_type,command=lambda e_num:change_type(e_num),state="readonly") 
         bar_type.grid(row=0,column=0,padx=20,sticky="w")
 
         inp_search = CTkEntry(FRight,placeholder_text="Search",text_color="black",width=300,corner_radius=20,height=30,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 16))
@@ -819,6 +836,7 @@ class top_gui(CTkToplevel):
                 types = "ทั้งหมด"
             TYPE.set(types)
             show_products_table(on_search.get(),TYPE.get())
+            table_stock.yview_moveto(0)
 
     # //----------------------Button Next Page-------------------------------
 
@@ -913,19 +931,19 @@ class top_gui(CTkToplevel):
         l_vid = CTkLabel(Frame,text="VID:",font=("Arial Bold", 18),text_color="#000000")
         l_vid.grid(row=1,column=0,pady=15,padx=20,sticky="w")
 
-        inp_vid = CTkEntry(Frame,placeholder_text="VID",text_color="#818181",width=85,corner_radius=10,height=25,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 14))
+        inp_vid = CTkEntry(Frame,placeholder_text="VID",textvariable=self.vid,text_color="#818181",width=85,corner_radius=10,height=25,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 14))
         inp_vid.grid(row=1,column=1,pady=15,padx=(0,40),sticky="w")
 
         l_pid = CTkLabel(Frame,text="PID:",font=("Arial Bold", 18),text_color="#000000")
         l_pid.grid(row=1,column=2,pady=15,padx=20,  sticky="w")
 
-        inp_pid = CTkEntry(Frame,placeholder_text="PID",text_color="#818181",width=85,corner_radius=10,height=25,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 14))
+        inp_pid = CTkEntry(Frame,placeholder_text="PID",textvariable=self.pid,text_color="#818181",width=85,corner_radius=10,height=25,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 14))
         inp_pid.grid(row=1,column=3,pady=15,padx=(0,40),sticky="w")
 
         l_size = CTkLabel(Frame,text="Size:",font=("Arial Bold", 18),text_color="#000000")
         l_size.grid(row=2,column=0,pady=15,padx=20,sticky="w")
 
-        box_size = CTkComboBox(Frame,values=["58mm","80mm"],width=85,corner_radius=10,height=25,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 14))
+        box_size = CTkComboBox(Frame,values=["58mm","80mm"],variable=self.print_width,width=85,corner_radius=10,height=25,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 14),state="readonly")
         box_size.grid(row=2,column=1,pady=15,padx=(0,40),sticky="w")
 
         btn_enter = CTkButton(Frame,text="Enter",height=30,corner_radius=10,font=("Arial", 14),command=lambda: self.connect_printer(inp_vid.get(),inp_pid.get(),box_size.get()))
@@ -938,6 +956,7 @@ class top_gui(CTkToplevel):
             self.printer[2] = 384
         else:
             self.printer[2] = 512
+
         new_setting = {""
             "PRINTER_VID":self.printer[0],
             "PRINTER_PID":self.printer[1],
@@ -945,6 +964,10 @@ class top_gui(CTkToplevel):
             }
         
         self.data.edit_settings(self.setting_file ,new_setting)
+        self.vid.set(f"{self.printer[0]}")
+        self.pid.set(f"{self.printer[1]}")
+        self.print_width.set(f"{self.printer[2]}")
+
         
         if (self.open_printer == None or not self.open_printer.winfo_exists()):
             self.open_printer = printer.Printer(self.printer[0],self.printer[1],self.printer[2])
@@ -1067,19 +1090,85 @@ class top_gui(CTkToplevel):
         frame_main = CTkFrame(self,fg_color="#FFFFFF", corner_radius=0)
         frame_main.pack(fill=BOTH,expand=True)
 
-        FLeft = CTkFrame(frame_main,width=600,fg_color="#7cffac", corner_radius=0)
+        FLeft = CTkFrame(frame_main,width=800,fg_color="#dfdfdf", corner_radius=0)
         FLeft.pack(side=LEFT, fill=BOTH)
-        FLeft.columnconfigure(0,weight=1)
+        FLeft.rowconfigure(5,weight=1)
 
         FRight = CTkFrame(frame_main,fg_color="#D4D4D4", corner_radius=0)
         FRight.pack(side=RIGHT, fill=BOTH,expand=True)
         FRight.columnconfigure(0,weight=1)
 
-        btn_day = CTkButton(FLeft,text="รายวัน",height=40,corner_radius=0,fg_color="white",bg_color="black",hover_color="#dfdfdf",font=("Arial Bold",16),text_color="black")
+        btn_day = CTkButton(FLeft,text="รายวัน",height=50,corner_radius=0,fg_color="white",bg_color="black",hover_color="#dfdfdf",font=("Arial Bold",16),text_color="black")
         btn_day.grid(row=0,column=0,sticky="news")
 
-        btn_month = CTkButton(FLeft,text="รายเดือน",height=40,corner_radius=0,fg_color="white",bg_color="black",hover_color="#dfdfdf",font=("Arial Bold",16),text_color="black")
+        btn_month = CTkButton(FLeft,text="รายเดือน",height=50,corner_radius=0,fg_color="white",bg_color="black",hover_color="#dfdfdf",font=("Arial Bold",16),text_color="black")
         btn_month.grid(row=0,column=1,sticky="news")
 
-        btn_year= CTkButton(FLeft,text="รายปี",height=40,corner_radius=0,fg_color="white",bg_color="black",hover_color="#dfdfdf",font=("Arial Bold",16),text_color="black")
+        btn_year= CTkButton(FLeft,text="รายปี",height=50,corner_radius=0,fg_color="white",bg_color="black",hover_color="#dfdfdf",font=("Arial Bold",16),text_color="black")
         btn_year.grid(row=0,column=2,sticky="news")
+
+        dates = CTkDatePicker(FLeft)
+        dates.set_allow_change_month(True)
+        dates.set_date_format("%d-%m-%Y")
+        dates.set_allow_manual_input(True) 
+        dates.grid(row=1,column=0)
+
+        CTkLabel(FLeft,text="To",font=("Arial Bold",18),bg_color="#dfdfdf",corner_radius=0).grid(row=1,column=1,sticky="news")
+
+        dates_to = CTkDatePicker(FLeft,corner_radius=0)
+        dates_to.set_allow_change_month(True)
+        dates_to.set_date_format("%d-%m-%Y")
+        dates_to.set_allow_manual_input(True) 
+        dates_to.grid(row=1,column=2)
+
+        Title_Sales = CTkLabel(FLeft,text="\nยอดขาย : \n\nกำไร : \n",font=("Arial Bold",24),bg_color="white",justify=LEFT)
+        Title_Sales.grid(row=2,column=0,sticky="news")
+
+        self.sales = 0
+        self.profit = 0
+        self.text_sales = StringVar(value=f"\n{self.sales}\n\n{self.profit}\n")
+
+        Sales = CTkLabel(FLeft,textvariable=self.text_sales,font=("Arial Bold",24),bg_color="white",justify=RIGHT)
+        Sales.grid(row=2,column=1,columnspan=2,sticky="news")
+
+        PromPay = CTkLabel(FLeft,text="PromPay :",font=("Arial Bold",24),height=60,bg_color="#264eff",text_color="white",justify=LEFT)
+        PromPay.grid(row=3,column=0,sticky="news")
+
+        inp_prom = CTkEntry(FLeft,textvariable=self.prom_str,state="disabled",bg_color="#dfdfdf",font=("Arial Bold",24),text_color="#818181",border_color="#8D8D8D")
+        inp_prom.grid(row=3,column=1,columnspan=2,sticky="news")
+
+        def edit_prom():
+            if (inp_prom.cget("state") == "disabled"):
+                inp_prom.configure(state="normal",text_color="#000000",border_color="#000000")
+                btn_edit.configure(text="Save")
+            else:
+                
+                try:
+                    new_data = [
+                        f"USERNAME={self.username}",
+                        f"PASSWORD={self.passwords}",
+                        f"REMEMBER={self.remember}",
+                        f"POS={self.pos}",
+                        f"SHIFT={self.shift}",
+                        f"PROMPAY=0{int(inp_prom.get())}"
+                    ]
+                    inp_prom.configure(state="disabled",text_color="#818181",border_color="#8D8D8D")
+                    self.prom_str.set(f"{inp_prom.get()}")
+                    self.data.edit_data(self.account_file,new_data)
+                    btn_edit.configure(text="Edit")
+                except:
+                    CTkMessagebox(title="Failed",message="Please Enter a Number.")
+                    inp_prom.delete(0,END)
+                    inp_prom.configure(state="disabled",text_color="#818181",border_color="#8D8D8D")
+                    btn_edit.configure(text="Edit")
+
+        btn_edit = CTkButton(FLeft,text="Edit",font=("Arial Bold",40),corner_radius=0,bg_color="#dfdfdf",height=60,command=edit_prom)
+        btn_edit.grid(row=4,column=0,columnspan=3,sticky="news")
+
+        btn_bill = CTkButton(FLeft,text="",corner_radius=0,fg_color="#F7F7F7",image=self.open_pimg_default,hover_color="#dfdfdf")
+        btn_bill.grid(row=5,column=0,columnspan=3,sticky="news")
+
+        btn_cancel_bill = CTkButton(FLeft,text="Cancel Bill",height=80,corner_radius=0,fg_color="#f33838",hover_color="#f66b6b")
+        btn_cancel_bill.grid(row=6,column=0,columnspan=3,sticky="news")
+
+        self.after(200,lambda:dates.focus_force())
