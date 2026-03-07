@@ -11,6 +11,8 @@ import printer
 import main
 import threading
 from CTkDatePicker import CTkDatePicker
+from promptpay import qrcode
+from io import BytesIO
 
 class top_gui(CTkToplevel):
     def __init__(self,db=None):
@@ -21,15 +23,16 @@ class top_gui(CTkToplevel):
         self.load_data = encode_file.EncodeDecode().load_data()
         self.account_file = self.load_data.get("Account_File")
         self.setting_file = self.load_data.get("Settings_File")
-        self.printer = [self.load_data.get("PRINTER_VID"),self.load_data.get("PRINTER_PID"),self.load_data.get("PRINTER_WIDTH")]
+        self.printer = [self.load_data.get("PRINTER_NAME"),self.load_data.get("PRINTER_VID"),self.load_data.get("PRINTER_PID"),self.load_data.get("PRINTER_WIDTH")]
 
-        if (self.printer[2] == 384):
+        if (self.printer[3] == 384):
             width_printer = "58mm"
         else:
             width_printer = "80mm"
 
-        self.vid = StringVar(value=f"{self.printer[0]}")
-        self.pid = StringVar(value=f"{self.printer[1]}")
+        self.pname = StringVar(value=f"{self.printer[0]}")
+        self.vid = StringVar(value=f"{self.printer[1]}")
+        self.pid = StringVar(value=f"{self.printer[2]}")
         self.print_width = StringVar(value=f"{width_printer}")
 
         self.username = self.load_data.get("USERNAME")
@@ -925,8 +928,11 @@ class top_gui(CTkToplevel):
 
         Frame.columnconfigure(3,weight=1)
 
-        usb_id = CTkLabel(Frame,text="USB ID:",font=("Arial Bold", 24),text_color="#000000")
-        usb_id.grid(row=0,column=0,pady=15,padx=20,sticky="w")
+        name_shop = CTkLabel(Frame,text="Name : ",font=("Arial Bold", 24),text_color="#000000")
+        name_shop.grid(row=0,column=0,padx=20,sticky="w")
+
+        inp_name = CTkEntry(Frame,placeholder_text="Name",textvariable=self.pname,text_color="#818181",corner_radius=10,height=25,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 14))
+        inp_name.grid(row=0,column=1,columnspan=3,pady=15,padx=(0,40),sticky="news")
 
         l_vid = CTkLabel(Frame,text="VID:",font=("Arial Bold", 18),text_color="#000000")
         l_vid.grid(row=1,column=0,pady=15,padx=20,sticky="w")
@@ -946,31 +952,29 @@ class top_gui(CTkToplevel):
         box_size = CTkComboBox(Frame,values=["58mm","80mm"],variable=self.print_width,width=85,corner_radius=10,height=25,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 14),state="readonly")
         box_size.grid(row=2,column=1,pady=15,padx=(0,40),sticky="w")
 
-        btn_enter = CTkButton(Frame,text="Enter",height=30,corner_radius=10,font=("Arial", 14),command=lambda: self.connect_printer(inp_vid.get(),inp_pid.get(),box_size.get()))
+        btn_enter = CTkButton(Frame,text="Enter",height=30,corner_radius=10,font=("Arial", 14),command=lambda: self.connect_printer(inp_name.get(),inp_vid.get(),inp_pid.get(),box_size.get()))
         btn_enter.grid(row=2,column=2,columnspan=3,pady=15,padx=20,sticky="news")
     
-    def connect_printer(self,vid,pid,size):
-        self.printer[0] = str(vid)
-        self.printer[1] = str(pid)
+    def connect_printer(self,name,vid,pid,size):
+        self.pname.set(name)
+        self.vid.set(vid)
+        self.pid.set(pid)
         if (size == "58mm"):
-            self.printer[2] = 384
+            self.printer[3] = 384
         else:
-            self.printer[2] = 512
+            self.printer[3] = 512
 
-        new_setting = {""
-            "PRINTER_VID":self.printer[0],
-            "PRINTER_PID":self.printer[1],
-            "PRINTER_WIDTH":self.printer[2]
+        new_setting = {
+            "PRINTER_NAME" : self.pname.get(), 
+            "PRINTER_VID":self.vid.get(),
+            "PRINTER_PID":self.pid.get(),
+            "PRINTER_WIDTH":self.printer[3]
             }
         
         self.data.edit_settings(self.setting_file ,new_setting)
-        self.vid.set(f"{self.printer[0]}")
-        self.pid.set(f"{self.printer[1]}")
-        self.print_width.set(f"{self.printer[2]}")
-
         
         if (self.open_printer == None or not self.open_printer.winfo_exists()):
-            self.open_printer = printer.Printer(self.printer[0],self.printer[1],self.printer[2])
+            self.open_printer = printer.Printer(self.pname.get(),self.vid.get(),self.pid.get(),self.printer[3])
 
         err = self.open_printer.connect_print()
         if (err == None):
@@ -1038,7 +1042,7 @@ class top_gui(CTkToplevel):
                 amount_order += int(amount)
             
             if (self.open_printer == None):
-                self.open_printer = printer.Printer(self.printer[0],self.printer[1],self.printer[2])
+                self.open_printer = printer.Printer(self.pname.get(),self.vid.get(),self.pid.get(),self.printer[3])
             
             self.open_main = main.main_gui(self.my_sql)
             if (cash - price_total >=0 and on == True):
@@ -1066,11 +1070,93 @@ class top_gui(CTkToplevel):
             
                     
                     self.destroy()
+                else:
+                    obj.set(f"{amount_order}\n\n{price_total:.2f}\n\n{0.00}\n\n{0.00}")
+                    self.destroy()
 
         btn_pay = CTkButton(Frame_main,text="Pay",width=200,height=40,command=lambda:pay_cash(float(inp_cash.get())))
         btn_pay.pack(pady=15)
 
         self.after(500,lambda:inp_cash.focus_force())
+    
+    def pay_qrcode(self,data_order,func,obj,logo):
+        bill_order = {}
+        list_order = []
+        on = True
+        price_cost_total = 0
+        price_total = 0
+        amount_order = 0
+
+        for id,value in data_order.items():
+            name = value["name"]
+            amount = value["amount"]
+            cost_price = value["cost_price"]
+            price = value["price"]
+            total = value["total"]
+
+            bill_order[id] = {
+                "name":name,
+                "amount":amount,
+                "cost_price":cost_price,
+                "price":price,
+                "total":total
+            }
+
+            list_order.append([id,name,amount,cost_price,price,total])
+
+            price_cost_total += float(cost_price)
+            price_total += float(total)
+            amount_order += int(amount)
+        
+        pay_load = qrcode.generate_payload(self.prompay,price_total)
+
+        byte_io = BytesIO()
+
+        img_qr = qrcode.to_image(pay_load)
+
+        img_qr.save(byte_io,format="PNG")
+        byte_io.seek(0)
+        
+
+        open_img = Image.open(byte_io)
+
+        logo.configure(light_image=open_img,dark_image=open_img)
+
+        if (self.open_printer == None):
+            self.open_printer = printer.Printer(self.pname.get(),self.vid.get(),self.pid.get(),self.printer[3])
+
+        if (on == True):
+            on = False
+            obj.set(f"{amount_order}\n\n{price_total:.2f}\n\n{price_total:.2f}\n\n{0.0}")
+
+            mes = CTkMessagebox(title="Pay Succeed",message="ลูกค้าชำระเงินเรียบร้อยแล้ว ??",font=("Arial Bold",14),option_1="OK")
+
+            if (mes.get() == "OK"):
+                func()
+                dates = self.my_sql.date_day_time()
+                count = self.my_sql.count_bill_id()
+                day_time = dates[0].strftime("%d/%m/%Y %H:%M:%S")
+
+                count_num = count[0]+1
+                bill_id = dates[0].strftime("%y%m%d") + str(f"{count_num:06d}")
+                
+
+                self.my_sql.insert_bill(self.pos,bill_id,dates[0],price_cost_total,price_total,int(price_total),list_order)
+
+                html = self.open_printer.html_bill(bill_id,day_time,bill_order,int(price_total))
+                threading.Thread(target=self.open_printer.print_bills,args=(bill_id,html)).start()
+            
+                    
+                self.destroy()
+
+            else:
+                obj.set(f"{amount_order}\n\n{price_total:.2f}\n\n{0.00}\n\n{0.00}")
+                self.destroy()
+
+            open_icon = Image.open(os.path.join(self.appdir, "icon","icon.png"))
+            resize = open_icon.resize((410,410))
+            logo.configure(light_image=resize,dark_image=resize)
+
 
     def audit_ui(self):
         self.title("Audit")

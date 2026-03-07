@@ -287,7 +287,7 @@ class main_gui(CTkToplevel):
         pay_cash = CTkButton(FBottomPay,text="Cash",cursor="hand2",text_color="white",width=200,height=60,corner_radius=0,fg_color="#ffad15",hover_color="#e29e45",font=("Arial Bold",24),command=lambda:open_menu(lambda:self.open_top_ui.cash_ui(self.products_order,self.clear,self.guest_ui.price_order_guest)))
         pay_cash.grid(row=0,column=0,sticky="nsew")
 
-        pay_prom = CTkButton(FBottomPay,text="Prompay",cursor="hand2",text_color="white",width=200,height=60,corner_radius=0,fg_color="#264eff",hover_color="#2e5fe6",font=("Arial Bold",24))
+        pay_prom = CTkButton(FBottomPay,text="Prompay",cursor="hand2",text_color="white",width=200,height=60,corner_radius=0,fg_color="#264eff",hover_color="#2e5fe6",font=("Arial Bold",24),command=lambda:open_menu(lambda:self.open_top_ui.pay_qrcode(self.products_order,self.clear,self.guest_ui.price_order_guest,self.guest_ui.icon)))
         pay_prom.grid(row=0,column=1,sticky="nsew")
 
         all_row = self.my_sql.all_row(self.types.get())
@@ -689,7 +689,11 @@ class guest_gui(CTkToplevel):
 
         self.price_order_guest = text_var
 
+        open_icon = Image.open(os.path.join(self.appdir, "icon","icon.png"))
+        self.icon = CTkImage(open_icon,size=(150,150))
+
         self.protocol("WM_DELETE_WINDOW",self.quit)
+
 
     def guest_ui(self):
         self.title("Stock List")
@@ -729,8 +733,7 @@ class guest_gui(CTkToplevel):
         FBottom = CTkFrame(FRight,fg_color="#3afa80",corner_radius=0,border_width=0,border_color="black")
         FBottom.pack(side=BOTTOM,fill=BOTH)
 
-        open_icon = Image.open(os.path.join(self.appdir, "icon","icon.png"))
-        icon = CTkImage(open_icon,size=(150,150))
+        
 
-        label_logo = CTkLabel(FBottom,text="",image=icon)
+        label_logo = CTkLabel(FBottom,text="",image=self.icon)
         label_logo.pack(pady=100)

@@ -9,7 +9,8 @@ from PIL import Image
 import top_ui
 
 class Printer:
-    def __init__(self,vid,pid,width):
+    def __init__(self,name,vid,pid,width):
+        self.name = name
         self.vid = vid
         self.pid = pid
         self.width = width
@@ -38,7 +39,7 @@ class Printer:
 
         options = {
             'quiet': '',
-            'width': self.width,
+            'width': int(self.width),
             'disable-smart-width': '',
             'encoding': "UTF-8",
             'enable-local-file-access': ''
@@ -136,7 +137,7 @@ class Printer:
         </head>
         <body>
             <div class="header">
-                <h2 style="margin: 0;">STOCK LIST</h2> <br>
+                <h2 style="margin: 0;">{self.name}</h2> <br>
                 <p>วันที่: {dates}</p>
                 <p>Bill ID: {bill_id}</p>
             </div>

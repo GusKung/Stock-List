@@ -36,9 +36,10 @@ class EncodeDecode:
             "PROMPAY="
         ]
         self.settings = {
+                "PRINTER_NAME":"",
                 "PRINTER_VID":"",
                 "PRINTER_PID":"",
-                "PRINTER_WIDTH":""
+                "PRINTER_WIDTH":384
         }
 
     def load_data(self):
@@ -64,7 +65,7 @@ class EncodeDecode:
                 da.write("\n".join(self.account).encode("utf-8"))
             self.encode(self.account_file)
             account = self.decode(self.account_file)
-            print(account)
+
             self.data_account.update(account)
         else:
             account = self.decode(self.account_file)
