@@ -21,7 +21,8 @@ class main_gui(CTkToplevel):
         self.passwords = self.load_data.get("PASSWORD")
         self.remember_me = self.load_data.get("REMEMBER")
         self.pos = self.load_data.get("POS")
-        self.printer = self.load_data.get("PRINTER_VID"),self.load_data.get("PRINTER_PID"),self.load_data.get("PRINTER_WIDTH")
+        self.prompay = self.load_data.get("PROMPAY")
+        self.printer = [self.load_data.get("PRINTER_VID"),self.load_data.get("PRINTER_PID"),self.load_data.get("PRINTER_WIDTH")]
 
         self.amount = 0
         self.price = 0.0
@@ -40,6 +41,7 @@ class main_gui(CTkToplevel):
 
         self.my_sql = db
         self.open_top_ui = None
+        self.open_top_ui2 = None
         self.image_cache = {}
         self.image_cache_order = {}
         default_path = os.path.join(self.appdir, "products", "Default.jpg")
@@ -159,21 +161,27 @@ class main_gui(CTkToplevel):
                 self.open_top_ui = top_ui.top_gui(self.my_sql)
 
             self.open_top_ui.printer_ui()
+        
+        if (self.prompay == "" or self.prompay == None):
+            if (self.open_top_ui2 == None or not self.open_top_ui2.winfo_exists()):
+                self.open_top_ui2 = top_ui.top_gui(self.my_sql)
+
+            self.open_top_ui2.audit_ui()
 
         self.guest_ui = guest_gui(self.price_order_guest)
         self.guest_ui.guest_ui()
 
-        def open_menu(func):
+        def open_func(func):
             if (self.open_top_ui == None or not self.open_top_ui.winfo_exists()):
                 self.open_top_ui = top_ui.top_gui(self.my_sql)
 
             func()
 
         menu = CTkMenuBar(master=self)
-        stock_menu = menu.add_cascade("Stock",command=lambda:open_menu(lambda:self.open_top_ui.check_level(self.open_top_ui.stock_ui,self.username,self.passwords,2)))
-        account_menu = menu.add_cascade("Account",command=lambda:open_menu(lambda:self.open_top_ui.check_level(self.open_top_ui.account_ui,self.username,self.passwords,3)))
-        audit_menu = menu.add_cascade("Audit",command=lambda:open_menu(lambda:self.open_top_ui.check_level(self.open_top_ui.audit_ui,self.username,self.passwords,3)))
-        printer_menu = menu.add_cascade("Printer",command=lambda:open_menu(lambda:self.open_top_ui.printer_ui()))
+        stock_menu = menu.add_cascade("Stock",command=lambda:open_func(lambda:self.open_top_ui.check_level(self.open_top_ui.stock_ui,self.username,self.passwords,2)))
+        account_menu = menu.add_cascade("Account",command=lambda:open_func(lambda:self.open_top_ui.check_level(self.open_top_ui.account_ui,self.username,self.passwords,3)))
+        audit_menu = menu.add_cascade("Audit",command=lambda:open_func(lambda:self.open_top_ui.check_level(self.open_top_ui.audit_ui,self.username,self.passwords,3)))
+        printer_menu = menu.add_cascade("Printer",command=lambda:open_func(lambda:self.open_top_ui.printer_ui()))
 
         FLeft= CTkFrame(self,fg_color="#D4D4D4",corner_radius=0,border_color="black",border_width=0)
         FLeft.pack(side=LEFT,fill=BOTH,expand=True)
@@ -284,10 +292,10 @@ class main_gui(CTkToplevel):
         FRBLable_price = CTkLabel(FBottom,textvariable=self.price_order,font=("Arial",24),justify="right")
         FRBLable_price.pack(side=RIGHT,anchor="nw",padx=20,pady=20)
 
-        pay_cash = CTkButton(FBottomPay,text="Cash",cursor="hand2",text_color="white",width=200,height=60,corner_radius=0,fg_color="#ffad15",hover_color="#e29e45",font=("Arial Bold",24),command=lambda:open_menu(lambda:self.open_top_ui.cash_ui(self.products_order,self.clear,self.guest_ui.price_order_guest)))
+        pay_cash = CTkButton(FBottomPay,text="Cash",cursor="hand2",text_color="white",width=200,height=60,corner_radius=0,fg_color="#ffad15",hover_color="#e29e45",font=("Arial Bold",24),command=lambda:open_func(lambda:self.open_top_ui.cash_ui(self.products_order,self.clear,self.guest_ui.price_order_guest)))
         pay_cash.grid(row=0,column=0,sticky="nsew")
 
-        pay_prom = CTkButton(FBottomPay,text="Prompay",cursor="hand2",text_color="white",width=200,height=60,corner_radius=0,fg_color="#264eff",hover_color="#2e5fe6",font=("Arial Bold",24),command=lambda:open_menu(lambda:self.open_top_ui.pay_qrcode(self.products_order,self.clear,self.guest_ui.price_order_guest,self.guest_ui.icon)))
+        pay_prom = CTkButton(FBottomPay,text="Prompay",cursor="hand2",text_color="white",width=200,height=60,corner_radius=0,fg_color="#264eff",hover_color="#2e5fe6",font=("Arial Bold",24),command=lambda:open_func(lambda:self.open_top_ui.pay_qrcode(self.products_order,self.clear,self.guest_ui.price_order_guest,self.guest_ui.icon)))
         pay_prom.grid(row=0,column=1,sticky="nsew")
 
         all_row = self.my_sql.all_row(self.types.get())

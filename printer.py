@@ -39,10 +39,11 @@ class Printer:
 
         options = {
             'quiet': '',
-            'width': int(self.width),
+            'width': int(self.width - 10),
             'disable-smart-width': '',
             'encoding': "UTF-8",
-            'enable-local-file-access': ''
+            'enable-local-file-access': '',
+            'quiet': ''
         }
 
         config = imgkit.config(wkhtmltoimage=os.path.join(self.appdir, "wkhtmltoimage.exe"))
@@ -78,7 +79,7 @@ class Printer:
 
             html_order += f"""
             <tr>
-                <td style="word-break: break-all; width: 45%;">{p_id}<br>{value['name'][0:25]} . . .</td>
+                <td style="word-break: break-all; width: 45%;">{p_id}<br>{value['name'][0:20]} . . .</td>
                 <td style="text-align: center; width: 15%;">X{value['amount']}</td>
                 <td style="text-align: right; width: 20%;">{float(value['price']):.2f}</td>
                 <td style="text-align: right; width: 20%;">{p_total:.2f}</td>
@@ -94,10 +95,11 @@ class Printer:
                 * {{ margin: 0; padding: 0; box-sizing: border-box; }}
                 body {{ 
                     font-family: 'Tahoma', sans-serif; 
-                    width: {self.width}px;
+                    width: {self.width - 10}px;
                     background-color: white;
                     color: black;
                     padding: 5px;
+                    overflow: hidden;
                 }}
 
                 .header {{ text-align: center; margin-bottom: 10px; }}

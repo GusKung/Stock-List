@@ -50,6 +50,8 @@ class top_gui(CTkToplevel):
         self.on_search = BooleanVar(value=False)
         self.on_reset = BooleanVar(value=False)
 
+        self.date_time = StringVar(value="Day")
+
         self.appdir = Path(__file__).parent
 
         self.my_sql = db
@@ -1184,13 +1186,29 @@ class top_gui(CTkToplevel):
         FRight.pack(side=RIGHT, fill=BOTH,expand=True)
         FRight.columnconfigure(0,weight=1)
 
-        btn_day = CTkButton(FLeft,text="รายวัน",height=50,corner_radius=0,fg_color="white",bg_color="black",hover_color="#dfdfdf",font=("Arial Bold",16),text_color="black")
+        def change_day(date):
+            self.date_time.set(date)
+            list_bill()
+
+        def list_bill():
+            data_bill , all_row = self.my_sql.show_bill(self.date_time.get())
+            table_bill.delete(*table_bill.get_children())
+            for i in data_bill:
+                id = i[0]
+                date = i[1]
+                cost_price = i[2]
+                price = i[3]
+                pay = i[4]
+                
+                table_bill.insert("",END,values=(id,date,cost_price,price,pay))
+
+        btn_day = CTkButton(FLeft,text="รายวัน",height=50,corner_radius=0,fg_color="white",bg_color="black",hover_color="#dfdfdf",font=("Arial Bold",16),text_color="black",command=lambda:change_day("Day"))
         btn_day.grid(row=0,column=0,sticky="news")
 
-        btn_month = CTkButton(FLeft,text="รายเดือน",height=50,corner_radius=0,fg_color="white",bg_color="black",hover_color="#dfdfdf",font=("Arial Bold",16),text_color="black")
+        btn_month = CTkButton(FLeft,text="รายเดือน",height=50,corner_radius=0,fg_color="white",bg_color="black",hover_color="#dfdfdf",font=("Arial Bold",16),text_color="black",command=lambda:change_day("Month"))
         btn_month.grid(row=0,column=1,sticky="news")
 
-        btn_year= CTkButton(FLeft,text="รายปี",height=50,corner_radius=0,fg_color="white",bg_color="black",hover_color="#dfdfdf",font=("Arial Bold",16),text_color="black")
+        btn_year= CTkButton(FLeft,text="รายปี",height=50,corner_radius=0,fg_color="white",bg_color="black",hover_color="#dfdfdf",font=("Arial Bold",16),text_color="black",command=lambda:change_day("Year"))
         btn_year.grid(row=0,column=2,sticky="news")
 
         dates = CTkDatePicker(FLeft)
@@ -1256,5 +1274,62 @@ class top_gui(CTkToplevel):
 
         btn_cancel_bill = CTkButton(FLeft,text="Cancel Bill",height=80,corner_radius=0,fg_color="#f33838",hover_color="#f66b6b")
         btn_cancel_bill.grid(row=6,column=0,columnspan=3,sticky="news")
+
+        bill_search = CTkEntry(FRight,placeholder_text="Search Bill ID",height=30,width=300,font=("Arial Bold",16))
+        bill_search.grid(row=0,column=0,sticky="e",padx=(0,100),pady=10)
+
+        open_img = Image.open(os.path.join(self.appdir,"icon","search.png"))
+        icon_search = CTkImage(open_img,size=(25,25))
+
+        btn_search = CTkButton(FRight,image=icon_search,width=80,corner_radius=20,text="",fg_color="#38f388",hover_color="#6be59e")
+        btn_search.grid(row=0,column=0,sticky="e",pady=10)
+
+        # //------------------------------------Table-----------------------------------------------------
+        style = ttk.Style(self)
+        style.configure("Treeview", font=("Arial", 12), rowheight=40,borderwidth=0, highlightthickness=0)       
+        style.configure("Treeview.Heading", font=("Arial Bold", 12))  
+
+        table_bill = ttk.Treeview(FRight,columns=("ID","Time","Cost Price","Price","Pay","Log"),show="headings")
+
+        scrollbar = ttk.Scrollbar(FRight, orient="vertical", command=table_bill.yview)
+        table_bill.configure(yscrollcommand=scrollbar.set)
+        scrollbar.grid(row=1, column=1, sticky="ns")
+
+        FRight.columnconfigure(0,weight=1)
+        FRight.rowconfigure(1,weight=1)
+
+        table_bill.heading("ID",text="ID")
+        table_bill.heading("Time",text="Time")
+        table_bill.heading("Cost Price",text="Cost Price")
+        table_bill.heading("Price",text="Price")
+        table_bill.heading("Pay",text="Pay")
+
+        table_bill.column("ID",width=30,anchor=CENTER)
+        table_bill.column("Time",width=100,anchor="w")
+        table_bill.column("Price",width=30,anchor=CENTER)
+        table_bill.column("Pay",width=100,anchor=CENTER)
+
+        table_bill.column("Cost Price",width=0,stretch=False)
+        table_bill.column("Log",width=0,stretch=False)
+
+        table_bill.grid(row=1, column=0, sticky="nsew")
+
+        data_bill , all_row = self.my_sql.show_bill(self.date_time.get())
+        rows = [f"{i}" for i in range(0, all_row+1)]
+
+
+        btn_next = CTkButton(FRight,width=100,height=40,font=("Arial Bold",16),text=">",corner_radius=20,fg_color="#38f388",hover_color="#6be59e",text_color="black",cursor="hand2")
+        btn_next.grid(row=2,column=0,sticky="se",padx=(0,20),pady=20)
+
+        btn_back = CTkButton(FRight,width=100,height=40,font=("Arial Bold",16),text="<",corner_radius=20,fg_color="#38f388",hover_color="#6be59e",text_color="black",cursor="hand2")
+        btn_back.grid(row=2,column=0,sticky="sw",padx=(20,0),pady=20)
+
+        amount_page = CTkComboBox(FRight,width=80,state="readonly",values=rows)
+        amount_page_scroll = CTkScrollableDropdown(amount_page,values=rows,justify="left", button_color="transparent")
+        amount_page.grid(row=2,column=0,columnspan=2,sticky="S",pady=25)
+
+        amount_page.set(rows[0])
+
+        list_bill()
 
         self.after(200,lambda:dates.focus_force())

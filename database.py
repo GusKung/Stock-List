@@ -220,16 +220,43 @@ class Database_Mysql:
     def insert_bill(self,pos_id,bill_id,day_time,cost_price,price,pay,log):
         log_json = json.dumps(log,ensure_ascii=False)
 
-        self.sql.execute("INSERT INTO `bills` VALUES (%s,%s,%s,%s,%s)",(bill_id,day_time,price,pay,log_json))
-        profit = price - cost_price
-
-
-        self.sql.execute("UPDATE `pos` SET `sell` = %s, `profit` = %s  WHERE `pos_id` = %s",(price,profit,pos_id))
+        self.sql.execute("INSERT INTO `bills` VALUES (%s,%s,%s,%s,%s,%s)",(bill_id,day_time,cost_price,price,pay,log_json))
+        
+        # profit = price - cost_price
+        # self.sql.execute("UPDATE `pos` SET `sell` = %s, `profit` = %s  WHERE `pos_id` = %s",(price,profit,pos_id))
         for i in log:
             id = i[0]
             amount = i[2]
 
             self.sql.execute("UPDATE `products` SET `p_amount` = `p_amount` - %s, `p_sell` = `p_sell` + %s WHERE `p_id` = %s;",(amount,amount,id))
         self.connect.commit()
+        
 
+    def show_bill(self,date):
+        if (date == "Day"):
+            self.sql.execute("SELECT * FROM stock_list.bills WHERE DATE(`day_times`) = DATE(CURDATE()) LIMIT 50;")
+            result = self.sql.fetchall()
 
+            self.sql.execute("SELECT COUNT(*) FROM stock_list.bills WHERE DATE(`day_times`) = DATE(CURDATE());")
+            result_row = self.sql.fetchone()
+
+        elif (date == "Month"):
+            self.sql.execute("SELECT * FROM stock_list.bills WHERE MONTH(`day_times`) = MONTH(CURDATE()) LIMIT 50;")
+            result = self.sql.fetchall()
+
+            self.sql.execute("SELECT COUNT(*) FROM stock_list.bills WHERE DATE(`day_times`) = DATE(CURDATE());")
+            result_row = self.sql.fetchone()
+
+        elif (date == "Year"):
+            self.sql.execute("SELECT * FROM stock_list.bills WHERE YEAR(`day_times`) = YEAR(CURDATE()) LIMIT 50;")
+            result = self.sql.fetchall()
+
+            self.sql.execute("SELECT COUNT(*) FROM stock_list.bills WHERE DATE(`day_times`) = DATE(CURDATE());")
+            result_row = self.sql.fetchone()
+
+        all_amount = result_row
+        all_row = int(all_amount[0] / 50)
+
+        return result , all_row
+
+        
