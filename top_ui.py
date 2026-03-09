@@ -13,6 +13,7 @@ import threading
 from CTkDatePicker import CTkDatePicker
 from promptpay import qrcode
 from io import BytesIO
+import json
 
 class top_gui(CTkToplevel):
     def __init__(self,db=None):
@@ -1191,16 +1192,27 @@ class top_gui(CTkToplevel):
             list_bill()
 
         def list_bill():
-            data_bill , all_row = self.my_sql.show_bill(self.date_time.get())
+            data_bills , all_row , b_cost , b_price = self.my_sql.show_bill(self.date_time.get(),PAGE.get())
             table_bill.delete(*table_bill.get_children())
-            for i in data_bill:
+
+            for i in data_bills:
                 id = i[0]
                 date = i[1]
                 cost_price = i[2]
                 price = i[3]
                 pay = i[4]
+                log = i[5]
+
+                list_product = json.dumps(log,ensure_ascii=False)
                 
-                table_bill.insert("",END,values=(id,date,cost_price,price,pay))
+                table_bill.insert("",END,values=(id,date,cost_price,price,pay,list_product))
+            
+            self.text_sales.set(f"\n{float(b_price)}\n\n{float(b_price) - float(b_cost)}\n")
+            amount_page.set(PAGE.get())
+            rows = [f"{i}" for i in range(0, all_row+1)]
+
+            amount_page_scroll.configure(values=rows)
+            ALL_ROWS.set(all_row)
 
         btn_day = CTkButton(FLeft,text="รายวัน",height=50,corner_radius=0,fg_color="white",bg_color="black",hover_color="#dfdfdf",font=("Arial Bold",16),text_color="black",command=lambda:change_day("Day"))
         btn_day.grid(row=0,column=0,sticky="news")
@@ -1228,9 +1240,13 @@ class top_gui(CTkToplevel):
         Title_Sales = CTkLabel(FLeft,text="\nยอดขาย : \n\nกำไร : \n",font=("Arial Bold",24),bg_color="white",justify=LEFT)
         Title_Sales.grid(row=2,column=0,sticky="news")
 
-        self.sales = 0
-        self.profit = 0
-        self.text_sales = StringVar(value=f"\n{self.sales}\n\n{self.profit}\n")
+        Sales_Amount = StringVar(value="0")
+        Profit_Amount = StringVar(value="0")
+        PAGE = IntVar(value="0")
+        ALL_ROWS = IntVar(value="0")
+        ID_BILL = StringVar(value="")
+
+        self.text_sales = StringVar(value=f"\n{Sales_Amount.get()}\n\n{Profit_Amount.get()}\n")
 
         Sales = CTkLabel(FLeft,textvariable=self.text_sales,font=("Arial Bold",24),bg_color="white",justify=RIGHT)
         Sales.grid(row=2,column=1,columnspan=2,sticky="news")
@@ -1269,11 +1285,15 @@ class top_gui(CTkToplevel):
         btn_edit = CTkButton(FLeft,text="Edit",font=("Arial Bold",40),corner_radius=0,bg_color="#dfdfdf",height=60,command=edit_prom)
         btn_edit.grid(row=4,column=0,columnspan=3,sticky="news")
 
-        btn_bill = CTkButton(FLeft,text="",corner_radius=0,fg_color="#F7F7F7",image=self.open_pimg_default,hover_color="#dfdfdf")
-        btn_bill.grid(row=5,column=0,columnspan=3,sticky="news")
+        data_bill = CTkTextbox(FLeft,width=400,height=200,corner_radius=0,font=("Arial", 16),border_width=2,border_color="#A7A7A7",fg_color="#FCFCFC",text_color="#818181")
+        data_bill.configure(state="disabled")
+        data_bill.grid(row=5,column=0,columnspan=3,sticky="news")
+
+        btn_open_bill = CTkButton(FLeft,text="Open Bill",height=80,corner_radius=0)
+        btn_open_bill.grid(row=6,column=0,columnspan=3,sticky="news")
 
         btn_cancel_bill = CTkButton(FLeft,text="Cancel Bill",height=80,corner_radius=0,fg_color="#f33838",hover_color="#f66b6b")
-        btn_cancel_bill.grid(row=6,column=0,columnspan=3,sticky="news")
+        btn_cancel_bill.grid(row=7,column=0,columnspan=3,sticky="news")
 
         bill_search = CTkEntry(FRight,placeholder_text="Search Bill ID",height=30,width=300,font=("Arial Bold",16))
         bill_search.grid(row=0,column=0,sticky="e",padx=(0,100),pady=10)
@@ -1314,21 +1334,72 @@ class top_gui(CTkToplevel):
 
         table_bill.grid(row=1, column=0, sticky="nsew")
 
-        data_bill , all_row = self.my_sql.show_bill(self.date_time.get())
+
+        def select_bill(event):
+            select = table_bill.focus()
+            values = table_bill.item(select,"values")
+            row = 1.0
+
+            id_bill = values[0]
+            products = values[5]
+            loads_products = json.loads(products)
+            list_products = json.loads(loads_products)
+
+
+            data_bill.configure(state="normal")
+            data_bill.delete("0.0","end")
+
+            data_bill.insert("1.0","ID Bill : ","readonly")
+            data_bill.insert("1.end",f"{id_bill}\n")
+
+            for i in list_products:
+                p_id = i[0]
+                name = i[1]
+                amount = i[2]
+                cost = i[3]
+                price = i[4]
+                total = i[5]
+
+                row += 1.0
+               
+                data_bill.insert(f"{row}",f"{p_id:<15} {name[:25]+" ..":<20} {amount:<12} {price:<10} {total:<10}\n")
+
+
+            data_bill.configure(state="disabled")
+
+            
+        table_bill.bind("<Double-1>", select_bill)
+
+        data_bills , all_row , cost , price = self.my_sql.show_bill(self.date_time.get(),PAGE.get())
         rows = [f"{i}" for i in range(0, all_row+1)]
 
+        ALL_ROWS.set(all_row)
 
-        btn_next = CTkButton(FRight,width=100,height=40,font=("Arial Bold",16),text=">",corner_radius=20,fg_color="#38f388",hover_color="#6be59e",text_color="black",cursor="hand2")
+
+        def next_page():
+            if (PAGE.get() < (ALL_ROWS.get())):
+                PAGE.set(PAGE.get()+1)
+                list_bill()
+        
+        def back_page():
+            if (PAGE.get() > 0 and PAGE.get() <= (ALL_ROWS.get())):
+                PAGE.set(PAGE.get()-1)
+                list_bill()
+
+        def change_page(num):
+            PAGE.set(num)
+            list_bill()
+
+
+        btn_next = CTkButton(FRight,width=100,height=40,font=("Arial Bold",16),text=">",corner_radius=20,fg_color="#38f388",hover_color="#6be59e",text_color="black",cursor="hand2",command=next_page)
         btn_next.grid(row=2,column=0,sticky="se",padx=(0,20),pady=20)
 
-        btn_back = CTkButton(FRight,width=100,height=40,font=("Arial Bold",16),text="<",corner_radius=20,fg_color="#38f388",hover_color="#6be59e",text_color="black",cursor="hand2")
+        btn_back = CTkButton(FRight,width=100,height=40,font=("Arial Bold",16),text="<",corner_radius=20,fg_color="#38f388",hover_color="#6be59e",text_color="black",cursor="hand2",command=back_page)
         btn_back.grid(row=2,column=0,sticky="sw",padx=(20,0),pady=20)
 
-        amount_page = CTkComboBox(FRight,width=80,state="readonly",values=rows)
-        amount_page_scroll = CTkScrollableDropdown(amount_page,values=rows,justify="left", button_color="transparent")
+        amount_page = CTkComboBox(FRight,width=80,state="readonly",variable=rows)
+        amount_page_scroll = CTkScrollableDropdown(amount_page,values=rows,justify="left", button_color="transparent",command=lambda e_num:change_page(e_num))
         amount_page.grid(row=2,column=0,columnspan=2,sticky="S",pady=25)
-
-        amount_page.set(rows[0])
 
         list_bill()
 

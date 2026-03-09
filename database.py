@@ -232,31 +232,47 @@ class Database_Mysql:
         self.connect.commit()
         
 
-    def show_bill(self,date):
+    def show_bill(self,date,num=0):
         if (date == "Day"):
-            self.sql.execute("SELECT * FROM stock_list.bills WHERE DATE(`day_times`) = DATE(CURDATE()) LIMIT 50;")
+            self.sql.execute("SELECT * FROM stock_list.bills WHERE DATE(`day_times`) = DATE(CURDATE()) LIMIT 50 offset %s;",(num*50,))
             result = self.sql.fetchall()
 
             self.sql.execute("SELECT COUNT(*) FROM stock_list.bills WHERE DATE(`day_times`) = DATE(CURDATE());")
             result_row = self.sql.fetchone()
+
+            self.sql.execute("SELECT sum(`b_cost_price`) , sum(`b_price`) FROM stock_list.bills WHERE DATE(`day_times`) = DATE(CURDATE());")
+            result_price = self.sql.fetchone()
 
         elif (date == "Month"):
-            self.sql.execute("SELECT * FROM stock_list.bills WHERE MONTH(`day_times`) = MONTH(CURDATE()) LIMIT 50;")
+            self.sql.execute("SELECT * FROM stock_list.bills WHERE MONTH(`day_times`) = MONTH(CURDATE()) LIMIT 50 offset %s;",(num*50,))
             result = self.sql.fetchall()
 
-            self.sql.execute("SELECT COUNT(*) FROM stock_list.bills WHERE DATE(`day_times`) = DATE(CURDATE());")
+            self.sql.execute("SELECT COUNT(*) FROM stock_list.bills WHERE MONTH(`day_times`) = MONTH(CURDATE());")
             result_row = self.sql.fetchone()
+
+            self.sql.execute("SELECT sum(`b_cost_price`) , sum(`b_price`) FROM stock_list.bills WHERE MONTH(`day_times`) = MONTH(CURDATE());")
+            result_price = self.sql.fetchone()
 
         elif (date == "Year"):
-            self.sql.execute("SELECT * FROM stock_list.bills WHERE YEAR(`day_times`) = YEAR(CURDATE()) LIMIT 50;")
+            self.sql.execute("SELECT * FROM stock_list.bills WHERE YEAR(`day_times`) = YEAR(CURDATE()) LIMIT 50 offset %s;",(num*50,))
             result = self.sql.fetchall()
 
-            self.sql.execute("SELECT COUNT(*) FROM stock_list.bills WHERE DATE(`day_times`) = DATE(CURDATE());")
+            self.sql.execute("SELECT COUNT(*) FROM stock_list.bills WHERE YEAR(`day_times`) = YEAR(CURDATE());")
             result_row = self.sql.fetchone()
+
+            self.sql.execute("SELECT sum(`b_cost_price`) , sum(`b_price`) FROM stock_list.bills WHERE YEAR(`day_times`) = YEAR(CURDATE());")
+            result_price = self.sql.fetchone()
 
         all_amount = result_row
         all_row = int(all_amount[0] / 50)
 
-        return result , all_row
+        if (result_price and result_price[0] is not None):
+            cost = result_price[0]
+            price = result_price[1]
+        else:
+            cost = 0
+            price = 0
+
+        return result , all_row , cost , price
 
         
