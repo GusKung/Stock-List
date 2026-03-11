@@ -1188,6 +1188,7 @@ class top_gui(CTkToplevel):
         PAY = IntVar(value="")
         DATE_START = StringVar(value=None)
         DATE_END = StringVar(value=None)
+        TYPE_BILL = StringVar(value="ปกติ")
 
         list_order_bill = []
         order_bill = {}
@@ -1208,21 +1209,22 @@ class top_gui(CTkToplevel):
             list_bill()
 
         def list_bill(search=None):
-            data_bills , all_row , b_cost , b_price = self.my_sql.show_bill(self.date_time.get(),PAGE.get(),DATE_START.get(),DATE_END.get(),search)
+            data_bills , all_row , b_cost , b_price = self.my_sql.show_bill(TYPE_BILL.get(),self.date_time.get(),PAGE.get(),DATE_START.get(),DATE_END.get(),search)
             table_bill.delete(*table_bill.get_children())
             table_bill.yview_moveto(0)
 
             for i in data_bills:
                 id = i[0]
-                date = i[1]
-                cost_price = i[2]
-                price = i[3]
-                pay = i[4]
-                log = i[5]
+                status = i[1]
+                date = i[2]
+                cost_price = i[3]
+                price = i[4]
+                pay = i[5]
+                log = i[6]
 
                 list_product = json.dumps(log,ensure_ascii=False)
                 
-                table_bill.insert("",END,values=(id,date,cost_price,price,pay,list_product))
+                table_bill.insert("",END,values=(id,status,date,cost_price,price,pay,list_product))
             
             self.text_sales.set(f"\n{float(b_price)}\n\n{float(b_price) - float(b_cost)}\n")
             amount_page.set(PAGE.get())
@@ -1390,6 +1392,13 @@ class top_gui(CTkToplevel):
         btn_cancel_bill = CTkButton(FLeft,text="Cancel Bill",height=80,corner_radius=0,fg_color="#f33838",hover_color="#f66b6b",command=cancel_bill)
         btn_cancel_bill.grid(row=7,column=0,columnspan=3,sticky="news")
 
+        def change_type(types):
+            TYPE_BILL.set(types)
+            list_bill()
+
+        type_box = CTkComboBox(FRight,variable=TYPE_BILL,values=["ปกติ","ยกเลิก"],width=100,command=lambda e:change_type(e))
+        type_box.grid(row=0,column=0,sticky="w",padx=(40,0),pady=10)
+
         bill_search = CTkEntry(FRight,placeholder_text="Search Bill ID",height=30,width=300,font=("Arial Bold",16))
         bill_search.grid(row=0,column=0,sticky="e",padx=(0,100),pady=10)
 
@@ -1413,7 +1422,7 @@ class top_gui(CTkToplevel):
         style.configure("Treeview", font=("Arial", 12), rowheight=40,borderwidth=0, highlightthickness=0)       
         style.configure("Treeview.Heading", font=("Arial Bold", 12))  
 
-        table_bill = ttk.Treeview(FRight,columns=("ID","Time","Cost Price","Price","Pay","Log"),show="headings")
+        table_bill = ttk.Treeview(FRight,columns=("ID","Status","Time","Cost Price","Price","Pay","Log"),show="headings")
 
         scrollbar = ttk.Scrollbar(FRight, orient="vertical", command=table_bill.yview)
         table_bill.configure(yscrollcommand=scrollbar.set)
@@ -1423,15 +1432,17 @@ class top_gui(CTkToplevel):
         FRight.rowconfigure(1,weight=1)
 
         table_bill.heading("ID",text="ID")
+        table_bill.heading("Status",text="Status")
         table_bill.heading("Time",text="Time")
         table_bill.heading("Cost Price",text="Cost Price")
         table_bill.heading("Price",text="Price")
         table_bill.heading("Pay",text="Pay")
 
-        table_bill.column("ID",width=30,anchor=CENTER)
+        table_bill.column("ID",width=100,anchor=CENTER)
+        table_bill.column("Status",width=40,anchor=CENTER)
         table_bill.column("Time",width=100,anchor="w")
-        table_bill.column("Price",width=30,anchor=CENTER)
-        table_bill.column("Pay",width=100,anchor=CENTER)
+        table_bill.column("Price",width=40,anchor=CENTER)
+        table_bill.column("Pay",width=40,anchor=CENTER)
 
         table_bill.column("Cost Price",width=0,stretch=False)
         table_bill.column("Log",width=0,stretch=False)
@@ -1445,10 +1456,10 @@ class top_gui(CTkToplevel):
             row = 1.0
 
             ID_BILL.set(values[0])
-            TIME.set(values[1])
-            PAY.set(values[4])
+            TIME.set(values[2])
+            PAY.set(values[5])
 
-            products = values[5]
+            products = values[6]
             loads_products = json.loads(products)
             list_products = json.loads(loads_products)
 
@@ -1480,7 +1491,7 @@ class top_gui(CTkToplevel):
             
         table_bill.bind("<Double-1>", select_bill)
 
-        data_bills , all_row , cost , price = self.my_sql.show_bill(self.date_time.get(),PAGE.get())
+        data_bills , all_row , cost , price = self.my_sql.show_bill(TYPE_BILL.get(),self.date_time.get(),PAGE.get())
         rows = [f"{i}" for i in range(0, all_row+1)]
 
         ALL_ROWS.set(all_row)
