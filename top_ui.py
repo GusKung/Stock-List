@@ -1210,6 +1210,7 @@ class top_gui(CTkToplevel):
         def list_bill(search=None):
             data_bills , all_row , b_cost , b_price = self.my_sql.show_bill(self.date_time.get(),PAGE.get(),DATE_START.get(),DATE_END.get(),search)
             table_bill.delete(*table_bill.get_children())
+            table_bill.yview_moveto(0)
 
             for i in data_bills:
                 id = i[0]
@@ -1400,6 +1401,7 @@ class top_gui(CTkToplevel):
                 list_bill(bill_search.get())
             else:
                 list_bill()
+            bill_search.delete(0,END)
 
         btn_search = CTkButton(FRight,image=icon_search,width=80,corner_radius=20,text="",fg_color="#38f388",hover_color="#6be59e",command=search_bill)
         btn_search.grid(row=0,column=0,sticky="e",pady=10)

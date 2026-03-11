@@ -19,7 +19,7 @@ class Printer:
 
         vid = int(self.vid, 16)
         pid = int(self.pid, 16)
-        self.p = Usb(vid, pid)
+        self.p = Usb(vid, pid,profile="TH230Plus")
 
         self.appdir = Path(__file__).parent
 
