@@ -47,6 +47,7 @@ class top_gui(CTkToplevel):
         self.shift = self.load_data.get("SHIFT")
         self.prompay = self.load_data.get("PROMPAY")
 
+        self.pos_str = StringVar(value=self.load_data.get("POS"))
         self.prom_str = StringVar(value=f"{self.prompay}")
 
         self.types = StringVar(value="ทั้งหมด")
@@ -1355,7 +1356,7 @@ class top_gui(CTkToplevel):
             order = json.dumps(list_order_bill,ensure_ascii=False)
             order_list = json.loads(order)
 
-            mes = CTkMessagebox(title="CanCel Bill",message=f"Are you sure cacnel bill: {ID_BILL.get()}",option_1="CANCEL",option_2="OK")
+            mes = CTkMessagebox(title="CanCel Bill",message=f"Are you sure cacnel bill: {ID_BILL.get()}",icon="warning",option_1="CANCEL",option_2="OK")
 
             if (mes.get() == "OK"):
                 for i in order_list:
@@ -1511,3 +1512,52 @@ class top_gui(CTkToplevel):
         list_bill()
 
         self.after(200,lambda:dates.focus_force())
+    
+    def pos_ui(self):
+        self.title("POS")
+        screen_x = self.winfo_screenwidth()
+        screen_y = self.winfo_screenheight()
+
+        x = int((screen_x / 2) - (520/2))
+        y = int((screen_y / 2) - (200 / 2))
+        self.geometry(f"{520}x{200}+{x}+{y-25}")
+
+        self.resizable(False,False)
+
+        icon = os.path.join(self.appdir, "icon","icon.ico")
+        
+        self.iconbitmap(icon)
+        self.after(200, lambda: self.iconbitmap(icon))
+        self.deiconify()
+        self.attributes('-topmost', True)
+
+        self.Frame_main = CTkFrame(self,fg_color="#dfdfdf", corner_radius=0)
+        self.Frame_main.pack(fill=BOTH,expand=True)
+
+        Frame = CTkFrame(self.Frame_main,fg_color="#ffffff", corner_radius=20)
+        Frame.pack(fill=Y,expand=True,pady=20,padx=20)
+
+        name_shop = CTkLabel(Frame,text="POS : ",font=("Arial Bold", 24),text_color="#000000")
+        name_shop.grid(row=0,column=0,padx=20,sticky="w")
+
+        def change_pos():
+            new_data = [
+                f"USERNAME={self.username}",
+                f"PASSWORD={self.passwords}",
+                f"REMEMBER={self.remember}",
+                f"POS={pos_box.get()}",
+                f"SHIFT={self.shift}",
+                f"PROMPAY={self.prompay}"
+            ]
+
+            self.data.edit_data(self.account_file ,new_data)
+
+            mes = CTkMessagebox(title="SET POS Succeed",message=f"Your {pos_box.get()}",icon="check",option_1="OK")
+            if (mes.get() == "OK"):
+                self.destroy()
+
+        pos_box = CTkComboBox(Frame,values=[f"POS{i+1}" for i in range(10)],variable=self.pos_str,width=150,corner_radius=10,height=40,border_width=2,border_color="#8D8D8D",fg_color="#FCFCFC",font=("Arial", 14),state="readonly")
+        pos_box.grid(row=0,column=1,pady=15,padx=(0,40),sticky="w")
+
+        btn_enter = CTkButton(Frame,text="OK",height=40,corner_radius=10,font=("Arial", 14),command=change_pos)
+        btn_enter.grid(row=1,column=0,columnspan=2,pady=15,padx=20,sticky="news")

@@ -182,6 +182,7 @@ class main_gui(CTkToplevel):
         account_menu = menu.add_cascade("Account",command=lambda:open_func(lambda:self.open_top_ui.check_level(self.open_top_ui.account_ui,self.username,self.passwords,3)))
         audit_menu = menu.add_cascade("Audit",command=lambda:open_func(lambda:self.open_top_ui.check_level(self.open_top_ui.audit_ui,self.username,self.passwords,3)))
         printer_menu = menu.add_cascade("Printer",command=lambda:open_func(lambda:self.open_top_ui.printer_ui()))
+        pos_menu = menu.add_cascade("POS",command=lambda:open_func(lambda:self.open_top_ui.check_level(self.open_top_ui.pos_ui,self.username,self.passwords,3)))
 
         FLeft= CTkFrame(self,fg_color="#D4D4D4",corner_radius=0,border_color="black",border_width=0)
         FLeft.pack(side=LEFT,fill=BOTH,expand=True)
