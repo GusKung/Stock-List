@@ -14,6 +14,8 @@ from CTkDatePicker import CTkDatePicker
 from promptpay import qrcode
 from io import BytesIO
 import json
+import webbrowser
+from datetime import datetime
 
 class top_gui(CTkToplevel):
     def __init__(self,db=None):
@@ -24,6 +26,8 @@ class top_gui(CTkToplevel):
         self.load_data = encode_file.EncodeDecode().load_data()
         self.account_file = self.load_data.get("Account_File")
         self.setting_file = self.load_data.get("Settings_File")
+        self.bill_file = self.load_data.get("Bill File")
+
         self.printer = [self.load_data.get("PRINTER_NAME"),self.load_data.get("PRINTER_VID"),self.load_data.get("PRINTER_PID"),self.load_data.get("PRINTER_WIDTH")]
 
         if (self.printer[3] == 384):
@@ -976,7 +980,7 @@ class top_gui(CTkToplevel):
         
         self.data.edit_settings(self.setting_file ,new_setting)
         
-        if (self.open_printer == None or not self.open_printer.winfo_exists()):
+        if (self.open_printer == None):
             self.open_printer = printer.Printer(self.pname.get(),self.vid.get(),self.pid.get(),self.printer[3])
 
         err = self.open_printer.connect_print()
@@ -1176,6 +1180,17 @@ class top_gui(CTkToplevel):
         self.after(200, lambda: self.iconbitmap(icon))
         self.deiconify()
 
+        PAGE = IntVar(value="0")
+        ALL_ROWS = IntVar(value="0")
+        ID_BILL = StringVar(value="")
+        TIME = StringVar(value="")
+        PAY = IntVar(value="")
+        DATE_START = StringVar(value=None)
+        DATE_END = StringVar(value=None)
+
+        list_order_bill = []
+        order_bill = {}
+
         frame_main = CTkFrame(self,fg_color="#FFFFFF", corner_radius=0)
         frame_main.pack(fill=BOTH,expand=True)
 
@@ -1191,8 +1206,8 @@ class top_gui(CTkToplevel):
             self.date_time.set(date)
             list_bill()
 
-        def list_bill():
-            data_bills , all_row , b_cost , b_price = self.my_sql.show_bill(self.date_time.get(),PAGE.get())
+        def list_bill(search=None):
+            data_bills , all_row , b_cost , b_price = self.my_sql.show_bill(self.date_time.get(),PAGE.get(),DATE_START.get(),DATE_END.get(),search)
             table_bill.delete(*table_bill.get_children())
 
             for i in data_bills:
@@ -1229,24 +1244,32 @@ class top_gui(CTkToplevel):
         dates.set_allow_manual_input(True) 
         dates.grid(row=1,column=0)
 
-        CTkLabel(FLeft,text="To",font=("Arial Bold",18),bg_color="#dfdfdf",corner_radius=0).grid(row=1,column=1,sticky="news")
-
         dates_to = CTkDatePicker(FLeft,corner_radius=0)
         dates_to.set_allow_change_month(True)
         dates_to.set_date_format("%d-%m-%Y")
         dates_to.set_allow_manual_input(True) 
-        dates_to.grid(row=1,column=2)
+        dates_to.grid(row=1,column=1)
+
+        def specify_date():
+            self.date_time.set("")
+            PAGE.set("0")
+
+            d_start = datetime.strptime(dates.get_date(), "%d-%m-%Y").strftime("%Y-%m-%d")
+            d_end = datetime.strptime(dates_to.get_date(), "%d-%m-%Y").strftime("%Y-%m-%d")
+
+            DATE_START.set(d_start)
+            DATE_END.set(d_end)
+
+            list_bill()
+
+
+        btn_dates = CTkButton(FLeft,text="OK",corner_radius=0,command=specify_date)
+        btn_dates.grid(row=1,column=2,sticky="news")
 
         Title_Sales = CTkLabel(FLeft,text="\nยอดขาย : \n\nกำไร : \n",font=("Arial Bold",24),bg_color="white",justify=LEFT)
         Title_Sales.grid(row=2,column=0,sticky="news")
 
-        Sales_Amount = StringVar(value="0")
-        Profit_Amount = StringVar(value="0")
-        PAGE = IntVar(value="0")
-        ALL_ROWS = IntVar(value="0")
-        ID_BILL = StringVar(value="")
-
-        self.text_sales = StringVar(value=f"\n{Sales_Amount.get()}\n\n{Profit_Amount.get()}\n")
+        self.text_sales = StringVar(value=f"\n{0.0}\n\n{0.0}\n")
 
         Sales = CTkLabel(FLeft,textvariable=self.text_sales,font=("Arial Bold",24),bg_color="white",justify=RIGHT)
         Sales.grid(row=2,column=1,columnspan=2,sticky="news")
@@ -1289,10 +1312,80 @@ class top_gui(CTkToplevel):
         data_bill.configure(state="disabled")
         data_bill.grid(row=5,column=0,columnspan=3,sticky="news")
 
-        btn_open_bill = CTkButton(FLeft,text="Open Bill",height=80,corner_radius=0)
+        def open_bill():
+            order = json.dumps(list_order_bill,ensure_ascii=False)
+            order_list = json.loads(order)
+
+          
+            file_html = os.path.join(self.bill_file,f"{ID_BILL.get()}.html")
+
+            if (os.path.exists(file_html)):
+                webbrowser.open(f"file://{file_html}")
+
+            else:
+                for i in order_list:
+                    id = i [0]
+                    name = i[1]
+                    amount = i[2]
+                    cost = i[3]
+                    price = i[4]
+                    total = price * amount
+
+                    order_bill[id] = {
+                        "name":name,
+                        "amount":amount,
+                        "cost_price":cost,
+                        "price":price,
+                        "total":total
+                    }
+                
+                if (self.open_printer == None):
+                    self.open_printer = printer.Printer(self.pname.get(),self.vid.get(),self.pid.get(),self.printer[3])
+                
+                html = self.open_printer.html_bill(ID_BILL.get(),TIME.get(),order_bill,PAY.get())
+                with open(file_html, "w", encoding="utf-8") as f:
+                    f.write(html)
+                webbrowser.open(f"file://{file_html}")
+
+        btn_open_bill = CTkButton(FLeft,text="Open Bill",height=80,corner_radius=0,command=open_bill)
         btn_open_bill.grid(row=6,column=0,columnspan=3,sticky="news")
 
-        btn_cancel_bill = CTkButton(FLeft,text="Cancel Bill",height=80,corner_radius=0,fg_color="#f33838",hover_color="#f66b6b")
+
+        def cancel_bill():
+            order = json.dumps(list_order_bill,ensure_ascii=False)
+            order_list = json.loads(order)
+
+            mes = CTkMessagebox(title="CanCel Bill",message=f"Are you sure cacnel bill: {ID_BILL.get()}",option_1="CANCEL",option_2="OK")
+
+            if (mes.get() == "OK"):
+                for i in order_list:
+                    id = i [0]
+                    name = i[1]
+                    amount = i[2]
+                    cost = i[3]
+                    price = i[4]
+                    total = price * amount
+
+                    order_bill[id] = {
+                        "name":name,
+                        "amount":amount,
+                        "cost_price":cost,
+                        "price":price,
+                        "total":total
+                    }
+                
+                for id,value in order_bill.items():
+                    name = value["name"]
+                    amount = value["amount"]
+                    cost = value["cost_price"]
+                    price = value["price"]
+                    total = value["total"]
+
+                    self.my_sql.cancel_bill(ID_BILL.get(),id,amount)
+                
+                list_bill()
+
+        btn_cancel_bill = CTkButton(FLeft,text="Cancel Bill",height=80,corner_radius=0,fg_color="#f33838",hover_color="#f66b6b",command=cancel_bill)
         btn_cancel_bill.grid(row=7,column=0,columnspan=3,sticky="news")
 
         bill_search = CTkEntry(FRight,placeholder_text="Search Bill ID",height=30,width=300,font=("Arial Bold",16))
@@ -1301,8 +1394,16 @@ class top_gui(CTkToplevel):
         open_img = Image.open(os.path.join(self.appdir,"icon","search.png"))
         icon_search = CTkImage(open_img,size=(25,25))
 
-        btn_search = CTkButton(FRight,image=icon_search,width=80,corner_radius=20,text="",fg_color="#38f388",hover_color="#6be59e")
+        def search_bill():
+            if (bill_search.get() != ""):
+                list_bill(bill_search.get())
+            else:
+                list_bill()
+
+        btn_search = CTkButton(FRight,image=icon_search,width=80,corner_radius=20,text="",fg_color="#38f388",hover_color="#6be59e",command=search_bill)
         btn_search.grid(row=0,column=0,sticky="e",pady=10)
+
+        bill_search.bind("<Return>",lambda e:search_bill())
 
         # //------------------------------------Table-----------------------------------------------------
         style = ttk.Style(self)
@@ -1340,7 +1441,10 @@ class top_gui(CTkToplevel):
             values = table_bill.item(select,"values")
             row = 1.0
 
-            id_bill = values[0]
+            ID_BILL.set(values[0])
+            TIME.set(values[1])
+            PAY.set(values[4])
+
             products = values[5]
             loads_products = json.loads(products)
             list_products = json.loads(loads_products)
@@ -1350,7 +1454,11 @@ class top_gui(CTkToplevel):
             data_bill.delete("0.0","end")
 
             data_bill.insert("1.0","ID Bill : ","readonly")
-            data_bill.insert("1.end",f"{id_bill}\n")
+            data_bill.insert("1.end",f"{ID_BILL.get()}\n")
+
+            list_order_bill.clear()
+            order_bill.clear()
+
 
             for i in list_products:
                 p_id = i[0]
@@ -1362,11 +1470,10 @@ class top_gui(CTkToplevel):
 
                 row += 1.0
                
-                data_bill.insert(f"{row}",f"{p_id:<15} {name[:25]+" ..":<20} {amount:<12} {price:<10} {total:<10}\n")
-
+                data_bill.insert(f"{row}",f"{p_id:<15} {name[0:20]+" ...":<20} {amount:<12} {price:<10} {total:<10}\n")
+                list_order_bill.append([p_id,name[0:20]+" ...",amount,cost,price])
 
             data_bill.configure(state="disabled")
-
             
         table_bill.bind("<Double-1>", select_bill)
 
