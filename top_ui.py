@@ -1067,7 +1067,7 @@ class top_gui(CTkToplevel):
                     day_time = dates[0].strftime("%d/%m/%Y %H:%M:%S")
 
                     count_num = count[0]+1
-                    bill_id = dates[0].strftime("%y%m%d") + str(f"{count_num:06d}")
+                    bill_id = f"{self.pos} "+dates[0].strftime("%y%m%d") + str(f"{count_num:06d}")
                     
 
                     self.my_sql.insert_bill(self.pos,bill_id,dates[0],price_cost_total,price_total,int(inp_cash.get()),list_order)
@@ -1145,7 +1145,7 @@ class top_gui(CTkToplevel):
                 day_time = dates[0].strftime("%d/%m/%Y %H:%M:%S")
 
                 count_num = count[0]+1
-                bill_id = dates[0].strftime("%y%m%d") + str(f"{count_num:06d}")
+                bill_id = f"{self.pos} "+dates[0].strftime("%y%m%d") + str(f"{count_num:06d}")
                 
 
                 self.my_sql.insert_bill(self.pos,bill_id,dates[0],price_cost_total,price_total,int(price_total),list_order)
