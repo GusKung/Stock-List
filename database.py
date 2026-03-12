@@ -343,8 +343,7 @@ class Database_Mysql:
         return result , all_row , cost , price
 
     def cancel_bill(self,id_bill,id,amount):
-        self.sql.execute("UPDATE `products` SET  `p_amount` = `p_amount` + %s, `p_sell` = `p_sell` - %s WHERE `p_id` = %s;",(amount,amount,id))
+        self.sql.execute("UPDATE `products` INNER JOIN `bills` ON `bills`.`b_id` = %s SET  `p_amount` = `p_amount` + %s, `p_sell` = `p_sell` - %s WHERE `p_id` = %s AND `bills`.`b_status` != %s ;",(id_bill,amount,amount,id,"Cancel"))
 
-  
         self.sql.execute("UPDATE `bills` SET `b_status` = %s WHERE `b_id` = %s ",("Cancel",id_bill))
         self.connect.commit()

@@ -555,10 +555,11 @@ class main_gui(CTkToplevel):
 
     def inp_products_order(self,id):
         find_star = id.find("*")
+        amount = 0
+        bar_code = id
         
         if (find_star <= -1):
             amount = 1
-            bar_code = id
         else:
             amount = id[0:find_star]
             bar_code = id[find_star+1:]
@@ -573,6 +574,7 @@ class main_gui(CTkToplevel):
                     if (id_search == None):
                 
                         if (find_star <= -1):
+                            cost_price = p_cost_price
                             self.price = float(p_price)
                             self.amount += int(amount)
                             self.total += float(p_price)    
@@ -580,7 +582,7 @@ class main_gui(CTkToplevel):
                         else:
                             self.price = float(p_price)
                             total = float(p_price) * float(amount)
-                            
+                            cost_price = p_cost_price * int(amount)
                             self.amount += int(amount)
                             self.total += total
                         
@@ -593,14 +595,14 @@ class main_gui(CTkToplevel):
 
                         if (bar_code in self.products_order):
                             self.products_order[bar_code]["amount"] += int(amount)
-                            self.products_order[bar_code]["cost_price"] += p_cost_price
+                            self.products_order[bar_code]["cost_price"] += cost_price
                             self.products_order[bar_code]["price"] = p_price
                             self.products_order[bar_code]["total"] += total
                         else:
                             self.products_order[bar_code] = {
                                 "name":p_name,
                                 "amount":int(amount),
-                                "cost_price":float(p_cost_price),
+                                "cost_price":float(cost_price),
                                 "price":float(p_price),
                                 "total":float(total)
                             }

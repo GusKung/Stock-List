@@ -1455,9 +1455,10 @@ class top_gui(CTkToplevel):
             values = table_bill.item(select,"values")
             row = 1.0
 
-            ID_BILL.set(values[0])
-            TIME.set(values[2])
-            PAY.set(values[5])
+            if (values and len(values) > 0):
+                ID_BILL.set(values[0])
+                TIME.set(values[2])
+                PAY.set(values[5])
 
             products = values[6]
             loads_products = json.loads(products)
